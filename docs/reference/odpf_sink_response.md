@@ -1,16 +1,16 @@
-# OdpfSinkResponse
+# SinkResponse
 ```java
-public class OdpfSinkResponse {
+public class SinkResponse {
   private final Map<Long, ErrorInfo> errors = new HashMap<>();
   ...
 }
 
 ```
-SinkResponse will be returned by odpfSink.pushToSink(messageList) function call.
+SinkResponse will be returned by sink.pushToSink(messageList) function call.
 The response contains error map indexed by message in the input list.
 
 ## Errors
-These errors are returned by sinks in the OdpfSinkResponse object. The error type are:
+These errors are returned by sinks in the SinkResponse object. The error type are:
 
 * DESERIALIZATION_ERROR
 * INVALID_MESSAGE_ERROR
