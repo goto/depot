@@ -35,6 +35,7 @@ dependencies {
     implementation group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.1.0'
     implementation group: 'com.gotocompany', name: 'stencil', version: '0.1.0' exclude group: 'org.slf4j'
     implementation group: 'org.aeonbits.owner', name: 'owner', version: '1.0.9'
+    implementation 'com.google.cloud:google-cloud-bigquerystorage:2.21.0'
     implementation 'com.google.cloud:google-cloud-bigquery:1.115.0'
     implementation (group: 'com.google.cloud', name:'google-cloud-bigtable', version:'2.11.2') {
         exclude group: "io.grpc"
