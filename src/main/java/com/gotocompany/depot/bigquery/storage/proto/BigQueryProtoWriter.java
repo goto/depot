@@ -14,6 +14,7 @@ import com.google.cloud.bigquery.storage.v1.StreamWriter;
 import com.google.cloud.bigquery.storage.v1.TableSchema;
 import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.cloud.bigquery.storage.v1.WriteStreamView;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.bigquery.storage.BigQueryStream;
@@ -29,7 +30,8 @@ import java.util.function.Function;
 public class BigQueryProtoWriter implements AutoCloseable, BigQueryWriter {
 
     private final BigQuerySinkConfig config;
-    protected StreamWriter streamWriter;
+    @Getter
+    private StreamWriter streamWriter;
     @Getter
     private Descriptors.Descriptor descriptor;
 
@@ -75,7 +77,7 @@ public class BigQueryProtoWriter implements AutoCloseable, BigQueryWriter {
             throws ExecutionException, InterruptedException {
         assert (rows instanceof BigQueryProtoPayload);
         ApiFuture<AppendRowsResponse> future = streamWriter.append(((BigQueryProtoPayload) rows).getPayload());
-        ApiFutures.addCallback(future, callback);
+        ApiFutures.addCallback(future, callback, MoreExecutors.directExecutor());
         return future.get();
     }
 }

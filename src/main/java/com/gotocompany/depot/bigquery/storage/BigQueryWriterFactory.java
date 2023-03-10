@@ -4,7 +4,6 @@ import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoWriter;
 import com.gotocompany.depot.bigquery.storage.json.BigQueryJsonWriter;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 
-import java.io.IOException;
 
 public class BigQueryWriterFactory {
 
