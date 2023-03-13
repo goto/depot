@@ -2,13 +2,19 @@ package com.gotocompany.depot.bigquery.storage.proto;
 
 import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
+
 public class BigQueryProtoPayload implements BigQueryPayload {
-    private ProtoRows protoRows;
+    private ProtoRows payload;
 
-    public ProtoRows getPayload() {
-        return protoRows;
+    @Override
+    public Object getPayload() {
+        return payload;
     }
+
+    @Override
+    public void setPayload(Object payload) {
+        this.payload = (ProtoRows) payload;
+    }
+
 }

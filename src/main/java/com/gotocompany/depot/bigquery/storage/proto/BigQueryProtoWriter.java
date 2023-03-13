@@ -4,16 +4,7 @@ import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.core.CredentialsProvider;
-import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
-import com.google.cloud.bigquery.storage.v1.BQTableSchemaToProtoDescriptor;
-import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
-import com.google.cloud.bigquery.storage.v1.GetWriteStreamRequest;
-import com.google.cloud.bigquery.storage.v1.ProtoSchema;
-import com.google.cloud.bigquery.storage.v1.ProtoSchemaConverter;
-import com.google.cloud.bigquery.storage.v1.StreamWriter;
-import com.google.cloud.bigquery.storage.v1.TableSchema;
-import com.google.cloud.bigquery.storage.v1.WriteStream;
-import com.google.cloud.bigquery.storage.v1.WriteStreamView;
+import com.google.cloud.bigquery.storage.v1.*;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
@@ -76,7 +67,7 @@ public class BigQueryProtoWriter implements AutoCloseable, BigQueryWriter {
     public AppendRowsResponse appendAndGet(BigQueryPayload rows, ApiFutureCallback<AppendRowsResponse> callback)
             throws ExecutionException, InterruptedException {
         assert (rows instanceof BigQueryProtoPayload);
-        ApiFuture<AppendRowsResponse> future = streamWriter.append(((BigQueryProtoPayload) rows).getPayload());
+        ApiFuture<AppendRowsResponse> future = streamWriter.append((ProtoRows) rows.getPayload());
         ApiFutures.addCallback(future, callback, MoreExecutors.directExecutor());
         return future.get();
     }

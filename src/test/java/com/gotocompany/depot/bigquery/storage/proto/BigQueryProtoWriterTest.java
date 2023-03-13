@@ -26,29 +26,6 @@ public class BigQueryProtoWriterTest {
     private BigQueryWriter bigQueryWriter;
     private StreamWriter writer;
 
-    @AllArgsConstructor
-    static class Container {
-        @Getter
-        @Setter
-        private String message;
-
-    }
-
-    @AllArgsConstructor
-    static class AppendCompleteCallback implements ApiFutureCallback<AppendRowsResponse> {
-
-        private Container container;
-
-        @Override
-        public void onFailure(Throwable t) {
-            container.setMessage(t.getMessage());
-        }
-
-        @Override
-        public void onSuccess(AppendRowsResponse result) {
-            container.setMessage("Append Success");
-        }
-    }
     @Before
     public void setup() {
         BigQuerySinkConfig config = Mockito.mock(BigQuerySinkConfig.class);
@@ -96,7 +73,8 @@ public class BigQueryProtoWriterTest {
         Container container = new Container("");
         AppendCompleteCallback callback = new AppendCompleteCallback(container);
         ProtoRows rows = Mockito.mock(ProtoRows.class);
-        BigQueryPayload payload = new BigQueryProtoPayload(rows);
+        BigQueryPayload payload = new BigQueryProtoPayload();
+        payload.setPayload(rows);
         ApiFuture<AppendRowsResponse> future = Mockito.mock(ApiFuture.class);
         AppendRowsResponse apiResponse = Mockito.mock(AppendRowsResponse.class);
         Mockito.when(future.get()).thenReturn(apiResponse);
@@ -104,5 +82,29 @@ public class BigQueryProtoWriterTest {
         AppendRowsResponse appendRowsResponse = bigQueryWriter.appendAndGet(payload, callback);
         Assert.assertEquals(apiResponse, appendRowsResponse);
         Mockito.verify(future, Mockito.times(1)).addListener(Mockito.any(), Mockito.any());
+    }
+
+    @AllArgsConstructor
+    static class Container {
+        @Getter
+        @Setter
+        private String message;
+
+    }
+
+    @AllArgsConstructor
+    static class AppendCompleteCallback implements ApiFutureCallback<AppendRowsResponse> {
+
+        private Container container;
+
+        @Override
+        public void onFailure(Throwable t) {
+            container.setMessage(t.getMessage());
+        }
+
+        @Override
+        public void onSuccess(AppendRowsResponse result) {
+            container.setMessage("Append Success");
+        }
     }
 }
