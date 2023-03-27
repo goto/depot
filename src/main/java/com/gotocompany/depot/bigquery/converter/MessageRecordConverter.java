@@ -1,5 +1,9 @@
 package com.gotocompany.depot.bigquery.converter;
 
+import com.google.api.client.util.DateTime;
+import com.google.api.client.util.Preconditions;
+import com.google.common.io.BaseEncoding;
+import com.google.protobuf.ByteString;
 import com.gotocompany.depot.bigquery.models.Record;
 import com.gotocompany.depot.bigquery.models.Records;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
@@ -12,14 +16,19 @@ import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageParser;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
+import com.gotocompany.depot.schema.LogicalType;
+import com.gotocompany.depot.schema.SchemaField;
+import com.gotocompany.depot.schema.SchemaFieldType;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Slf4j
@@ -65,5 +74,51 @@ public class MessageRecordConverter {
             log.error("failed to deserialize message: {}, {} ", e, message.getMetadataString());
             throw new DeserializerException("failed to deserialize ", e);
         }
+    }
+
+    private void floatCheck(Object fieldValue) {
+        if (fieldValue instanceof Float) {
+            float floatValue = ((Number) fieldValue).floatValue();
+            Preconditions.checkArgument(!Float.isInfinite(floatValue) && !Float.isNaN(floatValue));
+        } else if (fieldValue instanceof Double) {
+            double doubleValue = ((Number) fieldValue).doubleValue();
+            Preconditions.checkArgument(!Double.isInfinite(doubleValue) && !Double.isNaN(doubleValue));
+        }
+    }
+
+    private Object getFieldValue(SchemaField field, Object value) {
+        if(field.getType().equals(SchemaFieldType.FLOAT)) {
+            floatCheck(value);
+        }
+        if (field.getType().equals(SchemaFieldType.ENUM)) {
+            return value.toString();
+        }
+        if (field.getType().equals(SchemaFieldType.BYTES)) {
+            return BaseEncoding.base64().encode(((ByteString) value).toByteArray());
+        }
+        if (field.getType().equals(SchemaFieldType.MESSAGE)) {
+            ParsedMessage msg = (ParsedMessage) value;
+            if (msg.getSchema().logicalType().equals(LogicalType.TIMESTAMP)) {
+                return new DateTime(msg.getLogicalValue().getTimestamp().toEpochMilli());
+            }
+            if (msg.getSchema().logicalType().equals(LogicalType.STRUCT)) {
+                JSONObject json = new JSONObject(msg.getLogicalValue().getStruct());
+                return json.toString();
+            }
+          return getMapping(msg);
+        }
+        return value;
+    }
+
+    private Map<String, Object> getMapping(ParsedMessage msg) {
+        return msg.getFields().entrySet().stream().collect(Collectors.toMap(sfEntry -> sfEntry.getKey().getName(), e -> {
+            Object value = e.getValue();
+            SchemaField fd = e.getKey();
+            if (fd.isRepeated()) {
+                List<Object> listValue = (List<Object>) value;
+                return listValue.stream().map(o -> getFieldValue(fd, o)).collect(Collectors.toList());
+            }
+            return getFieldValue(fd, value);
+        }));
     }
 }

@@ -4,7 +4,14 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.Preconditions;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.Timestamp;
+import com.gotocompany.depot.message.LogicalValue;
+import com.gotocompany.depot.schema.Schema;
+import com.gotocompany.depot.schema.SchemaField;
+import com.gotocompany.depot.schema.proto.ProtoSchema;
+import com.gotocompany.depot.schema.proto.SchemaFieldImpl;
 import com.jayway.jsonpath.Configuration;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.exception.UnknownFieldsException;
@@ -28,9 +35,13 @@ public class ProtoParsedMessage implements ParsedMessage {
     private static final Configuration JSON_PATH_CONFIG = Configuration.builder()
             .jsonProvider(new ProtoJsonProvider())
             .build();
-    private final DynamicMessage dynamicMessage;
+    private final Message dynamicMessage;
 
     public ProtoParsedMessage(DynamicMessage dynamicMessage) {
+        this.dynamicMessage = dynamicMessage;
+    }
+
+    public ProtoParsedMessage(Message dynamicMessage) {
         this.dynamicMessage = dynamicMessage;
     }
 
@@ -45,15 +56,30 @@ public class ProtoParsedMessage implements ParsedMessage {
 
     @Override
     public void validate(SinkConfig config) {
-        if (!config.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable() && ProtoUtils.hasUnknownField(dynamicMessage)) {
-            log.error("Unknown fields {}", UnknownProtoFields.toString(dynamicMessage.toByteArray()));
-            throw new UnknownFieldsException(dynamicMessage);
-        }
+//        if (!config.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable() && ProtoUtils.hasUnknownField(dynamicMessage)) {
+//            log.error("Unknown fields {}", UnknownProtoFields.toString(dynamicMessage.toByteArray()));
+//            throw new UnknownFieldsException(dynamicMessage);
+//        }
     }
 
     @Override
     public Map<String, Object> getMapping() {
         return getMappings(dynamicMessage);
+    }
+
+    @Override
+    public Map<SchemaField, Object> getFields() {
+        return dynamicMessage.getAllFields().entrySet().stream().collect(Collectors.toMap(e -> new SchemaFieldImpl(e.getKey()), e -> {
+            Object value = e.getValue();
+            Descriptors.FieldDescriptor key = e.getKey();
+            if (key.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.MESSAGE)) {
+                if (key.isRepeated()) {
+                    return ((List<Message>) value).stream().map(v -> new ProtoParsedMessage(v)).collect(Collectors.toList());
+                }
+                return new ProtoParsedMessage((Message) value);
+            }
+            return value;
+        }));
     }
 
     private Object getFieldValue(Descriptors.FieldDescriptor fd, Object value) {
@@ -82,7 +108,7 @@ public class ProtoParsedMessage implements ParsedMessage {
         }
     }
 
-    private Map<String, Object> getMappings(DynamicMessage message) {
+    private Map<String, Object> getMappings(MessageOrBuilder message) {
         if (message == null) {
             return new HashMap<>();
         }
@@ -111,5 +137,15 @@ public class ProtoParsedMessage implements ParsedMessage {
             throw new IllegalArgumentException("Invalid field config : name can not be empty");
         }
         return MessageUtils.getFieldFromJsonObject(name, dynamicMessage, JSON_PATH_CONFIG);
+    }
+
+    @Override
+    public Schema getSchema() {
+        return new ProtoSchema(dynamicMessage.getDescriptorForType());
+    }
+
+    @Override
+    public LogicalValue getLogicalValue() {
+        return new ProtoLogicalValue(dynamicMessage);
     }
 }

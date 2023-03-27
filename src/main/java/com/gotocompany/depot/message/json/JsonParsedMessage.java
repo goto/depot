@@ -1,5 +1,11 @@
 package com.gotocompany.depot.message.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gotocompany.depot.message.LogicalValue;
+import com.gotocompany.depot.schema.Schema;
+import com.gotocompany.depot.schema.SchemaField;
 import com.jayway.jsonpath.Configuration;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.message.MessageUtils;
