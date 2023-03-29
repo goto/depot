@@ -8,6 +8,10 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Schema interface implementation from JSONObject.
+ * This implementation derives schema from JSONObject by type checking the JSON values.
+ */
 public class GenericJsonSchema implements Schema {
     private final JSONObject json;
 
@@ -17,7 +21,7 @@ public class GenericJsonSchema implements Schema {
 
     @Override
     public String getFullName() {
-        return "";
+        return "root";
     }
 
     @Override

@@ -1,12 +1,15 @@
 package com.gotocompany.depot.message.proto;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.Value;
+import com.gotocompany.depot.exception.DeserializerException;
 import com.gotocompany.depot.message.LogicalValue;
 import com.gotocompany.depot.schema.LogicalType;
 import com.gotocompany.depot.schema.proto.ProtoSchema;
+import org.json.JSONObject;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -27,7 +30,12 @@ public class ProtoLogicalValue implements LogicalValue {
 
     @Override
     public Instant getTimestamp() {
-        Timestamp timestamp = Timestamp.newBuilder().mergeFrom(message).build();
+        Timestamp timestamp = null;
+        try {
+            timestamp = Timestamp.parseFrom(message.toByteArray());
+        } catch (InvalidProtocolBufferException e) {
+            throw new DeserializerException(getErrMessage("Timestamp"), e);
+        }
         return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
     }
 
@@ -44,7 +52,7 @@ public class ProtoLogicalValue implements LogicalValue {
             case LIST_VALUE:
                 return value.getListValue().getValuesList().stream().map(this::getValue).collect(Collectors.toList());
             default:
-                return null;
+                return JSONObject.NULL;
         }
     }
 
@@ -56,23 +64,27 @@ public class ProtoLogicalValue implements LogicalValue {
 
     @Override
     public Map<String, Object> getStruct() {
-        Struct s = Struct.newBuilder().mergeFrom(message).build();
+        Struct s = null;
+        try {
+            s = Struct.parseFrom(message.toByteArray());
+        } catch (InvalidProtocolBufferException e) {
+            throw new DeserializerException(getErrMessage("Struct"), e);
+        }
         return getStructValue(s);
-    }
-
-    // TODO: is it really needed? or Does it belong here?
-    @Override
-    public Map<Object, Object> getMap() {
-//        Collection<Message> mapData = (Collection<Message>) message;
-//        return mapData.stream().collect(Collectors.toMap(e -> {
-//            e.getDescriptorForType().findFieldByName("key");
-//        }, e -> {}));
-        return null;
     }
 
     @Override
     public Duration getDuration() {
-        com.google.protobuf.Duration duration = com.google.protobuf.Duration.newBuilder().mergeFrom(message).build();
+        com.google.protobuf.Duration duration = null;
+        try {
+            duration = com.google.protobuf.Duration.parseFrom(message.toByteArray());
+        } catch (InvalidProtocolBufferException e) {
+            throw new DeserializerException(getErrMessage("Duration"), e);
+        }
         return Duration.ofSeconds(duration.getSeconds(), duration.getNanos());
+    }
+
+    private String getErrMessage(String type) {
+        return String.format("Failed while deserializing given \"%s\" to %s", message.getDescriptorForType().getFullName(), type);
     }
 }

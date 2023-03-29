@@ -26,18 +26,18 @@ public class GenericJsonSchemaField implements SchemaField {
         return name;
     }
 
-    private SchemaFieldType getFieldType(Object value) {
-        if (value instanceof JSONObject) {
+    private SchemaFieldType getFieldType(Object inputValue) {
+        if (inputValue instanceof JSONObject) {
             return SchemaFieldType.MESSAGE;
-        } else if (value instanceof Double) {
+        } else if (inputValue instanceof Double) {
             return SchemaFieldType.DOUBLE;
-        } else if (value instanceof Integer) {
+        } else if (inputValue instanceof Integer) {
             return SchemaFieldType.INT;
-        } else if (value instanceof Float) {
+        } else if (inputValue instanceof Float) {
             return SchemaFieldType.FLOAT;
-        } else if (value instanceof Long) {
+        } else if (inputValue instanceof Long) {
             return SchemaFieldType.LONG;
-        } else if (value == Boolean.TRUE || value == Boolean.FALSE) {
+        } else if (inputValue == Boolean.TRUE || inputValue == Boolean.FALSE) {
             return SchemaFieldType.BOOLEAN;
         }
         return SchemaFieldType.STRING;

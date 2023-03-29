@@ -66,7 +66,7 @@ public class MessageRecordConverter {
                     ? config.getSinkConnectorSchemaProtoMessageClass() : config.getSinkConnectorSchemaProtoKeyClass();
             ParsedMessage parsedMessage = parser.parse(message, mode, schemaClass);
             parsedMessage.validate(config);
-            Map<String, Object> columns = parsedMessage.getMapping();
+            Map<String, Object> columns = getMapping(parsedMessage);
             MessageRecordConverterUtils.addMetadata(columns, message, config);
             MessageRecordConverterUtils.addTimeStampColumnForJson(columns, config);
             return new Record(message.getMetadata(), columns, index, null);
@@ -87,7 +87,7 @@ public class MessageRecordConverter {
     }
 
     private Object getFieldValue(SchemaField field, Object value) {
-        if(field.getType().equals(SchemaFieldType.FLOAT)) {
+        if (field.getType().equals(SchemaFieldType.FLOAT)) {
             floatCheck(value);
         }
         if (field.getType().equals(SchemaFieldType.ENUM)) {
@@ -105,7 +105,7 @@ public class MessageRecordConverter {
                 JSONObject json = new JSONObject(msg.getLogicalValue().getStruct());
                 return json.toString();
             }
-          return getMapping(msg);
+            return getMapping(msg);
         }
         return value;
     }

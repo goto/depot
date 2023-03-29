@@ -11,11 +11,12 @@ import com.gotocompany.depot.schema.SchemaField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ProtoSchema implements Schema {
     private final Descriptors.Descriptor descriptor;
-    private Map<String, SchemaFieldImpl> fields;
+    private Map<String, ProtoSchemaField> fields;
 
     public ProtoSchema(Descriptors.Descriptor descriptor) {
         this.descriptor = descriptor;
@@ -56,8 +57,8 @@ public class ProtoSchema implements Schema {
     private void initializeFields() {
         if (fields == null) {
             fields = descriptor.getFields().stream()
-                    .map(SchemaFieldImpl::new)
-                    .collect(Collectors.toMap(SchemaFieldImpl::getName, schemaField -> schemaField));
+                    .map(ProtoSchemaField::new)
+                    .collect(Collectors.toMap(ProtoSchemaField::getName, Function.identity()));
         }
     }
 }

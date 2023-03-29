@@ -5,9 +5,9 @@ import com.gotocompany.depot.schema.Schema;
 import com.gotocompany.depot.schema.SchemaField;
 import com.gotocompany.depot.schema.SchemaFieldType;
 
-public class SchemaFieldImpl implements SchemaField {
+public class ProtoSchemaField implements SchemaField {
     private Descriptors.FieldDescriptor fd;
-    public SchemaFieldImpl(Descriptors.FieldDescriptor fieldDescriptor) {
+    public ProtoSchemaField(Descriptors.FieldDescriptor fieldDescriptor) {
         this.fd = fieldDescriptor;
     }
 
