@@ -6,6 +6,8 @@ import com.gotocompany.depot.schema.SchemaFieldType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+
 public class GenericJsonSchemaField implements SchemaField {
     private final String name;
 
@@ -29,7 +31,10 @@ public class GenericJsonSchemaField implements SchemaField {
     private SchemaFieldType getFieldType(Object inputValue) {
         if (inputValue instanceof JSONObject) {
             return SchemaFieldType.MESSAGE;
-        } else if (inputValue instanceof Double) {
+        } else if (inputValue instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) inputValue;
+            return jsonArray.isEmpty() ? SchemaFieldType.STRING : getFieldType(jsonArray.get(0));
+        } else if (inputValue instanceof BigDecimal) {
             return SchemaFieldType.DOUBLE;
         } else if (inputValue instanceof Integer) {
             return SchemaFieldType.INT;
