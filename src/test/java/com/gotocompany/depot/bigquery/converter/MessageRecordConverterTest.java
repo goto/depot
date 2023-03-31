@@ -1,6 +1,8 @@
 package com.gotocompany.depot.bigquery.converter;
 
 import com.google.api.client.util.DateTime;
+import com.google.common.io.BaseEncoding;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -10,6 +12,7 @@ import com.google.protobuf.Timestamp;
 import com.google.protobuf.UnknownFieldSet;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.Timestamps;
+import com.gotocompany.depot.StatusBQ;
 import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestMessageBQ;
 import com.gotocompany.depot.TestTypesMessage;
@@ -38,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -408,5 +412,38 @@ public class MessageRecordConverterTest {
         Records records = messageRecordConverter.convert(messages);
         assertEquals(IllegalArgumentException.class, records.getInvalidRecords().get(0).getErrorInfo().getException().getClass());
         assertEquals(ErrorType.DESERIALIZATION_ERROR, records.getInvalidRecords().get(0).getErrorInfo().getErrorType());
+    }
+
+    @Test
+    public void shouldConvertEnumToString() throws IOException {
+
+        Tuple3<MessageRecordConverter, List<Message>, Map<String, Object>> testData = setupForTypeTest("status", StatusBQ.CANCELLED.getValueDescriptor());
+
+        MessageRecordConverter converter = testData.getV1();
+        List<Message> inputData = testData.getV2();
+
+        Records records = converter.convert(inputData);
+        assertEquals(1, records.getValidRecords().size());
+        assertEquals(0, records.getInvalidRecords().size());
+        Map<String, Object> record1Columns = records.getValidRecords().get(0).getColumns();
+
+        assertEquals("CANCELLED", record1Columns.get("status"));
+    }
+
+    @Test
+    public void shouldConvertBytesToString() throws IOException {
+        byte[] byteData = "byteDataTest".getBytes(StandardCharsets.UTF_8);
+        Tuple3<MessageRecordConverter, List<Message>, Map<String, Object>> testData = setupForTypeTest("user_token", ByteString.copyFrom(byteData));
+
+        MessageRecordConverter converter = testData.getV1();
+        List<Message> inputData = testData.getV2();
+
+        Records records = converter.convert(inputData);
+        assertEquals(1, records.getValidRecords().size());
+        assertEquals(0, records.getInvalidRecords().size());
+        Map<String, Object> record1Columns = records.getValidRecords().get(0).getColumns();
+        String expected = BaseEncoding.base64().encode(byteData);
+
+        assertEquals(expected, record1Columns.get("user_token"));
     }
 }
