@@ -12,6 +12,7 @@ import com.google.protobuf.Value;
 import com.google.protobuf.util.Timestamps;
 import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestMessageBQ;
+import com.gotocompany.depot.TestTypesMessage;
 import com.gotocompany.depot.bigquery.TestMessageBuilder;
 import com.gotocompany.depot.bigquery.TestMetadata;
 import com.gotocompany.depot.bigquery.models.Record;
@@ -65,9 +66,6 @@ public class MessageRecordConverterTest {
         System.setProperty("SINK_BIGQUERY_METADATA_COLUMNS_TYPES",
                 "message_offset=integer,message_topic=string,load_time=timestamp,message_timestamp=timestamp,message_partition=integer");
         stencilClient = Mockito.mock(ClassLoadStencilClient.class, CALLS_REAL_METHODS);
-        Map<String, Descriptors.Descriptor> descriptorsMap = new HashMap<String, Descriptors.Descriptor>() {{
-            put(String.format("%s", TestMessage.class.getName()), TestMessage.getDescriptor());
-        }};
         ProtoMessageParser protoMessageParser = new ProtoMessageParser(stencilClient);
         recordConverter = new MessageRecordConverter(protoMessageParser,
                 ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties()));
@@ -336,7 +334,7 @@ public class MessageRecordConverterTest {
                 new Tuple<>("message_offset", record1Offset.getOffset()),
                 new Tuple<>("message_timestamp", record1Offset.getTimestamp()),
                 new Tuple<>("load_time", record1Offset.getLoadTime()));
-        List<Message> messages = Arrays.asList(consumerRecord);
+        List<Message> messages = Collections.singletonList(consumerRecord);
         StencilClient client1 = Mockito.mock(StencilClient.class);
         when(client1.parse(anyString(), any())).thenReturn(d);
         ProtoMessageParser protoMessageParser = new ProtoMessageParser(client1);
@@ -386,5 +384,29 @@ public class MessageRecordConverterTest {
         Map<String, Object> record1Columns = records.getValidRecords().get(0).getColumns();
 
         assertEquals(new JSONObject(expectedProperties).toString(), new JSONObject((String) record1Columns.get("properties")).toString());
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenFloatingPointIsNaN() throws IOException {
+        TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
+        TestTypesMessage testTypesMessage = TestTypesMessage.newBuilder().setFloatValue(Float.NaN).setStringValue("test").build();
+        DynamicMessage message = DynamicMessage.parseFrom(TestTypesMessage.getDescriptor(), testTypesMessage.toByteArray());
+        Message consumerRecord = new Message(
+                message.toByteArray(),
+                message.toByteArray(),
+                new Tuple<>("message_topic", record1Offset.getTopic()),
+                new Tuple<>("message_partition", record1Offset.getPartition()),
+                new Tuple<>("message_offset", record1Offset.getOffset()),
+                new Tuple<>("message_timestamp", record1Offset.getTimestamp()),
+                new Tuple<>("load_time", record1Offset.getLoadTime()));
+        List<Message> messages = Collections.singletonList(consumerRecord);
+        StencilClient client1 = Mockito.mock(StencilClient.class);
+        when(client1.parse(anyString(), any())).thenReturn(message);
+        ProtoMessageParser protoMessageParser = new ProtoMessageParser(client1);
+        MessageRecordConverter messageRecordConverter = new MessageRecordConverter(protoMessageParser,
+                ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties()));
+        Records records = messageRecordConverter.convert(messages);
+        assertEquals(IllegalArgumentException.class, records.getInvalidRecords().get(0).getErrorInfo().getException().getClass());
+        assertEquals(ErrorType.DESERIALIZATION_ERROR, records.getInvalidRecords().get(0).getErrorInfo().getErrorType());
     }
 }

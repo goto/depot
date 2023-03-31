@@ -11,7 +11,6 @@ import com.gotocompany.depot.schema.json.GenericJsonSchemaField;
 import com.jayway.jsonpath.Configuration;
 import org.json.JSONObject;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -36,17 +35,7 @@ public class JsonParsedMessage implements ParsedMessage {
     }
 
     @Override
-    public void validate(SinkConfig config) {
-
-    }
-
-    @Override
-    public Map<String, Object> getMapping() {
-        if (jsonObject == null || jsonObject.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return jsonObject.toMap();
-    }
+    public void validate(SinkConfig config) { }
 
     @Override
     public Map<SchemaField, Object> getFields() {

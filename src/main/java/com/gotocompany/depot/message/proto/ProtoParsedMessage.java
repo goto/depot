@@ -1,32 +1,23 @@
 package com.gotocompany.depot.message.proto;
 
-import com.google.api.client.util.DateTime;
-import com.google.api.client.util.Preconditions;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
-import com.google.protobuf.Timestamp;
+import com.gotocompany.depot.config.SinkConfig;
+import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.message.LogicalValue;
+import com.gotocompany.depot.message.MessageUtils;
+import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.schema.Schema;
 import com.gotocompany.depot.schema.SchemaField;
 import com.gotocompany.depot.schema.proto.ProtoSchema;
 import com.gotocompany.depot.schema.proto.ProtoSchemaField;
-import com.jayway.jsonpath.Configuration;
-import com.gotocompany.depot.config.SinkConfig;
-import com.gotocompany.depot.exception.UnknownFieldsException;
-import com.gotocompany.depot.message.MessageUtils;
-import com.gotocompany.depot.message.ParsedMessage;
-import com.gotocompany.depot.message.proto.converter.fields.ProtoField;
-import com.gotocompany.depot.message.proto.converter.fields.ProtoFieldFactory;
 import com.gotocompany.depot.utils.ProtoUtils;
+import com.jayway.jsonpath.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,11 +54,6 @@ public class ProtoParsedMessage implements ParsedMessage {
     }
 
     @Override
-    public Map<String, Object> getMapping() {
-        return getMappings(dynamicMessage);
-    }
-
-    @Override
     public Map<SchemaField, Object> getFields() {
         return dynamicMessage.getAllFields().entrySet().stream().collect(Collectors.toMap(e -> new ProtoSchemaField(e.getKey()), e -> {
             Object value = e.getValue();
@@ -79,56 +65,6 @@ public class ProtoParsedMessage implements ParsedMessage {
                 return new ProtoParsedMessage((Message) value);
             }
             return value;
-        }));
-    }
-
-    private Object getFieldValue(Descriptors.FieldDescriptor fd, Object value) {
-        if (fd.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.FLOAT)) {
-            floatCheck(value);
-        }
-        if (fd.getType().equals(Descriptors.FieldDescriptor.Type.MESSAGE)
-                && !fd.getMessageType().getFullName().equals(com.google.protobuf.Struct.getDescriptor().getFullName())) {
-            if (fd.getMessageType().getFullName().equals(Timestamp.getDescriptor().getFullName())) {
-                ProtoField field = ProtoFieldFactory.getField(fd, value);
-                return new DateTime(((Instant) field.getValue()).toEpochMilli());
-            }
-            return getMappings((DynamicMessage) value);
-        }
-        ProtoField field = ProtoFieldFactory.getField(fd, value);
-        return field.getValue();
-    }
-
-    private void floatCheck(Object fieldValue) {
-        if (fieldValue instanceof Float) {
-            float floatValue = ((Number) fieldValue).floatValue();
-            Preconditions.checkArgument(!Float.isInfinite(floatValue) && !Float.isNaN(floatValue));
-        } else if (fieldValue instanceof Double) {
-            double doubleValue = ((Number) fieldValue).doubleValue();
-            Preconditions.checkArgument(!Double.isInfinite(doubleValue) && !Double.isNaN(doubleValue));
-        }
-    }
-
-    private Map<String, Object> getMappings(MessageOrBuilder message) {
-        if (message == null) {
-            return new HashMap<>();
-        }
-        Map<Descriptors.FieldDescriptor, Object> allFields = new TreeMap<>(message.getAllFields());
-        for (Descriptors.FieldDescriptor field : message.getDescriptorForType().getFields()) {
-            if (!field.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.ENUM)) {
-                continue;
-            }
-            if (!allFields.containsKey(field)) {
-                allFields.put(field, message.getField(field));
-            }
-        }
-        return allFields.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getName(), e -> {
-            Object value = e.getValue();
-            Descriptors.FieldDescriptor fd = e.getKey();
-            if (fd.isRepeated()) {
-                List<Object> listValue = (List<Object>) value;
-                return listValue.stream().map(o -> getFieldValue(fd, o)).collect(Collectors.toList());
-            }
-            return getFieldValue(fd, value);
         }));
     }
 
