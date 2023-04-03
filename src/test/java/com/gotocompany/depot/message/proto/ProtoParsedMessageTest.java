@@ -14,6 +14,7 @@ import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestMessageBQ;
 import com.gotocompany.depot.TestNestedMessageBQ;
 import com.gotocompany.depot.TestTypesMessage;
+import com.gotocompany.depot.schema.SchemaField;
 import com.gotocompany.stencil.Parser;
 import com.gotocompany.stencil.StencilClientFactory;
 import org.json.JSONArray;
@@ -25,6 +26,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -291,5 +296,34 @@ public class ProtoParsedMessageTest {
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
         Object value = protoParsedMessage.getFieldByName("list_message_values[0]");
         Assert.assertEquals("{\"order_number\":\"123\"}", value.toString());
+    }
+
+    @Test
+    public void shouldIncludeDefaultEnumFieldsOnGetFields() throws IOException {
+        TestTypesMessage message = TestTypesMessage.getDefaultInstance();
+        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
+        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
+        Map<SchemaField, Object> fields = protoParsedMessage.getFields();
+        Optional<SchemaField> enumValue = fields.keySet().stream().filter(f -> f.getName().equals("enum_value")).findFirst();
+        Assert.assertTrue(enumValue.isPresent());
+        Assert.assertEquals("CATEGORY_1", fields.get(enumValue.get()));
+    }
+
+    private Object getFieldValueFromFields(Map<SchemaField, Object> fields, String name) {
+        return fields.entrySet().stream().filter(f -> f.getKey().getName().equals(name)).findFirst().get().getValue();
+    }
+
+    @Test
+    public void shouldReturnParsedMessageIfFieldValueisOfTypeMessage() throws IOException {
+        TestMessage msg = TestMessage.newBuilder().setOrderNumber("order-number").build();
+        TestTypesMessage message = TestTypesMessage.newBuilder().setMessageValue(msg).addAllListMessageValues(Arrays.asList(msg, msg)).build();
+        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
+        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
+        Map<SchemaField, Object> fields = protoParsedMessage.getFields();
+        Assert.assertEquals(3, fields.size());
+        Assert.assertTrue(getFieldValueFromFields(fields, "message_value") instanceof ProtoParsedMessage);
+        List<Object> listValue = (List<Object>) getFieldValueFromFields(fields, "list_message_values");
+        Assert.assertEquals(2, listValue.size());
+        Assert.assertTrue(listValue.get(0) instanceof ProtoParsedMessage);
     }
 }

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -53,18 +54,35 @@ public class ProtoParsedMessage implements ParsedMessage {
         }
     }
 
+    private Object getProtoValue(Descriptors.FieldDescriptor fd, Object value) {
+        switch (fd.getJavaType()) {
+            case ENUM:
+                return value.toString();
+            case MESSAGE:
+                return new ProtoParsedMessage((Message) value);
+            default:
+                return value;
+        }
+    }
+
     @Override
     public Map<SchemaField, Object> getFields() {
-        return dynamicMessage.getAllFields().entrySet().stream().collect(Collectors.toMap(e -> new ProtoSchemaField(e.getKey()), e -> {
+        Map<Descriptors.FieldDescriptor, Object> allFields = new TreeMap<>(dynamicMessage.getAllFields());
+        for (Descriptors.FieldDescriptor field : dynamicMessage.getDescriptorForType().getFields()) {
+            if (!field.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.ENUM)) {
+                continue;
+            }
+            if (!allFields.containsKey(field)) {
+                allFields.put(field, dynamicMessage.getField(field));
+            }
+        }
+        return allFields.entrySet().stream().collect(Collectors.toMap(e -> new ProtoSchemaField(e.getKey()), e -> {
             Object value = e.getValue();
             Descriptors.FieldDescriptor key = e.getKey();
-            if (key.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.MESSAGE)) {
-                if (key.isRepeated()) {
-                    return ((List<Message>) value).stream().map(v -> new ProtoParsedMessage(v)).collect(Collectors.toList());
-                }
-                return new ProtoParsedMessage((Message) value);
+            if (key.isRepeated()) {
+                return ((List<Object>) value).stream().map(v -> getProtoValue(key, v)).collect(Collectors.toList());
             }
-            return value;
+            return getProtoValue(key, value);
         }));
     }
 

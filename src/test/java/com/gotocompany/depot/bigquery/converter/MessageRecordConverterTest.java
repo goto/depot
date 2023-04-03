@@ -356,6 +356,7 @@ public class MessageRecordConverterTest {
         List<Message> inputData = testData.getV2();
         Map<String, Object> record1ExpectedColumns = new HashMap<String, Object>() {{
             put("created_at", new DateTime(now.toEpochMilli()));
+            put("status", "COMPLETED");
             putAll(testData.getV3());
         }};
 

@@ -90,9 +90,6 @@ public class MessageRecordConverter {
         if (field.getType().equals(SchemaFieldType.FLOAT)) {
             floatCheck(value);
         }
-        if (field.getType().equals(SchemaFieldType.ENUM)) {
-            return value.toString();
-        }
         if (field.getType().equals(SchemaFieldType.BYTES)) {
             return BaseEncoding.base64().encode(((ByteString) value).toByteArray());
         }
