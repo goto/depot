@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 public class BigQueryProtoPayloadConverter {
@@ -64,12 +65,14 @@ public class BigQueryProtoPayloadConverter {
 
     public DynamicMessage convert(DynamicMessage inputMessage, Descriptors.Descriptor descriptor) {
         DynamicMessage.Builder messageBuilder = DynamicMessage.newBuilder(descriptor);
-        Descriptors.Descriptor descriptorForInputType = inputMessage.getDescriptorForType();
-        List<Descriptors.FieldDescriptor> fields = descriptor.getFields();
-        for (Descriptors.FieldDescriptor outputField : fields) {
-            Descriptors.FieldDescriptor inputFieldDesc = descriptorForInputType.findFieldByName(outputField.getName());
-            Object inputField = inputMessage.getField(inputFieldDesc);
-            ProtoField protoField = ProtoFieldFactory.getField(inputFieldDesc, inputField);
+        List<Descriptors.FieldDescriptor> allFields = inputMessage.getDescriptorForType().getFields();
+        for (Descriptors.FieldDescriptor inputField : allFields) {
+            Descriptors.FieldDescriptor outputField = descriptor.findFieldByName(inputField.getName());
+            if (outputField == null) {
+                // not found in table
+                continue;
+            }
+            ProtoField protoField = ProtoFieldFactory.getField(inputField, inputMessage.getField(inputField));
             Object fieldValue = protoField.getValue();
             if (fieldValue instanceof List) {
                 addRepeatedFields(messageBuilder, outputField, (List<?>) fieldValue);
