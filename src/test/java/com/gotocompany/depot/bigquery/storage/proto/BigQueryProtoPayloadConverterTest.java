@@ -169,7 +169,7 @@ public class BigQueryProtoPayloadConverterTest {
             return new Tuple<>(values.get("key"), values.get("value"));
         }).collect(Collectors.toList());
         actual.sort(Comparator.comparing(Tuple::getFirst));
-        List<Tuple<String, String>> expected = new ArrayList<>() {{
+        List<Tuple<String, String>> expected = new ArrayList<Tuple<String, String>>() {{
             add(new Tuple<>("k1", "v1"));
             add(new Tuple<>("k2", "v2"));
             add(new Tuple<>("k3", "v3"));
@@ -223,8 +223,14 @@ public class BigQueryProtoPayloadConverterTest {
                 .addRepeatedNumberField(11)
                 .addRepeatedNumberField(12)
                 .build();
-
         DynamicMessage convertedMessage = converter.convert(new Message(null, message.toByteArray()));
-        System.out.println(convertedMessage);
+        DynamicMessage sm1 = (DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("single_message"));
+        Assert.assertEquals("order-1", sm1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        List<DynamicMessage> nestedMessage = (List) convertedMessage.getField(testDescriptor.findFieldByName("repeated_message"));
+        Assert.assertEquals(2, nestedMessage.size());
+        DynamicMessage nestedMessage1 = nestedMessage.get(0);
+        DynamicMessage nestedMessage2 = nestedMessage.get(1);
+        Assert.assertEquals("order-2", nestedMessage1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        Assert.assertEquals("order-3", nestedMessage2.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
     }
 }

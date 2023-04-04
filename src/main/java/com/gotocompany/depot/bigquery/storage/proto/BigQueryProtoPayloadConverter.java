@@ -6,7 +6,6 @@ import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
-import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @AllArgsConstructor
 public class BigQueryProtoPayloadConverter {
@@ -44,7 +42,6 @@ public class BigQueryProtoPayloadConverter {
                 payload.addMetadataRecord(metadata);
                 rowBuilder.addSerializedRows(convertedMessage.toByteString());
             } catch (Exception e) {
-                // TODO: check individual errors
                 ErrorInfo info = new ErrorInfo(e, ErrorType.DEFAULT_ERROR);
                 BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, info, false);
                 payload.addMetadataRecord(metadata);
@@ -123,3 +120,4 @@ public class BigQueryProtoPayloadConverter {
         messageBuilder.setField(outputField, repeatedNestedFields);
     }
 }
+
