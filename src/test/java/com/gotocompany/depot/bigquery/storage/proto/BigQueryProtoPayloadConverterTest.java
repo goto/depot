@@ -222,6 +222,7 @@ public class BigQueryProtoPayloadConverterTest {
                 .addRepeatedMessage(nested2)
                 .addRepeatedNumberField(11)
                 .addRepeatedNumberField(12)
+                .addRepeatedNumberField(13)
                 .build();
         DynamicMessage convertedMessage = converter.convert(new Message(null, message.toByteArray()));
         DynamicMessage sm1 = (DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("single_message"));
@@ -232,5 +233,11 @@ public class BigQueryProtoPayloadConverterTest {
         DynamicMessage nestedMessage2 = nestedMessage.get(1);
         Assert.assertEquals(nested1.getOrderNumber(), nestedMessage1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
         Assert.assertEquals(nested2.getOrderNumber(), nestedMessage2.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        Assert.assertEquals(123L, convertedMessage.getField(testDescriptor.findFieldByName("number_field")));
+        List<Long> repeatedNumbers = (List) convertedMessage.getField(testDescriptor.findFieldByName("repeated_number_field"));
+        Assert.assertEquals(3, repeatedNumbers.size());
+        Assert.assertEquals(Long.valueOf(11), repeatedNumbers.get(0));
+        Assert.assertEquals(Long.valueOf(12), repeatedNumbers.get(1));
+        Assert.assertEquals(Long.valueOf(13), repeatedNumbers.get(2));
     }
 }
