@@ -8,9 +8,12 @@ import com.google.protobuf.Duration;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.StatusBQ;
 import com.gotocompany.depot.TestMessageBQ;
+import com.gotocompany.depot.TestNestedRepeatedMessageBQ;
+import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
+import com.gotocompany.depot.message.proto.TestProtoUtil;
 import com.gotocompany.stencil.client.ClassLoadStencilClient;
 import org.aeonbits.owner.ConfigFactory;
 import org.junit.Assert;
@@ -19,8 +22,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 
@@ -30,6 +34,8 @@ public class BigQueryProtoPayloadConverterTest {
 
     private Descriptors.Descriptor testDescriptor;
     private BigQueryProtoPayloadConverter converter;
+    private TableSchema testMessageBQSchema;
+    private ProtoMessageParser protoMessageParser;
 
     @Before
     public void setUp() throws IOException, Descriptors.DescriptorValidationException {
@@ -38,8 +44,8 @@ public class BigQueryProtoPayloadConverterTest {
         System.setProperty("SINK_BIGQUERY_METADATA_COLUMNS_TYPES",
                 "message_offset=integer,message_topic=string,load_time=timestamp,message_timestamp=timestamp,message_partition=integer");
         ClassLoadStencilClient stencilClient = Mockito.mock(ClassLoadStencilClient.class, CALLS_REAL_METHODS);
-        ProtoMessageParser protoMessageParser = new ProtoMessageParser(stencilClient);
-        TableSchema schema = TableSchema.newBuilder()
+        protoMessageParser = new ProtoMessageParser(stencilClient);
+        testMessageBQSchema = TableSchema.newBuilder()
                 .addFields(TableFieldSchema.newBuilder()
                         .setName("order_number")
                         .setMode(TableFieldSchema.Mode.NULLABLE)
@@ -90,8 +96,23 @@ public class BigQueryProtoPayloadConverterTest {
                                 .setType(TableFieldSchema.Type.INT64)
                                 .build())
                         .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("current_state")
+                        .setMode(TableFieldSchema.Mode.REPEATED)
+                        .setType(TableFieldSchema.Type.STRUCT)
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("key")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.STRING)
+                                .build())
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("value")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.STRING)
+                                .build())
+                        .build())
                 .build();
-        testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(schema);
+        testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(testMessageBQSchema);
         BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
         BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
         converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
@@ -121,7 +142,7 @@ public class BigQueryProtoPayloadConverterTest {
     }
 
     @Test
-    public void testDurationField() throws IOException {
+    public void shouldReturnDurationField() throws IOException {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
                 .setTripDuration(Duration.newBuilder().setSeconds(1234L).setNanos(231).build())
                 .build();
@@ -129,5 +150,81 @@ public class BigQueryProtoPayloadConverterTest {
         DynamicMessage tripDuration = ((DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("trip_duration")));
         Assert.assertEquals(1234L, tripDuration.getField(tripDuration.getDescriptorForType().findFieldByName("seconds")));
         Assert.assertEquals(231L, tripDuration.getField(tripDuration.getDescriptorForType().findFieldByName("nanos")));
+    }
+
+    @Test
+    public void shouldReturnMapField() throws Exception {
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .putCurrentState("k4", "v4")
+                .putCurrentState("k3", "v3")
+                .putCurrentState("k1", "v1")
+                .putCurrentState("k2", "v2")
+                .build();
+        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Object> currentState = ((List<Object>) convertedMessage.getField(testDescriptor.findFieldByName("current_state")));
+        List<Tuple<String, String>> actual = currentState.stream().map(o -> {
+            Map<String, String> values = ((DynamicMessage) o).getAllFields().entrySet().stream().collect(
+                    Collectors.toMap(s -> s.getKey().getName(), s -> s.getValue().toString())
+            );
+            return new Tuple<>(values.get("key"), values.get("value"));
+        }).collect(Collectors.toList());
+        actual.sort(Comparator.comparing(Tuple::getFirst));
+        List<Tuple<String, String>> expected = new ArrayList<>() {{
+            add(new Tuple<>("k1", "v1"));
+            add(new Tuple<>("k2", "v2"));
+            add(new Tuple<>("k3", "v3"));
+            add(new Tuple<>("k4", "v4"));
+        }};
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldReturnComplexAndNestedType() throws Descriptors.DescriptorValidationException, IOException {
+        TableSchema schema = TableSchema.newBuilder()
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("single_message")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.STRUCT)
+                        .addAllFields(testMessageBQSchema.getFieldsList())
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("repeated_message")
+                        .setMode(TableFieldSchema.Mode.REPEATED)
+                        .setType(TableFieldSchema.Type.STRUCT)
+                        .addAllFields(testMessageBQSchema.getFieldsList())
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("number_field")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.INT64)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("repeated_number_field")
+                        .setMode(TableFieldSchema.Mode.REPEATED)
+                        .setType(TableFieldSchema.Type.INT64)
+                        .build())
+                .build();
+        System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestNestedRepeatedMessageBQ");
+        testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(schema);
+        BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
+        BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
+        converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
+        Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
+
+        Instant now = Instant.now();
+        TestMessageBQ singleMessage = TestProtoUtil.generateTestMessage(now);
+        TestMessageBQ nested1 = TestProtoUtil.generateTestMessage(now);
+        TestMessageBQ nested2 = TestProtoUtil.generateTestMessage(now);
+        TestNestedRepeatedMessageBQ message = TestNestedRepeatedMessageBQ.newBuilder()
+                .setNumberField(123)
+                .setSingleMessage(singleMessage)
+                .addRepeatedMessage(nested1)
+                .addRepeatedMessage(nested2)
+                .addRepeatedNumberField(11)
+                .addRepeatedNumberField(12)
+                .build();
+
+        DynamicMessage convertedMessage = converter.convert(new Message(null, message.toByteArray()));
+        System.out.println(convertedMessage);
     }
 }

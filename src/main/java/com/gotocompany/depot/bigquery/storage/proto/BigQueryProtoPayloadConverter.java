@@ -122,5 +122,4 @@ public class BigQueryProtoPayloadConverter {
         }
         messageBuilder.setField(outputField, repeatedNestedFields);
     }
-
 }

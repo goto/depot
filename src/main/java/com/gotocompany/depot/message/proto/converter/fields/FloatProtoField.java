@@ -23,7 +23,7 @@ public class FloatProtoField implements ProtoField {
     }
 
     public Double getValue(Object field) {
-        return Double.valueOf(fieldValue.toString());
+        return Double.valueOf(field.toString());
     }
 
     @Override

@@ -1,7 +1,5 @@
 package com.gotocompany.depot.message.proto.converter.fields;
 
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 
 import java.util.Collection;
@@ -25,7 +23,7 @@ public class IntegerProtoField implements ProtoField {
     }
 
     public Long getValue(Object field) {
-        return Long.valueOf(fieldValue.toString());
+        return Long.valueOf(field.toString());
     }
 
     @Override
