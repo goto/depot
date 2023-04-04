@@ -121,7 +121,7 @@ public class ProtoParsedMessageTest {
         MessageSchema messageSchema = messageParser.getSchema("com.gotocompany.depot.TestMessageBQ", descriptorsMap);
         Map<String, Object> fields = new ProtoParsedMessage(messageProtoParser.parse(message.toByteArray())).getMapping(messageSchema);
         Map durationFields = (Map) fields.get("trip_duration");
-        assertEquals("order-1", fields.get("order_number"));
+        assertEquals(message.getOrderNumber(), fields.get("order_number"));
         assertEquals(1L, durationFields.get("seconds"));
         assertEquals(1000L, durationFields.get("nanos"));
     }

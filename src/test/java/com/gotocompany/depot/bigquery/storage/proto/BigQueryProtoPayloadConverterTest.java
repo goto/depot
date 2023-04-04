@@ -225,12 +225,12 @@ public class BigQueryProtoPayloadConverterTest {
                 .build();
         DynamicMessage convertedMessage = converter.convert(new Message(null, message.toByteArray()));
         DynamicMessage sm1 = (DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("single_message"));
-        Assert.assertEquals("order-1", sm1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        Assert.assertEquals(singleMessage.getOrderNumber(), sm1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
         List<DynamicMessage> nestedMessage = (List) convertedMessage.getField(testDescriptor.findFieldByName("repeated_message"));
         Assert.assertEquals(2, nestedMessage.size());
         DynamicMessage nestedMessage1 = nestedMessage.get(0);
         DynamicMessage nestedMessage2 = nestedMessage.get(1);
-        Assert.assertEquals("order-2", nestedMessage1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
-        Assert.assertEquals("order-3", nestedMessage2.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        Assert.assertEquals(nested1.getOrderNumber(), nestedMessage1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
+        Assert.assertEquals(nested2.getOrderNumber(), nestedMessage2.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
     }
 }
