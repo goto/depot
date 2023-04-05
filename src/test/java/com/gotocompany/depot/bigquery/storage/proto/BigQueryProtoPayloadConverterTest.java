@@ -3,9 +3,7 @@ package com.gotocompany.depot.bigquery.storage.proto;
 import com.google.cloud.bigquery.storage.v1.BQTableSchemaToProtoDescriptor;
 import com.google.cloud.bigquery.storage.v1.TableFieldSchema;
 import com.google.cloud.bigquery.storage.v1.TableSchema;
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.Duration;
-import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.*;
 import com.gotocompany.depot.StatusBQ;
 import com.gotocompany.depot.TestMessageBQ;
 import com.gotocompany.depot.TestNestedRepeatedMessageBQ;
@@ -20,6 +18,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -52,6 +51,11 @@ public class BigQueryProtoPayloadConverterTest {
                         .setType(TableFieldSchema.Type.STRING)
                         .build())
                 .addFields(TableFieldSchema.newBuilder()
+                        .setName("created_at")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.DATETIME)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
                         .setName("aliases")
                         .setMode(TableFieldSchema.Mode.REPEATED)
                         .setType(TableFieldSchema.Type.STRING)
@@ -78,6 +82,11 @@ public class BigQueryProtoPayloadConverterTest {
                         .build())
                 .addFields(TableFieldSchema.newBuilder()
                         .setName("status")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.STRING)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("properties")
                         .setMode(TableFieldSchema.Mode.NULLABLE)
                         .setType(TableFieldSchema.Type.STRING)
                         .build())
@@ -239,5 +248,50 @@ public class BigQueryProtoPayloadConverterTest {
         Assert.assertEquals(Long.valueOf(11), repeatedNumbers.get(0));
         Assert.assertEquals(Long.valueOf(12), repeatedNumbers.get(1));
         Assert.assertEquals(Long.valueOf(13), repeatedNumbers.get(2));
+    }
+
+    @Test
+    public void shouldConvertTimeStamp() throws IOException {
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setCreatedAt(Timestamp.newBuilder().setSeconds(1680609402L).build())
+                .build();
+        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        long createdAt = (long) convertedMessage.getField(testDescriptor.findFieldByName("created_at"));
+        // Microseconds
+        Assert.assertEquals(1680609402000000L, createdAt);
+    }
+
+    @Test
+    public void shouldConvertStruct() throws IOException {
+        ListValue.Builder builder = ListValue.newBuilder();
+        ListValue listValue = builder
+                .addValues(Value.newBuilder().setNumberValue(1).build())
+                .addValues(Value.newBuilder().setNumberValue(2).build())
+                .addValues(Value.newBuilder().setNumberValue(3).build())
+                .build();
+        Struct value = Struct.newBuilder()
+                .putFields("string", Value.newBuilder().setStringValue("string_val").build())
+                .putFields("list", Value.newBuilder().setListValue(listValue).build())
+                .putFields("boolean", Value.newBuilder().setBoolValue(true).build())
+                .putFields("number", Value.newBuilder().setNumberValue(123.45).build())
+                .build();
+
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setOrderNumber("order-1")
+                .setProperties(value)
+                .build();
+        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        String properties = (String) (convertedMessage.getField(testDescriptor.findFieldByName("properties")));
+        String expected = "{\n"
+                + "  \"number\": 123.45,\n"
+                + "  \"string\": \"string_val\",\n"
+                + "  \"list\": [\n"
+                + "    1,\n"
+                + "    2,\n"
+                + "    3\n"
+                + "  ],\n"
+                + "  \"boolean\": true\n"
+                + "}\n";
+        JSONAssert.assertEquals(expected, properties, true);
     }
 }

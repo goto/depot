@@ -1,6 +1,5 @@
 package com.gotocompany.depot.bigquery.storage.proto;
 
-import com.google.api.client.util.DateTime;
 import com.google.api.client.util.Preconditions;
 import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.protobuf.Descriptors;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor
 public class BigQueryProtoPayloadConverter {
@@ -76,7 +76,7 @@ public class BigQueryProtoPayloadConverter {
                 continue;
             }
             if (fieldValue instanceof Instant) {
-                messageBuilder.setField(outputField, new DateTime(((Instant) fieldValue).toEpochMilli()));
+                messageBuilder.setField(outputField, getBQInstant((Instant) fieldValue));
             } else if (protoField.getClass().getName().equals(MessageProtoField.class.getName())
                     || protoField.getClass().getName().equals(DurationProtoField.class.getName())) {
                 Descriptors.Descriptor messageType = outputField.getMessageType();
@@ -87,6 +87,11 @@ public class BigQueryProtoPayloadConverter {
             }
         }
         return messageBuilder.build();
+    }
+
+    private long getBQInstant(Instant instant) {
+        // Timestamp should be in microseconds
+        return TimeUnit.SECONDS.toMicros(instant.getEpochSecond()) + TimeUnit.NANOSECONDS.toMicros(instant.getNano());
     }
 
     private void floatCheck(Object fieldValue) {
@@ -110,7 +115,7 @@ public class BigQueryProtoPayloadConverter {
                 repeatedNestedFields.add(convert((DynamicMessage) f, messageType));
             } else {
                 if (f instanceof Instant) {
-                    repeatedNestedFields.add(new DateTime(((Instant) f).toEpochMilli()));
+                    repeatedNestedFields.add(getBQInstant((Instant) f));
                 } else {
                     floatCheck(f);
                     repeatedNestedFields.add(f);
