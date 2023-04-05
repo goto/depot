@@ -11,7 +11,7 @@ import com.gotocompany.depot.config.BigQuerySinkConfig;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public interface BigQueryWriter {
+public interface BigQueryWriter extends AutoCloseable {
 
     void init(Function<BigQuerySinkConfig, BigQueryWriteClient> bqWriterCreator,
               Function<BigQuerySinkConfig, CredentialsProvider> credCreator,

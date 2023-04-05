@@ -28,7 +28,7 @@ import lombok.Getter;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public class BigQueryProtoWriter implements AutoCloseable, BigQueryWriter {
+public class BigQueryProtoWriter implements BigQueryWriter {
 
     private final BigQuerySinkConfig config;
     @Getter

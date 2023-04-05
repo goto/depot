@@ -71,12 +71,18 @@ public class BigQueryProtoPayloadConverter {
             }
             ProtoField protoField = ProtoFieldFactory.getField(inputField, inputMessage.getField(inputField));
             Object fieldValue = protoField.getValue();
+            if (fieldValue.toString().isEmpty()) {
+                continue;
+            }
             if (fieldValue instanceof List) {
                 addRepeatedFields(messageBuilder, outputField, (List<?>) fieldValue);
                 continue;
             }
             if (fieldValue instanceof Instant) {
-                messageBuilder.setField(outputField, getBQInstant((Instant) fieldValue));
+                long timeStampValue = getBQInstant((Instant) fieldValue);
+                if (timeStampValue > 0) {
+                    messageBuilder.setField(outputField, timeStampValue);
+                }
             } else if (protoField.getClass().getName().equals(MessageProtoField.class.getName())
                     || protoField.getClass().getName().equals(DurationProtoField.class.getName())) {
                 Descriptors.Descriptor messageType = outputField.getMessageType();
@@ -115,7 +121,10 @@ public class BigQueryProtoPayloadConverter {
                 repeatedNestedFields.add(convert((DynamicMessage) f, messageType));
             } else {
                 if (f instanceof Instant) {
-                    repeatedNestedFields.add(getBQInstant((Instant) f));
+                    long timeStampValue = getBQInstant((Instant) f);
+                    if (timeStampValue > 0) {
+                        messageBuilder.setField(outputField, timeStampValue);
+                    }
                 } else {
                     floatCheck(f);
                     repeatedNestedFields.add(f);

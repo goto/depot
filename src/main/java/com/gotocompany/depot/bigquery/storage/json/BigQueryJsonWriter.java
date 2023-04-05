@@ -14,7 +14,7 @@ import com.gotocompany.depot.config.BigQuerySinkConfig;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public class BigQueryJsonWriter implements AutoCloseable, BigQueryWriter {
+public class BigQueryJsonWriter implements BigQueryWriter {
 
     public BigQueryJsonWriter(BigQuerySinkConfig config) {
 
