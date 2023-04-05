@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -67,22 +66,21 @@ public class ProtoParsedMessage implements ParsedMessage {
 
     @Override
     public Map<SchemaField, Object> getFields() {
-        Map<Descriptors.FieldDescriptor, Object> allFields = new TreeMap<>(dynamicMessage.getAllFields());
-        for (Descriptors.FieldDescriptor field : dynamicMessage.getDescriptorForType().getFields()) {
-            if (!field.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.ENUM)) {
-                continue;
+        return dynamicMessage.getDescriptorForType().getFields().stream().filter(fd -> {
+            Object value = dynamicMessage.getField(fd);
+            if (value == null) {
+                return false;
             }
-            if (!allFields.containsKey(field)) {
-                allFields.put(field, dynamicMessage.getField(field));
+            if (fd.isRepeated()) {
+                return !((List<?>) value).isEmpty();
             }
-        }
-        return allFields.entrySet().stream().collect(Collectors.toMap(e -> new ProtoSchemaField(e.getKey()), e -> {
-            Object value = e.getValue();
-            Descriptors.FieldDescriptor key = e.getKey();
-            if (key.isRepeated()) {
-                return ((List<Object>) value).stream().map(v -> getProtoValue(key, v)).collect(Collectors.toList());
+            return !value.toString().isEmpty();
+        }).collect(Collectors.toMap(ProtoSchemaField::new, fd -> {
+            Object value = dynamicMessage.getField(fd);
+            if (fd.isRepeated()) {
+                return ((List<?>) value).stream().map(v -> getProtoValue(fd, v)).collect(Collectors.toList());
             }
-            return getProtoValue(key, value);
+            return getProtoValue(fd, value);
         }));
     }
 

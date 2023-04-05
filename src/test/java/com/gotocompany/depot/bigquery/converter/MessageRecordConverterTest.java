@@ -354,18 +354,14 @@ public class MessageRecordConverterTest {
         Tuple3<MessageRecordConverter, List<Message>, Map<String, Object>> testData = setupForTypeTest("created_at", timestampData);
         MessageRecordConverter converter = testData.getV1();
         List<Message> inputData = testData.getV2();
-        Map<String, Object> record1ExpectedColumns = new HashMap<String, Object>() {{
-            put("created_at", new DateTime(now.toEpochMilli()));
-            put("status", "COMPLETED");
-            putAll(testData.getV3());
-        }};
+        DateTime expectedDayTime = new DateTime(now.toEpochMilli());
 
         Records records = converter.convert(inputData);
 
         assertEquals(1, records.getValidRecords().size());
         assertEquals(0, records.getInvalidRecords().size());
         Map<String, Object> record1Columns = records.getValidRecords().get(0).getColumns();
-        assertEquals(record1ExpectedColumns, record1Columns);
+        assertEquals(expectedDayTime, record1Columns.get("created_at"));
     }
 
     @Test

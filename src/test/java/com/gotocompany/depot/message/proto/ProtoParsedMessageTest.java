@@ -1,5 +1,6 @@
 package com.gotocompany.depot.message.proto;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Duration;
 import com.google.protobuf.DynamicMessage;
@@ -25,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -309,21 +311,54 @@ public class ProtoParsedMessageTest {
         Assert.assertEquals("CATEGORY_1", fields.get(enumValue.get()));
     }
 
-    private Object getFieldValueFromFields(Map<SchemaField, Object> fields, String name) {
+    private Object getFieldsValue(Map<SchemaField, Object> fields, String name) {
         return fields.entrySet().stream().filter(f -> f.getKey().getName().equals(name)).findFirst().get().getValue();
     }
 
+
     @Test
-    public void shouldReturnParsedMessageIfFieldValueisOfTypeMessage() throws IOException {
+    public void shouldReturnParsedMessageIfFieldValueIsOfTypeMessage() throws IOException {
         TestMessage msg = TestMessage.newBuilder().setOrderNumber("order-number").build();
         TestTypesMessage message = TestTypesMessage.newBuilder().setMessageValue(msg).addAllListMessageValues(Arrays.asList(msg, msg)).build();
         Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
         Map<SchemaField, Object> fields = protoParsedMessage.getFields();
-        Assert.assertEquals(3, fields.size());
-        Assert.assertTrue(getFieldValueFromFields(fields, "message_value") instanceof ProtoParsedMessage);
-        List<Object> listValue = (List<Object>) getFieldValueFromFields(fields, "list_message_values");
+        Assert.assertTrue(getFieldsValue(fields, "message_value") instanceof ProtoParsedMessage);
+        List<?> listValue = (List<?>) getFieldsValue(fields, "list_message_values");
         Assert.assertEquals(2, listValue.size());
         Assert.assertTrue(listValue.get(0) instanceof ProtoParsedMessage);
+    }
+
+    private boolean isFieldPresent(Map<SchemaField, Object> fields, String name) {
+        return fields.entrySet().stream().anyMatch(f -> f.getKey().getName().equals(name));
+    }
+
+    @Test
+    public void shouldIncludeDefaultValuesForMessage() throws IOException {
+        TestTypesMessage  message = TestTypesMessage.getDefaultInstance();
+        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
+        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
+        Map<SchemaField, Object> fields = protoParsedMessage.getFields();
+        Assert.assertEquals(Float.valueOf("0.0"), getFieldsValue(fields, "float_value"));
+        Assert.assertEquals(Double.parseDouble("0.0"), getFieldsValue(fields, "double_value"));
+        Assert.assertEquals(0, getFieldsValue(fields, "int32_value"));
+        Assert.assertEquals(0L, getFieldsValue(fields, "int64_value"));
+        Assert.assertEquals(0, getFieldsValue(fields, "uint32_value"));
+        Assert.assertEquals(0L, getFieldsValue(fields, "uint64_value"));
+        Assert.assertEquals(0, getFieldsValue(fields, "fixed32_value"));
+        Assert.assertEquals(0L, getFieldsValue(fields, "fixed64_value"));
+        Assert.assertEquals(0, getFieldsValue(fields, "sfixed32_value"));
+        Assert.assertEquals(0L, getFieldsValue(fields, "sfixed64_value"));
+        Assert.assertEquals(0, getFieldsValue(fields, "sint32_value"));
+        Assert.assertEquals(0L, getFieldsValue(fields, "sint64_value"));
+        Assert.assertEquals("CATEGORY_1", getFieldsValue(fields, "enum_value"));
+        Assert.assertEquals("", ((ByteString) getFieldsValue(fields, "bytes_value")).toString(StandardCharsets.UTF_8));
+        Assert.assertEquals(false, getFieldsValue(fields, "bool_value"));
+        // these fields shouldn't be included
+        Assert.assertFalse(isFieldPresent(fields, "string_value"));
+        Assert.assertFalse(isFieldPresent(fields, "message_value"));
+        Assert.assertFalse(isFieldPresent(fields, "list_values"));
+        Assert.assertFalse(isFieldPresent(fields, "list_message_values"));
+        Assert.assertFalse(isFieldPresent(fields, "timestamp_value"));
     }
 }
