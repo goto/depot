@@ -8,7 +8,7 @@ import com.google.protobuf.Value;
 import com.gotocompany.depot.exception.DeserializerException;
 import com.gotocompany.depot.message.LogicalValue;
 import com.gotocompany.depot.schema.LogicalType;
-import com.gotocompany.depot.schema.proto.ProtoSchema;
+import com.gotocompany.depot.schema.Schema;
 import org.json.JSONObject;
 
 import java.time.Duration;
@@ -18,14 +18,16 @@ import java.util.stream.Collectors;
 
 public class ProtoLogicalValue implements LogicalValue {
     private final Message message;
+    private final Schema schema;
 
-    public ProtoLogicalValue(Message message) {
+    public ProtoLogicalValue(Message message, Schema schema) {
         this.message = message;
+        this.schema = schema;
     }
 
     @Override
     public LogicalType getType() {
-        return new ProtoSchema(message.getDescriptorForType()).logicalType();
+        return schema.logicalType();
     }
 
     @Override

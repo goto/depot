@@ -98,6 +98,6 @@ public class ProtoParsedMessage implements ParsedMessage {
 
     @Override
     public LogicalValue getLogicalValue() {
-        return new ProtoLogicalValue(dynamicMessage);
+        return new ProtoLogicalValue(dynamicMessage, getSchema());
     }
 }
