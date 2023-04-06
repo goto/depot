@@ -30,13 +30,12 @@ public class ProtoLogicalValue implements LogicalValue {
 
     @Override
     public Instant getTimestamp() {
-        Timestamp timestamp = null;
         try {
-            timestamp = Timestamp.parseFrom(message.toByteArray());
+            Timestamp timestamp = Timestamp.parseFrom(message.toByteArray());
+            return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
         } catch (InvalidProtocolBufferException e) {
             throw new DeserializerException(getErrMessage("Timestamp"), e);
         }
-        return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
     }
 
     private Object getValue(Value value) {
@@ -64,24 +63,22 @@ public class ProtoLogicalValue implements LogicalValue {
 
     @Override
     public Map<String, Object> getStruct() {
-        Struct s = null;
         try {
-            s = Struct.parseFrom(message.toByteArray());
+            Struct s = Struct.parseFrom(message.toByteArray());
+            return getStructValue(s);
         } catch (InvalidProtocolBufferException e) {
             throw new DeserializerException(getErrMessage("Struct"), e);
         }
-        return getStructValue(s);
     }
 
     @Override
     public Duration getDuration() {
-        com.google.protobuf.Duration duration = null;
         try {
-            duration = com.google.protobuf.Duration.parseFrom(message.toByteArray());
+            com.google.protobuf.Duration duration = com.google.protobuf.Duration.parseFrom(message.toByteArray());
+            return Duration.ofSeconds(duration.getSeconds(), duration.getNanos());
         } catch (InvalidProtocolBufferException e) {
             throw new DeserializerException(getErrMessage("Duration"), e);
         }
-        return Duration.ofSeconds(duration.getSeconds(), duration.getNanos());
     }
 
     private String getErrMessage(String type) {
