@@ -1,12 +1,14 @@
 package com.gotocompany.depot.bigquery.storage.proto;
 
 import com.google.cloud.bigquery.storage.v1.BQTableSchemaToProtoDescriptor;
+import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.cloud.bigquery.storage.v1.TableFieldSchema;
 import com.google.cloud.bigquery.storage.v1.TableSchema;
 import com.google.protobuf.*;
 import com.gotocompany.depot.StatusBQ;
 import com.gotocompany.depot.TestMessageBQ;
 import com.gotocompany.depot.TestNestedRepeatedMessageBQ;
+import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.message.Message;
@@ -45,6 +47,31 @@ public class BigQueryProtoPayloadConverterTest {
         ClassLoadStencilClient stencilClient = Mockito.mock(ClassLoadStencilClient.class, CALLS_REAL_METHODS);
         protoMessageParser = new ProtoMessageParser(stencilClient);
         testMessageBQSchema = TableSchema.newBuilder()
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("message_offset")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.INT64)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("message_topic")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.STRING)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("load_time")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.TIMESTAMP)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("message_timestamp")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.TIMESTAMP)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("message_partition")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.INT64)
+                        .build())
                 .addFields(TableFieldSchema.newBuilder()
                         .setName("order_number")
                         .setMode(TableFieldSchema.Mode.NULLABLE)
@@ -139,7 +166,14 @@ public class BigQueryProtoPayloadConverterTest {
                 .setStatus(StatusBQ.COMPLETED)
                 .addAliases("alias1").addAliases("alias2")
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         Assert.assertEquals("order-no-112", convertedMessage.getField(testDescriptor.findFieldByName("order_number")));
         Assert.assertEquals("order-url-1", convertedMessage.getField(testDescriptor.findFieldByName("order_url")));
         Assert.assertEquals(1200L, convertedMessage.getField(testDescriptor.findFieldByName("discount")));
@@ -155,7 +189,14 @@ public class BigQueryProtoPayloadConverterTest {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
                 .setTripDuration(Duration.newBuilder().setSeconds(1234L).setNanos(231).build())
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         DynamicMessage tripDuration = ((DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("trip_duration")));
         Assert.assertEquals(1234L, tripDuration.getField(tripDuration.getDescriptorForType().findFieldByName("seconds")));
         Assert.assertEquals(231L, tripDuration.getField(tripDuration.getDescriptorForType().findFieldByName("nanos")));
@@ -169,7 +210,14 @@ public class BigQueryProtoPayloadConverterTest {
                 .putCurrentState("k1", "v1")
                 .putCurrentState("k2", "v2")
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         List<Object> currentState = ((List<Object>) convertedMessage.getField(testDescriptor.findFieldByName("current_state")));
         List<Tuple<String, String>> actual = currentState.stream().map(o -> {
             Map<String, String> values = ((DynamicMessage) o).getAllFields().entrySet().stream().collect(
@@ -233,7 +281,15 @@ public class BigQueryProtoPayloadConverterTest {
                 .addRepeatedNumberField(12)
                 .addRepeatedNumberField(13)
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, message.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, message.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         DynamicMessage sm1 = (DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("single_message"));
         Assert.assertEquals(singleMessage.getOrderNumber(), sm1.getField(sm1.getDescriptorForType().findFieldByName("order_number")));
         List<DynamicMessage> nestedMessage = (List) convertedMessage.getField(testDescriptor.findFieldByName("repeated_message"));
@@ -255,7 +311,14 @@ public class BigQueryProtoPayloadConverterTest {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
                 .setCreatedAt(Timestamp.newBuilder().setSeconds(1680609402L).build())
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         long createdAt = (long) convertedMessage.getField(testDescriptor.findFieldByName("created_at"));
         // Microseconds
         Assert.assertEquals(1680609402000000L, createdAt);
@@ -280,7 +343,14 @@ public class BigQueryProtoPayloadConverterTest {
                 .setOrderNumber("order-1")
                 .setProperties(value)
                 .build();
-        DynamicMessage convertedMessage = converter.convert(new Message(null, m1.toByteArray()));
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         String properties = (String) (convertedMessage.getField(testDescriptor.findFieldByName("properties")));
         String expected = "{\n"
                 + "  \"number\": 123.45,\n"
@@ -294,4 +364,125 @@ public class BigQueryProtoPayloadConverterTest {
                 + "}\n";
         JSONAssert.assertEquals(expected, properties, true);
     }
+
+    @Test
+    public void shouldHaveMetadataOnPayload() throws InvalidProtocolBufferException {
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setCreatedAt(Timestamp.newBuilder().setSeconds(1680609402L).build())
+                .build();
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(
+                    null,
+                    m1.toByteArray(),
+                    new Tuple<>("message_partition", 10),
+                    new Tuple<>("message_topic", "test-topic"),
+                    new Tuple<>("message_offset", 143),
+                    new Tuple<>("load_time", 1680609402L),
+                    new Tuple<>("message_timestamp", 1680609402L))
+            );
+            add(new Message(
+                    null,
+                    m1.toByteArray(),
+                    new Tuple<>("message_partition", 10),
+                    new Tuple<>("message_topic", "test-topic"),
+                    new Tuple<>("message_offset", 144L),
+                    new Tuple<>("load_time", 1680770429L),
+                    new Tuple<>("message_timestamp", 1680770429L))
+            );
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(2, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
+        Assert.assertEquals(10L, convertedMessage.getField(testDescriptor.findFieldByName("message_partition")));
+        Assert.assertEquals("test-topic", convertedMessage.getField(testDescriptor.findFieldByName("message_topic")));
+        Assert.assertEquals(143L, convertedMessage.getField(testDescriptor.findFieldByName("message_offset")));
+        Assert.assertEquals(1680609402000L, convertedMessage.getField(testDescriptor.findFieldByName("load_time")));
+        Assert.assertEquals(1680609402000L, convertedMessage.getField(testDescriptor.findFieldByName("message_timestamp")));
+
+        serializedRows = protoPayload.getSerializedRows(1);
+        convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
+        Assert.assertEquals(10L, convertedMessage.getField(testDescriptor.findFieldByName("message_partition")));
+        Assert.assertEquals("test-topic", convertedMessage.getField(testDescriptor.findFieldByName("message_topic")));
+        Assert.assertEquals(144L, convertedMessage.getField(testDescriptor.findFieldByName("message_offset")));
+        Assert.assertEquals(1680770429000L, convertedMessage.getField(testDescriptor.findFieldByName("load_time")));
+        Assert.assertEquals(1680770429000L, convertedMessage.getField(testDescriptor.findFieldByName("message_timestamp")));
+    }
+
+
+    @Test
+    public void shouldHaveMetadataOnPayloadWithNameSpace() throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
+        System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "__kafka_metadata");
+        TableSchema schema = TableSchema.newBuilder()
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("created_at")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.DATETIME)
+                        .build())
+                .addFields(TableFieldSchema.newBuilder()
+                        .setName("__kafka_metadata")
+                        .setMode(TableFieldSchema.Mode.NULLABLE)
+                        .setType(TableFieldSchema.Type.STRUCT)
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("message_offset")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.INT64)
+                                .build())
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("message_topic")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.STRING)
+                                .build())
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("load_time")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.TIMESTAMP)
+                                .build())
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("message_timestamp")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.TIMESTAMP)
+                                .build())
+                        .addFields(TableFieldSchema.newBuilder()
+                                .setName("message_partition")
+                                .setMode(TableFieldSchema.Mode.NULLABLE)
+                                .setType(TableFieldSchema.Type.INT64)
+                                .build())
+                        .build())
+                .build();
+        testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(schema);
+        BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
+        BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
+        converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
+        Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
+
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setCreatedAt(Timestamp.newBuilder().setSeconds(1680609402L).build())
+                .build();
+
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(
+                    null,
+                    m1.toByteArray(),
+                    new Tuple<>("message_partition", 10),
+                    new Tuple<>("message_topic", "test-topic"),
+                    new Tuple<>("message_offset", 143),
+                    new Tuple<>("load_time", 1680609402L),
+                    new Tuple<>("message_timestamp", 1680609402L))
+            );
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
+        DynamicMessage metadata = (DynamicMessage) convertedMessage.getField(testDescriptor.findFieldByName("__kafka_metadata"));
+        Assert.assertEquals(10L, metadata.getField(metadata.getDescriptorForType().findFieldByName("message_partition")));
+        Assert.assertEquals("test-topic", metadata.getField(metadata.getDescriptorForType().findFieldByName("message_topic")));
+        Assert.assertEquals(143L, metadata.getField(metadata.getDescriptorForType().findFieldByName("message_offset")));
+        Assert.assertEquals(1680609402000L, metadata.getField(metadata.getDescriptorForType().findFieldByName("load_time")));
+        Assert.assertEquals(1680609402000L, metadata.getField(metadata.getDescriptorForType().findFieldByName("message_timestamp")));
+    }
+
 }

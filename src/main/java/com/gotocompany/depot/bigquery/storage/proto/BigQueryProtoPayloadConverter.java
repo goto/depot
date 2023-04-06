@@ -37,11 +37,12 @@ public class BigQueryProtoPayloadConverter {
         for (int index = 0; index < messages.size(); index++) {
             Message message = messages.get(index);
             try {
-                DynamicMessage convertedMessage = convert(message);
                 BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, null, true);
+                DynamicMessage convertedMessage = convert(message);
                 payload.addMetadataRecord(metadata);
                 rowBuilder.addSerializedRows(convertedMessage.toByteString());
             } catch (Exception e) {
+                e.printStackTrace();
                 ErrorInfo info = new ErrorInfo(e, ErrorType.DEFAULT_ERROR);
                 BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, info, false);
                 payload.addMetadataRecord(metadata);
@@ -51,16 +52,19 @@ public class BigQueryProtoPayloadConverter {
         return payload;
     }
 
-    public DynamicMessage convert(Message message) throws IOException {
-        SinkConnectorSchemaMessageMode mode = config.getSinkConnectorSchemaMessageMode();
+
+    private DynamicMessage convert(Message message) throws IOException {
+        SinkConnectorSchemaMessageMode mode = this.config.getSinkConnectorSchemaMessageMode();
         String schemaClass = mode == SinkConnectorSchemaMessageMode.LOG_MESSAGE
-                ? config.getSinkConnectorSchemaProtoMessageClass() : config.getSinkConnectorSchemaProtoKeyClass();
+                ? this.config.getSinkConnectorSchemaProtoMessageClass() : this.config.getSinkConnectorSchemaProtoKeyClass();
         ParsedMessage parsedMessage = parser.parse(message, mode, schemaClass);
-        parsedMessage.validate(config);
-        return convert((DynamicMessage) parsedMessage.getRaw(), writer.getDescriptor());
+        parsedMessage.validate(this.config);
+        DynamicMessage.Builder messageBuilder = convert((DynamicMessage) parsedMessage.getRaw(), writer.getDescriptor());
+        BigQueryProtoUtils.addMetadata(message.getMetadata(), messageBuilder, writer.getDescriptor(), config);
+        return messageBuilder.build();
     }
 
-    public DynamicMessage convert(DynamicMessage inputMessage, Descriptors.Descriptor descriptor) {
+    private DynamicMessage.Builder convert(DynamicMessage inputMessage, Descriptors.Descriptor descriptor) {
         DynamicMessage.Builder messageBuilder = DynamicMessage.newBuilder(descriptor);
         List<Descriptors.FieldDescriptor> allFields = inputMessage.getDescriptorForType().getFields();
         for (Descriptors.FieldDescriptor inputField : allFields) {
@@ -86,13 +90,13 @@ public class BigQueryProtoPayloadConverter {
             } else if (protoField.getClass().getName().equals(MessageProtoField.class.getName())
                     || protoField.getClass().getName().equals(DurationProtoField.class.getName())) {
                 Descriptors.Descriptor messageType = outputField.getMessageType();
-                messageBuilder.setField(outputField, convert((DynamicMessage) fieldValue, messageType));
+                messageBuilder.setField(outputField, convert((DynamicMessage) fieldValue, messageType).build());
             } else {
                 floatCheck(fieldValue);
                 messageBuilder.setField(outputField, fieldValue);
             }
         }
-        return messageBuilder.build();
+        return messageBuilder;
     }
 
     private long getBQInstant(Instant instant) {
@@ -118,7 +122,7 @@ public class BigQueryProtoPayloadConverter {
         for (Object f : fieldValue) {
             if (f instanceof DynamicMessage) {
                 Descriptors.Descriptor messageType = outputField.getMessageType();
-                repeatedNestedFields.add(convert((DynamicMessage) f, messageType));
+                repeatedNestedFields.add(convert((DynamicMessage) f, messageType).build());
             } else {
                 if (f instanceof Instant) {
                     long timeStampValue = getBQInstant((Instant) f);
