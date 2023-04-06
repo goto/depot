@@ -17,7 +17,6 @@ import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.cloud.bigquery.storage.v1.WriteStreamView;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors;
-import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.bigquery.storage.BigQueryStream;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
@@ -74,9 +73,8 @@ public class BigQueryProtoWriter implements BigQueryWriter {
 
     // In the callback one can have the container and set the errors and/or log the response errors
     @Override
-    public AppendRowsResponse appendAndGet(BigQueryPayload rows, ApiFutureCallback<AppendRowsResponse> callback)
+    public AppendRowsResponse appendAndGet(com.gotocompany.depot.bigquery.storage.BigQueryPayload rows, ApiFutureCallback<AppendRowsResponse> callback)
             throws ExecutionException, InterruptedException {
-        assert (rows instanceof BigQueryProtoPayload);
         ApiFuture<AppendRowsResponse> future = streamWriter.append((ProtoRows) rows.getPayload());
         ApiFutures.addCallback(future, callback, MoreExecutors.directExecutor());
         return future.get();

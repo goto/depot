@@ -1,23 +1,31 @@
 package com.gotocompany.depot.bigquery.storage;
 
+import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.gotocompany.depot.bigquery.storage.proto.BigQueryRecordMeta;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public interface BigQueryPayload extends Iterable<BigQueryRecordMeta> {
-    List<BigQueryRecordMeta> RECORD_METADATA = new ArrayList<>();
 
-    default void addMetadataRecord(BigQueryRecordMeta record) {
-        RECORD_METADATA.add(record);
+public class BigQueryPayload implements Iterable<BigQueryRecordMeta> {
+    private final List<BigQueryRecordMeta> recordMetadata = new ArrayList<>();
+    private ProtoRows payload;
+
+    public void addMetadataRecord(BigQueryRecordMeta record) {
+        recordMetadata.add(record);
     }
 
-    default Iterator<BigQueryRecordMeta> iterator() {
-        return RECORD_METADATA.iterator();
+    public Iterator<BigQueryRecordMeta> iterator() {
+        return recordMetadata.iterator();
     }
 
-    Object getPayload();
+    public Object getPayload() {
+        return payload;
+    }
 
-    void setPayload(Object payload);
+    public void setPayload(Object payload) {
+        this.payload = (ProtoRows) payload;
+    }
+
 }

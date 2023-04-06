@@ -73,7 +73,7 @@ public class BigQueryProtoWriterTest {
         Container container = new Container("");
         AppendCompleteCallback callback = new AppendCompleteCallback(container);
         ProtoRows rows = Mockito.mock(ProtoRows.class);
-        BigQueryPayload payload = new BigQueryProtoPayload();
+        com.gotocompany.depot.bigquery.storage.BigQueryPayload payload = new BigQueryPayload();
         payload.setPayload(rows);
         ApiFuture<AppendRowsResponse> future = Mockito.mock(ApiFuture.class);
         AppendRowsResponse apiResponse = Mockito.mock(AppendRowsResponse.class);

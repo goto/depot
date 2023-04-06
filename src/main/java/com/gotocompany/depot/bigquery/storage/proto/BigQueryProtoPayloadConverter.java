@@ -31,9 +31,9 @@ public class BigQueryProtoPayloadConverter {
     private MessageParser parser;
     private BigQueryProtoWriter writer;
 
-    public BigQueryPayload convert(List<Message> messages) {
+    public com.gotocompany.depot.bigquery.storage.BigQueryPayload convert(List<Message> messages) {
         ProtoRows.Builder rowBuilder = ProtoRows.newBuilder();
-        BigQueryProtoPayload payload = new BigQueryProtoPayload();
+        BigQueryPayload payload = new BigQueryPayload();
         for (int index = 0; index < messages.size(); index++) {
             Message message = messages.get(index);
             try {

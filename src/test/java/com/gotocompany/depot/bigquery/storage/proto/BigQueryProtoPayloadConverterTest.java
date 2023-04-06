@@ -5,9 +5,7 @@ import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.cloud.bigquery.storage.v1.TableFieldSchema;
 import com.google.cloud.bigquery.storage.v1.TableSchema;
 import com.google.protobuf.*;
-import com.gotocompany.depot.StatusBQ;
-import com.gotocompany.depot.TestMessageBQ;
-import com.gotocompany.depot.TestNestedRepeatedMessageBQ;
+import com.gotocompany.depot.*;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
@@ -23,6 +21,7 @@ import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -485,4 +484,37 @@ public class BigQueryProtoPayloadConverterTest {
         Assert.assertEquals(1680609402000L, metadata.getField(metadata.getDescriptorForType().findFieldByName("message_timestamp")));
     }
 
+    @Test
+    public void shouldReturnInvalidRecords() throws InvalidProtocolBufferException {
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setCreatedAt(Timestamp.newBuilder().setSeconds(1680609402L).build())
+                .build();
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray(), new Tuple<>("message_offset", 11)));
+            add(new Message(null, "invalid".getBytes(StandardCharsets.UTF_8), new Tuple<>("message_offset", 12)));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        ByteString serializedRows = protoPayload.getSerializedRows(0);
+        DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
+        long createdAt = (long) convertedMessage.getField(testDescriptor.findFieldByName("created_at"));
+        // Microseconds
+        Assert.assertEquals(1680609402000000L, createdAt);
+
+        List<BigQueryRecordMeta> metas = new ArrayList<>();
+        for (BigQueryRecordMeta r : payload) {
+            metas.add(r);
+        }
+        BigQueryRecordMeta validRecord = metas.get(0);
+        BigQueryRecordMeta invalidRecord = metas.get(1);
+        Assert.assertTrue(validRecord.isValid());
+        Assert.assertFalse(invalidRecord.isValid());
+        Assert.assertNull(validRecord.getErrorInfo());
+        Assert.assertNotNull(invalidRecord.getErrorInfo());
+        Assert.assertEquals(0, validRecord.getIndex());
+        Assert.assertEquals(1, invalidRecord.getIndex());
+        Assert.assertEquals(11, validRecord.getMetadata().get("message_offset"));
+        Assert.assertEquals(12, invalidRecord.getMetadata().get("message_offset"));
+    }
 }
