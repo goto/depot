@@ -87,7 +87,7 @@ public class MessageRecordConverter {
     }
 
     private Object getFieldValue(SchemaField field, Object value) {
-        if (field.getType().equals(SchemaFieldType.FLOAT)) {
+        if (field.getType().equals(SchemaFieldType.FLOAT) || field.getType().equals(SchemaFieldType.DOUBLE)) {
             floatCheck(value);
         }
         if (field.getType().equals(SchemaFieldType.BYTES)) {
@@ -107,15 +107,27 @@ public class MessageRecordConverter {
         return value;
     }
 
+    private Object getListValue(SchemaField schemaField, List<?> value) {
+        return value
+                .stream()
+                .map(eachValue -> getFieldValue(schemaField, eachValue))
+                .collect(Collectors.toList());
+    }
+
+    private Object getValue(Map.Entry<SchemaField, Object> kv) {
+        SchemaField schemaField = kv.getKey();
+        Object value = kv.getValue();
+        if (schemaField.isRepeated()) {
+            return getListValue(schemaField, (List<?>) value);
+        }
+        return getFieldValue(schemaField, value);
+    }
+
     private Map<String, Object> getMapping(ParsedMessage msg) {
-        return msg.getFields().entrySet().stream().collect(Collectors.toMap(sfEntry -> sfEntry.getKey().getName(), e -> {
-            Object value = e.getValue();
-            SchemaField fd = e.getKey();
-            if (fd.isRepeated()) {
-                List<Object> listValue = (List<Object>) value;
-                return listValue.stream().map(o -> getFieldValue(fd, o)).collect(Collectors.toList());
-            }
-            return getFieldValue(fd, value);
-        }));
+        return msg
+                .getFields()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(kv -> kv.getKey().getName(), this::getValue));
     }
 }
