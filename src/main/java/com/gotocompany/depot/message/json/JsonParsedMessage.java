@@ -28,6 +28,11 @@ public class JsonParsedMessage implements ParsedMessage {
     }
 
     @Override
+    public JSONObject toJson(boolean preserveProtoFieldNames) {
+        return jsonObject;
+    }
+
+    @Override
     public void validate(SinkConfig config) {
 
     }

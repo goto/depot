@@ -1,12 +1,15 @@
 package com.gotocompany.depot.message;
 
 import com.gotocompany.depot.config.SinkConfig;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Map;
 
 public interface ParsedMessage {
     Object getRaw();
+
+    JSONObject toJson(boolean preserveProtoFieldNames);
 
     void validate(SinkConfig config);
 

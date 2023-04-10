@@ -4,6 +4,7 @@ import com.google.api.client.util.DateTime;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Duration;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.ListValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Timestamp;
@@ -576,5 +577,41 @@ public class ProtoParsedMessageTest {
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
         Object value = protoParsedMessage.getFieldByName("list_message_values[0]");
         Assert.assertEquals("{\"order_number\":\"123\"}", value.toString());
+    }
+
+    @Test
+    public void shouldReturnJsonObjectWithPreservedFieldNames() throws InvalidProtocolBufferException {
+        JSONObject jsonObject = new JSONObject(""
+                + "{\"string_value\": \"test-string\","
+                + " \"float_value\": 10.0, "
+                + "\"message_value\" : {\"order_number\" : \"order-1\", \"order_details\" : \"order-details-1\"}"
+                + "}");
+        TestTypesMessage message = TestTypesMessage
+                .newBuilder()
+                .setStringValue("test-string")
+                .setFloatValue(10.0f)
+                .setMessageValue(TestMessage.newBuilder().setOrderNumber("order-1").setOrderDetails("order-details-1"))
+                .build();
+        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
+        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
+        assertEquals(jsonObject.toString(), protoParsedMessage.toJson(true).toString());
+    }
+
+    @Test
+    public void shouldReturnJsonObjectWithNoPreservedFieldNames() throws InvalidProtocolBufferException {
+        JSONObject jsonObject = new JSONObject(""
+                + "{\"stringValue\": \"test-string\","
+                + " \"floatValue\": 10.0, "
+                + "\"messageValue\" : {\"orderNumber\" : \"order-1\", \"orderDetails\" : \"order-details-1\"}"
+                + "}");
+        TestTypesMessage message = TestTypesMessage
+                .newBuilder()
+                .setStringValue("test-string")
+                .setFloatValue(10.0f)
+                .setMessageValue(TestMessage.newBuilder().setOrderNumber("order-1").setOrderDetails("order-details-1"))
+                .build();
+        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
+        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
+        assertEquals(jsonObject.toString(), protoParsedMessage.toJson(false).toString());
     }
 }

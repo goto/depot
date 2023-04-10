@@ -4,7 +4,10 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.Preconditions;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
+import com.google.protobuf.util.JsonFormat;
+import com.gotocompany.depot.exception.DeserializerException;
 import com.jayway.jsonpath.Configuration;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.exception.UnknownFieldsException;
@@ -14,6 +17,7 @@ import com.gotocompany.depot.message.proto.converter.fields.ProtoField;
 import com.gotocompany.depot.message.proto.converter.fields.ProtoFieldFactory;
 import com.gotocompany.depot.utils.ProtoUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -41,6 +45,21 @@ public class ProtoParsedMessage implements ParsedMessage {
     @Override
     public Object getRaw() {
         return dynamicMessage;
+    }
+
+    @Override
+    public JSONObject toJson(boolean preserveProtoFieldNames) {
+        String json;
+        try {
+            if (preserveProtoFieldNames) {
+                json = JsonFormat.printer().preservingProtoFieldNames().print(dynamicMessage);
+            } else {
+                json = JsonFormat.printer().print(dynamicMessage);
+            }
+        } catch (InvalidProtocolBufferException e) {
+            throw new DeserializerException(e.getMessage());
+        }
+        return new JSONObject(json);
     }
 
     @Override
