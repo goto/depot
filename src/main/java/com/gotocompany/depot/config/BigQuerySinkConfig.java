@@ -101,7 +101,7 @@ public interface BigQuerySinkConfig extends SinkConfig {
     boolean getSinkBigqueryDynamicSchemaEnable();
 
     @DefaultValue("false")
-    @Key("SINK_BIGQUERY_STORAGE_API_ENABLED")
-    boolean getSinkBigqueryStorageAPIEnabled();
+    @Key("SINK_BIGQUERY_STORAGE_API_ENABLE")
+    boolean getSinkBigqueryStorageAPIEnable();
 }
 

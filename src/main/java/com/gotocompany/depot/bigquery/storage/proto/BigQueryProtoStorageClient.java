@@ -1,13 +1,19 @@
 package com.gotocompany.depot.bigquery.storage.proto;
 
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.ApiFutureCallback;
+import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.DeserializerException;
+import com.gotocompany.depot.exception.EmptyMessageException;
+import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageParser;
 import com.gotocompany.depot.message.ParsedMessage;
@@ -16,7 +22,6 @@ import com.gotocompany.depot.message.proto.converter.fields.DurationProtoField;
 import com.gotocompany.depot.message.proto.converter.fields.MessageProtoField;
 import com.gotocompany.depot.message.proto.converter.fields.ProtoField;
 import com.gotocompany.depot.message.proto.converter.fields.ProtoFieldFactory;
-import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -24,27 +29,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@AllArgsConstructor
-public class BigQueryProtoPayloadConverter {
+public class BigQueryProtoStorageClient implements BigQueryStorageClient {
 
-    private BigQuerySinkConfig config;
-    private MessageParser parser;
-    private BigQueryProtoWriter writer;
+    private final BigQueryProtoWriter writer;
+    private final BigQuerySinkConfig config;
+    private final MessageParser parser;
+    private final String schemaClass;
+    private final SinkConnectorSchemaMessageMode mode;
 
-    public com.gotocompany.depot.bigquery.storage.BigQueryPayload convert(List<Message> messages) {
+    public BigQueryProtoStorageClient(BigQueryProtoWriter writer, BigQuerySinkConfig config, MessageParser parser) {
+        this.writer = writer;
+        this.config = config;
+        this.parser = parser;
+        this.mode = config.getSinkConnectorSchemaMessageMode();
+        this.schemaClass = mode == SinkConnectorSchemaMessageMode.LOG_MESSAGE
+                ? config.getSinkConnectorSchemaProtoMessageClass() : config.getSinkConnectorSchemaProtoKeyClass();
+    }
+
+
+    public BigQueryPayload convert(List<Message> messages) {
         ProtoRows.Builder rowBuilder = ProtoRows.newBuilder();
         BigQueryPayload payload = new BigQueryPayload();
+        Descriptors.Descriptor descriptor = writer.getDescriptor();
         for (int index = 0; index < messages.size(); index++) {
             Message message = messages.get(index);
             try {
                 BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, null, true);
-                DynamicMessage convertedMessage = convert(message);
+                DynamicMessage convertedMessage = convert(message, descriptor);
                 payload.addMetadataRecord(metadata);
                 rowBuilder.addSerializedRows(convertedMessage.toByteString());
-            } catch (Exception e) {
-                e.printStackTrace();
-                ErrorInfo info = new ErrorInfo(e, ErrorType.DEFAULT_ERROR);
-                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, info, false);
+            } catch (UnknownFieldsException e) {
+                ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
+                payload.addMetadataRecord(metadata);
+            } catch (EmptyMessageException | UnsupportedOperationException e) {
+                ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.INVALID_MESSAGE_ERROR);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
+                payload.addMetadataRecord(metadata);
+            } catch (DeserializerException | IllegalArgumentException | IOException e) {
+                ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
                 payload.addMetadataRecord(metadata);
             }
         }
@@ -52,15 +76,17 @@ public class BigQueryProtoPayloadConverter {
         return payload;
     }
 
+    @Override
+    public AppendRowsResponse appendAndGet(BigQueryPayload payload, ApiFutureCallback<AppendRowsResponse> callback) throws Exception {
+        return writer.appendAndGet(payload, callback);
+    }
 
-    private DynamicMessage convert(Message message) throws IOException {
-        SinkConnectorSchemaMessageMode mode = this.config.getSinkConnectorSchemaMessageMode();
-        String schemaClass = mode == SinkConnectorSchemaMessageMode.LOG_MESSAGE
-                ? this.config.getSinkConnectorSchemaProtoMessageClass() : this.config.getSinkConnectorSchemaProtoKeyClass();
+
+    private DynamicMessage convert(Message message, Descriptors.Descriptor descriptor) throws IOException {
         ParsedMessage parsedMessage = parser.parse(message, mode, schemaClass);
-        parsedMessage.validate(this.config);
-        DynamicMessage.Builder messageBuilder = convert((DynamicMessage) parsedMessage.getRaw(), writer.getDescriptor());
-        BigQueryProtoUtils.addMetadata(message.getMetadata(), messageBuilder, writer.getDescriptor(), config);
+        parsedMessage.validate(config);
+        DynamicMessage.Builder messageBuilder = convert((DynamicMessage) parsedMessage.getRaw(), descriptor);
+        BigQueryProtoUtils.addMetadata(message.getMetadata(), messageBuilder, descriptor, config);
         return messageBuilder.build();
     }
 

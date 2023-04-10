@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 
 
-public class BigQueryProtoPayloadConverterTest {
+public class BigQueryProtoStorageClientTest {
 
 
     private Descriptors.Descriptor testDescriptor;
-    private BigQueryProtoPayloadConverter converter;
+    private BigQueryProtoStorageClient converter;
     private TableSchema testMessageBQSchema;
     private ProtoMessageParser protoMessageParser;
 
@@ -150,7 +150,7 @@ public class BigQueryProtoPayloadConverterTest {
         testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(testMessageBQSchema);
         BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
         BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
-        converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
+        converter = new BigQueryProtoStorageClient(writer, config, protoMessageParser);
         Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
     }
 
@@ -264,7 +264,7 @@ public class BigQueryProtoPayloadConverterTest {
         testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(schema);
         BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
         BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
-        converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
+        converter = new BigQueryProtoStorageClient(writer, config, protoMessageParser);
         Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
 
         Instant now = Instant.now();
@@ -453,7 +453,7 @@ public class BigQueryProtoPayloadConverterTest {
         testDescriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(schema);
         BigQuerySinkConfig config = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
         BigQueryProtoWriter writer = Mockito.mock(BigQueryProtoWriter.class);
-        converter = new BigQueryProtoPayloadConverter(config, protoMessageParser, writer);
+        converter = new BigQueryProtoStorageClient(writer, config, protoMessageParser);
         Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
 
         TestMessageBQ m1 = TestMessageBQ.newBuilder()

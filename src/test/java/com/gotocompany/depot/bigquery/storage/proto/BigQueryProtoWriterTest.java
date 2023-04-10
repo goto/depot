@@ -19,9 +19,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.concurrent.ExecutionException;
-
-
 public class BigQueryProtoWriterTest {
     private BigQueryWriter bigQueryWriter;
     private StreamWriter writer;
@@ -33,7 +30,6 @@ public class BigQueryProtoWriterTest {
         Mockito.when(config.getGCloudProjectID()).thenReturn("test-project");
         Mockito.when(config.getDatasetName()).thenReturn("dataset");
         Mockito.when(config.getTableName()).thenReturn("table");
-        bigQueryWriter = BigQueryWriterFactory.createBigQueryWriter(config);
         BigQueryWriteClient bqwc = Mockito.mock(BigQueryWriteClient.class);
         CredentialsProvider cp = Mockito.mock(CredentialsProvider.class);
         writer = Mockito.mock(StreamWriter.class);
@@ -53,7 +49,8 @@ public class BigQueryProtoWriterTest {
                 .build();
         Mockito.when(ws.getTableSchema()).thenReturn(schema);
         Mockito.when(bqwc.getWriteStream(Mockito.any(GetWriteStreamRequest.class))).thenReturn(ws);
-        bigQueryWriter.init(c -> bqwc, c -> cp, (c, cr, p) -> bqs);
+        bigQueryWriter = BigQueryWriterFactory.createBigQueryWriter(config, c -> bqwc, c -> cp, (c, cr, p) -> bqs);
+        bigQueryWriter.init();
     }
 
     @Test
@@ -69,7 +66,7 @@ public class BigQueryProtoWriterTest {
     }
 
     @Test
-    public void shouldAppendAndGet() throws ExecutionException, InterruptedException {
+    public void shouldAppendAndGet() throws Exception {
         Container container = new Container("");
         AppendCompleteCallback callback = new AppendCompleteCallback(container);
         ProtoRows rows = Mockito.mock(ProtoRows.class);

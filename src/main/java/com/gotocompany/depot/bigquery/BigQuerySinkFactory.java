@@ -7,6 +7,11 @@ import com.gotocompany.depot.bigquery.client.BigQueryRowWithoutInsertId;
 import com.gotocompany.depot.bigquery.converter.MessageRecordConverterCache;
 import com.gotocompany.depot.bigquery.handler.ErrorHandler;
 import com.gotocompany.depot.bigquery.handler.ErrorHandlerFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryPayloadConvertorFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriterFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
+import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoWriter;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
@@ -25,13 +30,14 @@ import java.util.function.Function;
 public class BigQuerySinkFactory {
 
     private final StatsDReporter statsDReporter;
+    private final Function<Map<String, Object>, String> rowIDCreator;
+    private final BigQuerySinkConfig sinkConfig;
     private BigQueryClient bigQueryClient;
     private BigQueryRow rowCreator;
-    private final Function<Map<String, Object>, String> rowIDCreator;
     private BigQueryMetrics bigQueryMetrics;
     private ErrorHandler errorHandler;
     private MessageRecordConverterCache converterCache;
-    private final BigQuerySinkConfig sinkConfig;
+    private BigQueryStorageClient bigQueryStorageClient;
 
     public BigQuerySinkFactory(Map<String, String> env, StatsDReporter statsDReporter, Function<Map<String, Object>, String> rowIDCreator) {
         this(ConfigFactory.create(BigQuerySinkConfig.class, env), statsDReporter, rowIDCreator);
@@ -73,12 +79,27 @@ public class BigQuerySinkFactory {
             } else {
                 this.rowCreator = new BigQueryRowWithoutInsertId();
             }
+            if (sinkConfig.getSinkBigqueryStorageAPIEnable()) {
+                BigQueryProtoWriter bigQueryWriter = (BigQueryProtoWriter) BigQueryWriterFactory
+                        .createBigQueryWriter(
+                                sinkConfig,
+                                BigQueryWriterUtils::getBigQueryWriterClient,
+                                BigQueryWriterUtils::getCredentialsProvider,
+                                BigQueryWriterUtils::getStreamWriter);
+                bigQueryWriter.init();
+                bigQueryStorageClient = BigQueryPayloadConvertorFactory.createBigQueryPayloadConvertor(sinkConfig, messageParser, bigQueryWriter);
+            }
         } catch (IOException e) {
             throw new IllegalArgumentException("Exception occurred while creating sink", e);
         }
+
+
     }
 
     public Sink create() {
+        if (sinkConfig.getSinkBigqueryStorageAPIEnable()) {
+            return new BigQueryStorageAPISink(bigQueryStorageClient, bigQueryMetrics, new Instrumentation(statsDReporter, BigQueryStorageAPISink.class));
+        }
         return new BigQuerySink(
                 bigQueryClient,
                 converterCache,

@@ -2,10 +2,11 @@ package com.gotocompany.depot.bigquery.storage;
 
 import com.google.api.core.ApiFutureCallback;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
+import com.gotocompany.depot.message.Message;
 
-public interface BigQueryWriter extends AutoCloseable {
+import java.util.List;
 
-    void init();
-
+public interface BigQueryStorageClient {
+    BigQueryPayload convert(List<Message> messages);
     AppendRowsResponse appendAndGet(BigQueryPayload payload, ApiFutureCallback<AppendRowsResponse> callback) throws Exception;
 }

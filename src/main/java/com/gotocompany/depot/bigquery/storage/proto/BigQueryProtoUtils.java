@@ -15,15 +15,15 @@ public class BigQueryProtoUtils {
     public static void addMetadata(
             Map<String, Object> metadata,
             DynamicMessage.Builder messageBuilder,
-            Descriptors.Descriptor inputDescriptor,
+            Descriptors.Descriptor tableDescriptor,
             BigQuerySinkConfig config) {
         if (config.shouldAddMetadata()) {
             List<TupleString> metadataColumnsTypes = config.getMetadataColumnsTypes();
             if (config.getBqMetadataNamespace().isEmpty()) {
-                setMetadata(metadata, messageBuilder, inputDescriptor, metadataColumnsTypes);
+                setMetadata(metadata, messageBuilder, tableDescriptor, metadataColumnsTypes);
             } else {
                 String namespace = config.getBqMetadataNamespace();
-                Descriptors.FieldDescriptor metadataFieldDescriptor = inputDescriptor.findFieldByName(namespace);
+                Descriptors.FieldDescriptor metadataFieldDescriptor = tableDescriptor.findFieldByName(namespace);
                 if (metadataFieldDescriptor != null) {
                     Descriptors.Descriptor metadataDescriptor = metadataFieldDescriptor.getMessageType();
                     DynamicMessage.Builder metadataBuilder = DynamicMessage.newBuilder(metadataDescriptor);
