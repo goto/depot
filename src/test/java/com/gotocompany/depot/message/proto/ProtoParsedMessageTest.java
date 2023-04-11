@@ -628,11 +628,9 @@ public class ProtoParsedMessageTest {
 
     @Test
     public void shouldThrowExceptionForInvalidProtoMessage() throws InvalidProtocolBufferException {
-        JSONObject jsonObject = new JSONObject("{\"stringValue\": \"test-string\"}");
         TestTypesMessage message = TestTypesMessage
                 .newBuilder()
                 .setStringValue("test-string")
-                .setFloatValue(Float.NaN)
                 .setTimestampValue(Timestamp.newBuilder().setSeconds(-99999999999999L).setNanos(0).build())
                 .setMessageValue(TestMessage.newBuilder().setOrderNumber("order-1").setOrderDetails("order-details-1"))
                 .build();
@@ -641,7 +639,7 @@ public class ProtoParsedMessageTest {
         Map<String, String> sinkConfig = new HashMap<>();
         sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "false");
         SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
-        assertEquals(jsonObject.toString(), protoParsedMessage.toJson(config).toString());
+        assertThrows(DeserializerException.class, () -> protoParsedMessage.toJson(config));
     }
 
     @Test
