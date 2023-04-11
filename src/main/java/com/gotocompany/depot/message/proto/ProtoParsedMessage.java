@@ -48,15 +48,15 @@ public class ProtoParsedMessage implements ParsedMessage {
     }
 
     @Override
-    public JSONObject toJson(boolean preserveProtoFieldNames) {
+    public JSONObject toJson(SinkConfig config) {
         String json;
         try {
-            if (preserveProtoFieldNames) {
+            if (config.isSchemaProtoPreserveProtoFieldNamesEnabled()) {
                 json = JsonFormat.printer().preservingProtoFieldNames().print(dynamicMessage);
             } else {
                 json = JsonFormat.printer().print(dynamicMessage);
             }
-        } catch (InvalidProtocolBufferException e) {
+        } catch (InvalidProtocolBufferException | IllegalArgumentException e) {
             throw new DeserializerException(e.getMessage());
         }
         return new JSONObject(json);

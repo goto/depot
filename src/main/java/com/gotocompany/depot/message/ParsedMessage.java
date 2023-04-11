@@ -9,7 +9,7 @@ import java.util.Map;
 public interface ParsedMessage {
     Object getRaw();
 
-    JSONObject toJson(boolean preserveProtoFieldNames);
+    JSONObject toJson(SinkConfig config);
 
     void validate(SinkConfig config);
 

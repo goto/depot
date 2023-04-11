@@ -28,7 +28,7 @@ public class JsonParsedMessage implements ParsedMessage {
     }
 
     @Override
-    public JSONObject toJson(boolean preserveProtoFieldNames) {
+    public JSONObject toJson(SinkConfig config) {
         return jsonObject;
     }
 

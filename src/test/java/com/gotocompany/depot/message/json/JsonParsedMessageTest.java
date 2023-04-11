@@ -1,7 +1,9 @@
 package com.gotocompany.depot.message.json;
 
+import com.gotocompany.depot.config.SinkConfig;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.spi.json.JsonOrgJsonProvider;
+import org.aeonbits.owner.ConfigFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -90,14 +92,16 @@ public class JsonParsedMessageTest {
     }
 
     @Test
-    public void shouldReturnJsonObject() {
+    public void shouldReturnJsonObjectAsItIs() {
         JSONObject jsonObject = new JSONObject(""
                 + "{\"first_name\": \"john doe\","
                 + " \"address\": \"planet earth\", "
                 + "\"family\" : [{\"brother\" : \"david doe\"}, {\"brother\" : \"cain doe\"}]"
                 + "}");
+        Map<String, String> sinkConfig = new HashMap<>();
+        sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "false");
+        SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
         JsonParsedMessage parsedMessage = new JsonParsedMessage(jsonObject, configuration);
-        assertEquals(jsonObject.toString(), parsedMessage.toJson(true).toString());
-        assertEquals(jsonObject.toString(), parsedMessage.toJson(false).toString());
+        assertEquals(jsonObject.toString(), parsedMessage.toJson(config).toString());
     }
 }

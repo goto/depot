@@ -94,4 +94,8 @@ public interface SinkConfig extends Config {
     @ConverterClass(ConfToListConverter.class)
     @Separator(ConfToListConverter.ELEMENT_SEPARATOR)
     List<TupleString> getMetadataColumnsTypes();
+
+    @Key("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE")
+    @DefaultValue("false")
+    Boolean isSchemaProtoPreserveProtoFieldNamesEnabled();
 }

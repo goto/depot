@@ -76,8 +76,4 @@ public interface HttpSinkConfig extends HttpClientConfig {
     @Key("SINK_HTTP_JSON_BODY_TEMPLATE")
     @DefaultValue("")
     String getSinkHttpJsonBodyTemplate();
-
-    @Key("SINK_HTTP_PRESERVE_PROTO_FIELD_NAMES_ENABLE")
-    @DefaultValue("true")
-    Boolean isSinkHttpPreserveProtoFieldNamesEnabled();
 }
