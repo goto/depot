@@ -35,7 +35,7 @@ public class JsonParsedMessage implements ParsedMessage {
     }
 
     @Override
-    public JSONObject toJson(SinkConfig config) {
+    public JSONObject toJson() {
         return jsonObject;
     }
 

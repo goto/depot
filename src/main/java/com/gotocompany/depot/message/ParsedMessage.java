@@ -10,7 +10,7 @@ import java.util.Map;
 public interface ParsedMessage {
     Object getRaw();
 
-    JSONObject toJson(SinkConfig config);
+    JSONObject toJson();
 
     void validate(SinkConfig config);
 

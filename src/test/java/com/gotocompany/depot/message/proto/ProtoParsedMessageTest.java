@@ -17,12 +17,10 @@ import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestMessageBQ;
 import com.gotocompany.depot.TestNestedMessageBQ;
 import com.gotocompany.depot.TestTypesMessage;
-import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.exception.DeserializerException;
 import com.gotocompany.depot.schema.SchemaField;
 import com.gotocompany.stencil.Parser;
 import com.gotocompany.stencil.StencilClientFactory;
-import org.aeonbits.owner.ConfigFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -34,7 +32,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -369,27 +366,6 @@ public class ProtoParsedMessageTest {
     }
 
     @Test
-    public void shouldReturnJsonObjectWithPreservedFieldNames() throws InvalidProtocolBufferException {
-        JSONObject jsonObject = new JSONObject(""
-                + "{\"string_value\": \"test-string\","
-                + " \"float_value\": 10.0, "
-                + "\"message_value\" : {\"order_number\" : \"order-1\", \"order_details\" : \"order-details-1\"}"
-                + "}");
-        TestTypesMessage message = TestTypesMessage
-                .newBuilder()
-                .setStringValue("test-string")
-                .setFloatValue(10.0f)
-                .setMessageValue(TestMessage.newBuilder().setOrderNumber("order-1").setOrderDetails("order-details-1"))
-                .build();
-        Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
-        ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
-        Map<String, String> sinkConfig = new HashMap<>();
-        sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "true");
-        SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
-        assertEquals(jsonObject.toString(), protoParsedMessage.toJson(config).toString());
-    }
-
-    @Test
     public void shouldReturnJsonObjectWithNoPreservedFieldNames() throws InvalidProtocolBufferException {
         JSONObject jsonObject = new JSONObject(""
                 + "{\"stringValue\": \"test-string\","
@@ -404,10 +380,7 @@ public class ProtoParsedMessageTest {
                 .build();
         Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
-        Map<String, String> sinkConfig = new HashMap<>();
-        sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "false");
-        SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
-        assertEquals(jsonObject.toString(), protoParsedMessage.toJson(config).toString());
+        assertEquals(jsonObject.toString(), protoParsedMessage.toJson().toString());
     }
 
     @Test
@@ -420,10 +393,7 @@ public class ProtoParsedMessageTest {
                 .build();
         Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
-        Map<String, String> sinkConfig = new HashMap<>();
-        sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "false");
-        SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
-        assertThrows(DeserializerException.class, () -> protoParsedMessage.toJson(config));
+        assertThrows(DeserializerException.class, protoParsedMessage::toJson);
     }
 
     @Test
@@ -436,9 +406,6 @@ public class ProtoParsedMessageTest {
                 .build();
         Parser protoParser = StencilClientFactory.getClient().getParser(TestTypesMessage.class.getName());
         ProtoParsedMessage protoParsedMessage = new ProtoParsedMessage(protoParser.parse(message.toByteArray()));
-        Map<String, String> sinkConfig = new HashMap<>();
-        sinkConfig.put("SINK_CONNECTOR_SCHEMA_PROTO_PRESERVE_PROTO_FIELD_NAMES_ENABLE", "false");
-        SinkConfig config = ConfigFactory.create(SinkConfig.class, sinkConfig);
-        assertThrows(DeserializerException.class, () -> protoParsedMessage.toJson(config));
+        assertThrows(DeserializerException.class, protoParsedMessage::toJson);
     }
 }
