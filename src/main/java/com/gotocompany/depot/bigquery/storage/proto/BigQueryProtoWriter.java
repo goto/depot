@@ -1,8 +1,6 @@
 package com.gotocompany.depot.bigquery.storage.proto;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.BQTableSchemaToProtoDescriptor;
@@ -15,7 +13,6 @@ import com.google.cloud.bigquery.storage.v1.StreamWriter;
 import com.google.cloud.bigquery.storage.v1.TableSchema;
 import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.cloud.bigquery.storage.v1.WriteStreamView;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.bigquery.storage.BigQueryStream;
@@ -26,6 +23,7 @@ import com.gotocompany.depot.config.BigQuerySinkConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
@@ -40,6 +38,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
     private StreamWriter streamWriter;
     @Getter
     private Descriptors.Descriptor descriptor;
+    private boolean isClosed = false;
 
     public BigQueryProtoWriter(BigQuerySinkConfig config,
                                Function<BigQuerySinkConfig, BigQueryWriteClient> bqWriterCreator,
@@ -78,33 +77,43 @@ public class BigQueryProtoWriter implements BigQueryWriter {
     }
 
     @Override
-    public void close() throws Exception {
-        this.streamWriter.close();
+    public void close() throws IOException {
+        synchronized (this) {
+            isClosed = true;
+            log.info("Closing StreamWriter");
+            this.streamWriter.close();
+        }
     }
 
     // In the callback one can have the container and set the errors and/or log the response errors
     @Override
-    public AppendRowsResponse appendAndGet(BigQueryPayload rows, ApiFutureCallback<AppendRowsResponse> callback)
-            throws ExecutionException, InterruptedException, Descriptors.DescriptorValidationException {
+    public AppendRowsResponse appendAndGet(BigQueryPayload rows) throws ExecutionException, InterruptedException {
         ApiFuture<AppendRowsResponse> future;
+        if (isClosed) {
+            log.error("The client is permanently closed. More tasks can not be added");
+            return AppendRowsResponse.newBuilder().build();
+        }
         // need to synchronize
         synchronized (this) {
             TableSchema updatedSchema = this.streamWriter.getUpdatedSchema();
             if (updatedSchema != null) {
                 log.info("Updated table schema detected, recreating stream writer");
                 // Close the StreamWriter
-                this.streamWriter.close();
-                this.descriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(updatedSchema);
-                BigQueryStream bigQueryStream = streamCreator.apply(config,
-                        credCreator.apply(config),
-                        ProtoSchemaConverter.convert(descriptor));
-                assert (bigQueryStream instanceof BigQueryProtoStream);
-                // Recreate stream writer
-                streamWriter = ((BigQueryProtoStream) bigQueryStream).getStreamWriter();
+                try {
+                    this.streamWriter.close();
+                    this.descriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(updatedSchema);
+                    BigQueryStream bigQueryStream = streamCreator.apply(config,
+                            credCreator.apply(config),
+                            ProtoSchemaConverter.convert(descriptor));
+                    assert (bigQueryStream instanceof BigQueryProtoStream);
+                    // Recreate stream writer
+                    streamWriter = ((BigQueryProtoStream) bigQueryStream).getStreamWriter();
+                } catch (Descriptors.DescriptorValidationException e) {
+                    throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
+                }
             }
             future = streamWriter.append((ProtoRows) rows.getPayload());
         }
-        ApiFutures.addCallback(future, callback, MoreExecutors.directExecutor());
         return future.get();
     }
 }

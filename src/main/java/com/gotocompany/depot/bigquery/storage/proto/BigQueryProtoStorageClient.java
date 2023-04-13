@@ -1,7 +1,6 @@
 package com.gotocompany.depot.bigquery.storage.proto;
 
 import com.google.api.client.util.Preconditions;
-import com.google.api.core.ApiFutureCallback;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.ProtoRows;
 import com.google.protobuf.Descriptors;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class BigQueryProtoStorageClient implements BigQueryStorageClient {
@@ -51,24 +51,26 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
         ProtoRows.Builder rowBuilder = ProtoRows.newBuilder();
         BigQueryPayload payload = new BigQueryPayload();
         Descriptors.Descriptor descriptor = writer.getDescriptor();
+        long validIndex = 0;
         for (int index = 0; index < messages.size(); index++) {
             Message message = messages.get(index);
             try {
-                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, null, true);
                 DynamicMessage convertedMessage = convert(message, descriptor);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, null, true);
                 payload.addMetadataRecord(metadata);
+                payload.putValidIndexToInputIndex(validIndex++, index);
                 rowBuilder.addSerializedRows(convertedMessage.toByteString());
             } catch (UnknownFieldsException e) {
                 ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR);
-                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, errorInfo, false);
                 payload.addMetadataRecord(metadata);
             } catch (EmptyMessageException | UnsupportedOperationException e) {
                 ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.INVALID_MESSAGE_ERROR);
-                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, errorInfo, false);
                 payload.addMetadataRecord(metadata);
             } catch (DeserializerException | IllegalArgumentException | IOException e) {
                 ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR);
-                BigQueryRecordMeta metadata = new BigQueryRecordMeta(message.getMetadata(), index, errorInfo, false);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, errorInfo, false);
                 payload.addMetadataRecord(metadata);
             }
         }
@@ -77,8 +79,8 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
     }
 
     @Override
-    public AppendRowsResponse appendAndGet(BigQueryPayload payload, ApiFutureCallback<AppendRowsResponse> callback) throws Exception {
-        return writer.appendAndGet(payload, callback);
+    public AppendRowsResponse appendAndGet(BigQueryPayload payload) throws ExecutionException, InterruptedException {
+        return writer.appendAndGet(payload);
     }
 
 
@@ -162,6 +164,11 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
             }
         }
         messageBuilder.setField(outputField, repeatedNestedFields);
+    }
+
+    @Override
+    public void close() throws IOException {
+        writer.close();
     }
 }
 

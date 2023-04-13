@@ -512,9 +512,7 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertFalse(invalidRecord.isValid());
         Assert.assertNull(validRecord.getErrorInfo());
         Assert.assertNotNull(invalidRecord.getErrorInfo());
-        Assert.assertEquals(0, validRecord.getIndex());
-        Assert.assertEquals(1, invalidRecord.getIndex());
-        Assert.assertEquals(11, validRecord.getMetadata().get("message_offset"));
-        Assert.assertEquals(12, invalidRecord.getMetadata().get("message_offset"));
+        Assert.assertEquals(0, validRecord.getInputIndex());
+        Assert.assertEquals(1, invalidRecord.getInputIndex());
     }
 }

@@ -1,11 +1,12 @@
 package com.gotocompany.depot.bigquery.storage;
 
-import com.google.api.core.ApiFutureCallback;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
+
+import java.util.concurrent.ExecutionException;
 
 public interface BigQueryWriter extends AutoCloseable {
 
     void init();
 
-    AppendRowsResponse appendAndGet(BigQueryPayload payload, ApiFutureCallback<AppendRowsResponse> callback) throws Exception;
+    AppendRowsResponse appendAndGet(BigQueryPayload payload) throws ExecutionException, InterruptedException;
 }

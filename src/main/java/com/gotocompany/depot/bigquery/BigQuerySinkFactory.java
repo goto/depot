@@ -99,13 +99,14 @@ public class BigQuerySinkFactory {
     public Sink create() {
         if (sinkConfig.getSinkBigqueryStorageAPIEnable()) {
             return new BigQueryStorageAPISink(bigQueryStorageClient, bigQueryMetrics, new Instrumentation(statsDReporter, BigQueryStorageAPISink.class));
+        } else {
+            return new BigQuerySink(
+                    bigQueryClient,
+                    converterCache,
+                    rowCreator,
+                    bigQueryMetrics,
+                    new Instrumentation(statsDReporter, BigQuerySink.class),
+                    errorHandler);
         }
-        return new BigQuerySink(
-                bigQueryClient,
-                converterCache,
-                rowCreator,
-                bigQueryMetrics,
-                new Instrumentation(statsDReporter, BigQuerySink.class),
-                errorHandler);
     }
 }

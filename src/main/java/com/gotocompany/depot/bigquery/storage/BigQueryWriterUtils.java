@@ -44,6 +44,7 @@ public class BigQueryWriterUtils {
             StreamWriter.Builder builder = StreamWriter.newBuilder(streamName);
             builder.setCredentialsProvider(credentialsProvider);
             builder.setWriterSchema(schema);
+            builder.setEnableConnectionPool(false);
             return new BigQueryProtoStream(builder.build());
         } catch (IOException e) {
             throw new IllegalArgumentException("Can't initialise Stream Writer", e);
