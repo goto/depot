@@ -9,7 +9,7 @@ public class RequestBodyFactory {
         HttpRequestBodyType bodyType = config.getRequestBodyType();
         switch (bodyType) {
             case JSON:
-                return new JsonBody();
+                return new JsonBody(config);
             case MESSAGE:
                 return new MessageBody();
             case TEMPLATIZED_JSON:
