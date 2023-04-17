@@ -14,8 +14,11 @@ import com.google.cloud.bigquery.storage.v1.TableSchema;
 import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.cloud.bigquery.storage.v1.WriteStreamView;
 import com.google.protobuf.Descriptors;
-import com.google.rpc.Status;
-import com.gotocompany.depot.bigquery.storage.*;
+import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageResponseParser;
+import com.gotocompany.depot.bigquery.storage.BigQueryStream;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
 import com.gotocompany.depot.common.Function3;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import lombok.Getter;
@@ -89,7 +92,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         ApiFuture<AppendRowsResponse> future;
         if (isClosed) {
             log.error("The client is permanently closed. More tasks can not be added");
-            return BigQueryStorageResponseUtils.get4xxErrorResponse();
+            return BigQueryStorageResponseParser.get4xxErrorResponse();
         }
         // need to synchronize
         synchronized (this) {

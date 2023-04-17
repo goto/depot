@@ -5,7 +5,7 @@ import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
-import com.gotocompany.depot.bigquery.storage.BigQueryStorageResponseUtils;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageResponseParser;
 import com.gotocompany.depot.exception.SinkException;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.metrics.BigQueryMetrics;
@@ -31,14 +31,14 @@ public class BigQueryStorageAPISink implements Sink {
     public SinkResponse pushToSink(List<Message> messages) throws SinkException {
         SinkResponse sinkResponse = new SinkResponse();
         BigQueryPayload payload = bigQueryStorageClient.convert(messages);
-        BigQueryStorageResponseUtils.setSinkResponseForInvalidMessages(payload, messages, sinkResponse, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse, instrumentation);
         try {
             AppendRowsResponse appendRowsResponse = bigQueryStorageClient.appendAndGet(payload);
-            BigQueryStorageResponseUtils.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation);
+            BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation);
         } catch (ExecutionException e) {
             e.printStackTrace();
             Throwable cause = e.getCause();
-            BigQueryStorageResponseUtils.setSinkResponseFromException(cause, payload, messages, sinkResponse, instrumentation);
+            BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, sinkResponse, instrumentation);
         } catch (InterruptedException e) {
             // Something bad has happened
             e.printStackTrace();

@@ -7,7 +7,7 @@ import com.gotocompany.depot.bigquery.client.BigQueryRowWithoutInsertId;
 import com.gotocompany.depot.bigquery.converter.MessageRecordConverterCache;
 import com.gotocompany.depot.bigquery.handler.ErrorHandler;
 import com.gotocompany.depot.bigquery.handler.ErrorHandlerFactory;
-import com.gotocompany.depot.bigquery.storage.BigQueryPayloadConvertorFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageClientFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
@@ -87,7 +87,7 @@ public class BigQuerySinkFactory {
                                 BigQueryWriterUtils::getCredentialsProvider,
                                 BigQueryWriterUtils::getStreamWriter);
                 bigQueryWriter.init();
-                bigQueryStorageClient = BigQueryPayloadConvertorFactory.createBigQueryPayloadConvertor(sinkConfig, messageParser, bigQueryWriter);
+                bigQueryStorageClient = BigQueryStorageClientFactory.createBigQueryStorageClient(sinkConfig, messageParser, bigQueryWriter);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Exception occurred while creating sink", e);

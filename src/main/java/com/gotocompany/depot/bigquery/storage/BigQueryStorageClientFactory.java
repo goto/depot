@@ -5,8 +5,8 @@ import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoWriter;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.message.MessageParser;
 
-public class BigQueryPayloadConvertorFactory {
-    public static BigQueryStorageClient createBigQueryPayloadConvertor(
+public class BigQueryStorageClientFactory {
+    public static BigQueryStorageClient createBigQueryStorageClient(
             BigQuerySinkConfig config,
             MessageParser parser,
             BigQueryProtoWriter bigQueryWriter) {

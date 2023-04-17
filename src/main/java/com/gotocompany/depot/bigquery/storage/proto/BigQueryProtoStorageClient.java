@@ -72,6 +72,10 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
                 ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR);
                 BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, errorInfo, false);
                 payload.addMetadataRecord(metadata);
+            } catch (Exception e) {
+                ErrorInfo errorInfo = new ErrorInfo(e, ErrorType.SINK_UNKNOWN_ERROR);
+                BigQueryRecordMeta metadata = new BigQueryRecordMeta(index, errorInfo, false);
+                payload.addMetadataRecord(metadata);
             }
         }
         payload.setPayload(rowBuilder.build());
