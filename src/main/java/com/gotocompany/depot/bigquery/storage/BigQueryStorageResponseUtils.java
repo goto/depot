@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-public class BigQueryStorageResponseParser {
+public class BigQueryStorageResponseUtils {
     private static final int STATUS_4XX = 400;
     private static final int STATUS_5XX = 500;
     private static final int STATUS_6XX = 600;
@@ -46,7 +46,7 @@ public class BigQueryStorageResponseParser {
     }
 
     public static boolean shouldRetry(io.grpc.Status status) {
-        return BigQueryStorageResponseParser.RETRYABLE_ERROR_CODES.contains(status.getCode());
+        return BigQueryStorageResponseUtils.RETRYABLE_ERROR_CODES.contains(status.getCode());
     }
 
     public static ErrorInfo getError(RowError rowError) {
@@ -77,18 +77,18 @@ public class BigQueryStorageResponseParser {
             Instrumentation instrumentation) {
 
         if (appendRowsResponse.hasError()) {
-            instrumentation.logError("received an in stream error: " + appendRowsResponse.getError());
+            instrumentation.logError("received an error in stream :{} ", appendRowsResponse.getError());
             com.google.rpc.Status error = appendRowsResponse.getError();
-            ErrorInfo errorInfo = BigQueryStorageResponseParser.getError(error);
+            ErrorInfo errorInfo = BigQueryStorageResponseUtils.getError(error);
             IntStream.range(0, messages.size()).forEach(index -> {
                 sinkResponse.addErrors(index, errorInfo);
             });
         }
 
-        //per message
+        //per message error
         List<RowError> rowErrorsList = appendRowsResponse.getRowErrorsList();
         rowErrorsList.forEach(rowError -> {
-            ErrorInfo errorInfo = BigQueryStorageResponseParser.getError(rowError);
+            ErrorInfo errorInfo = BigQueryStorageResponseUtils.getError(rowError);
             sinkResponse.addErrors(rowError.getIndex(), errorInfo);
             String metadataString = messages.get((int) payload.getInputIndex(rowError.getIndex())).getMetadataString();
             instrumentation.logError(
@@ -105,14 +105,20 @@ public class BigQueryStorageResponseParser {
             SinkResponse sinkResponse,
             Instrumentation instrumentation) {
         io.grpc.Status status = io.grpc.Status.fromThrowable(cause);
-        instrumentation.logError(status.getDescription());
-        boolean shouldRetry = BigQueryStorageResponseParser.shouldRetry(status);
+        instrumentation.logError("Error from exception: {} ", status.getDescription());
+        boolean shouldRetry = BigQueryStorageResponseUtils.shouldRetry(status);
         if (shouldRetry) {
             ErrorInfo errorInfo = new ErrorInfo(new Exception(cause), ErrorType.SINK_5XX_ERROR);
             IntStream.range(0, messages.size()).forEach(index -> {
                 sinkResponse.addErrors(index, errorInfo);
             });
-        } else if (cause instanceof Exceptions.AppendSerializationError) {
+        } else {
+            ErrorInfo errorInfo = new ErrorInfo(new Exception(cause), ErrorType.SINK_4XX_ERROR);
+            IntStream.range(0, messages.size()).forEach(index -> {
+                sinkResponse.addErrors(index, errorInfo);
+            });
+        }
+        if (cause instanceof Exceptions.AppendSerializationError) {
             Exceptions.AppendSerializationError ase = (Exceptions.AppendSerializationError) cause;
             Map<Integer, String> rowIndexToErrorMessage = ase.getRowIndexToErrorMessage();
             rowIndexToErrorMessage.forEach((index, err) -> {
@@ -126,5 +132,9 @@ public class BigQueryStorageResponseParser {
                 sinkResponse.addErrors(inputIndex, errorInfo);
             });
         }
+    }
+
+    public static AppendRowsResponse get4xxErrorResponse() {
+        return AppendRowsResponse.newBuilder().setError(Status.newBuilder().setCode(STATUS_4XX).build()).build();
     }
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class BigQueryPayload implements Iterable<BigQueryRecordMeta> {
     private final List<BigQueryRecordMeta> recordMetadata = new ArrayList<>();
-    private final Map<Long, Long> validIndexToInputIndexMapping = new HashMap<>();
+    private final Map<Long, Long> paylodIndexToInputIndexMapping = new HashMap<>();
     private Object payload;
 
     public void addMetadataRecord(BigQueryRecordMeta record) {
@@ -19,11 +19,11 @@ public class BigQueryPayload implements Iterable<BigQueryRecordMeta> {
     }
 
     public void putValidIndexToInputIndex(long validIndex, long inputIndex) {
-        validIndexToInputIndexMapping.put(validIndex, inputIndex);
+        paylodIndexToInputIndexMapping.put(validIndex, inputIndex);
     }
 
-    public long getInputIndex(long validIndex) {
-        return validIndexToInputIndexMapping.get(validIndex);
+    public long getInputIndex(long payloadIndex) {
+        return paylodIndexToInputIndexMapping.get(payloadIndex);
     }
 
     public Iterator<BigQueryRecordMeta> iterator() {
