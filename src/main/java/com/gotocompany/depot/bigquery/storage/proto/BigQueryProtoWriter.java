@@ -99,8 +99,8 @@ public class BigQueryProtoWriter implements BigQueryWriter {
             TableSchema updatedSchema = this.streamWriter.getUpdatedSchema();
             if (updatedSchema != null) {
                 log.info("Updated table schema detected, recreating stream writer");
-                // Close the StreamWriter
                 try {
+                    // Close the StreamWriter
                     this.streamWriter.close();
                     this.descriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(updatedSchema);
                     BigQueryStream bigQueryStream = streamCreator.apply(config,
