@@ -22,6 +22,10 @@ public class BigQueryMetrics extends SinkMetrics {
         STREAM_WRITER_APPEND
     }
 
+    public enum BigQueryStorageAPIError {
+        ROW_APPEND_ERROR
+    }
+
     public enum BigQueryErrorType {
         UNKNOWN_ERROR,
         INVALID_SCHEMA_ERROR,

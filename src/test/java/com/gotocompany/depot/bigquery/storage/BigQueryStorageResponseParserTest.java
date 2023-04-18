@@ -6,6 +6,7 @@ import com.google.cloud.bigquery.storage.v1.RowError;
 import com.google.rpc.Code;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.bigquery.storage.proto.BigQueryRecordMeta;
+import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.message.Message;
@@ -14,6 +15,7 @@ import com.gotocompany.depot.metrics.Instrumentation;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -24,7 +26,16 @@ import java.util.Map;
 
 public class BigQueryStorageResponseParserTest {
 
-    private final BigQueryMetrics bigQueryMetrics = Mockito.mock(BigQueryMetrics.class);
+    private Instrumentation instrumentation;
+    private BigQueryStorageResponseParser responseParser;
+
+    @Before
+    public void setup() {
+        instrumentation = Mockito.mock(Instrumentation.class);
+        BigQuerySinkConfig sinkConfig = Mockito.mock(BigQuerySinkConfig.class);
+        BigQueryMetrics bigQueryMetrics = new BigQueryMetrics(sinkConfig);
+        responseParser = new BigQueryStorageResponseParser(sinkConfig, instrumentation, bigQueryMetrics);
+    }
 
     @Test
     public void shouldReturnErrorFromStatus() {
@@ -84,8 +95,7 @@ public class BigQueryStorageResponseParserTest {
         Mockito.when(messages.get(3).getMetadataString()).thenReturn("meta2");
         Mockito.when(messages.get(4).getMetadataString()).thenReturn("meta3");
         SinkResponse response = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, response, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForInvalidMessages(payload, messages, response);
         Assert.assertEquals(3, response.getErrors().size());
         Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, response.getErrors().get(1L).getErrorType());
         Assert.assertEquals(ErrorType.UNKNOWN_FIELDS_ERROR, response.getErrors().get(3L).getErrorType());
@@ -115,8 +125,7 @@ public class BigQueryStorageResponseParserTest {
         List<Message> messages = createMockMessages();
         AppendRowsResponse appendRowsResponse = AppendRowsResponse.newBuilder().setError(com.google.rpc.Status.newBuilder().setMessage("test error").setCode(Code.UNAVAILABLE_VALUE).build()).build();
         SinkResponse sinkResponse = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse);
         Assert.assertEquals(3, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(3L).getErrorType());
@@ -140,8 +149,7 @@ public class BigQueryStorageResponseParserTest {
                 .addRowErrors(RowError.newBuilder().setIndex(2L).setMessage("row error2").build())
                 .build();
         SinkResponse sinkResponse = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse);
         Assert.assertEquals(3, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, sinkResponse.getErrors().get(3L).getErrorType());
@@ -173,8 +181,7 @@ public class BigQueryStorageResponseParserTest {
         BigQueryPayload payload = new BigQueryPayload();
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForException(cause, payload, messages, response);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, response.getErrors().get(1L).getErrorType());
@@ -194,8 +201,7 @@ public class BigQueryStorageResponseParserTest {
         BigQueryPayload payload = new BigQueryPayload();
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForException(cause, payload, messages, response);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(1L).getErrorType());
@@ -221,8 +227,7 @@ public class BigQueryStorageResponseParserTest {
         payload.putValidIndexToInputIndex(2L, 4L);
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForException(cause, payload, messages, response);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(1L).getErrorType());

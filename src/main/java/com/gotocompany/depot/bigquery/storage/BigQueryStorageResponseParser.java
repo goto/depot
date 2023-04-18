@@ -4,6 +4,7 @@ import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.Exceptions;
 import com.google.cloud.bigquery.storage.v1.RowError;
 import com.gotocompany.depot.SinkResponse;
+import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.metrics.BigQueryMetrics;
 import com.gotocompany.depot.metrics.Instrumentation;
@@ -28,6 +29,18 @@ public class BigQueryStorageResponseParser {
                 add(Code.DEADLINE_EXCEEDED);
                 add(Code.UNAVAILABLE);
             }};
+    private final BigQuerySinkConfig sinkConfig;
+    private final Instrumentation instrumentation;
+    private final BigQueryMetrics bigQueryMetrics;
+
+    public BigQueryStorageResponseParser(
+            BigQuerySinkConfig sinkConfig,
+            Instrumentation instrumentation,
+            BigQueryMetrics bigQueryMetrics) {
+        this.sinkConfig = sinkConfig;
+        this.instrumentation = instrumentation;
+        this.bigQueryMetrics = bigQueryMetrics;
+    }
 
     public static ErrorInfo getError(Status error) {
         com.google.rpc.Code code = com.google.rpc.Code.forNumber(error.getCode());
@@ -66,11 +79,14 @@ public class BigQueryStorageResponseParser {
         return new ErrorInfo(new Exception(rowError.getMessage()), ErrorType.SINK_4XX_ERROR);
     }
 
-    public static void setSinkResponseForInvalidMessages(
+    public static AppendRowsResponse get4xxErrorResponse() {
+        return AppendRowsResponse.newBuilder().setError(Status.newBuilder().setCode(com.google.rpc.Code.FAILED_PRECONDITION.ordinal()).build()).build();
+    }
+
+    public void setSinkResponseForInvalidMessages(
             BigQueryPayload payload,
             List<Message> messages,
-            SinkResponse sinkResponse,
-            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
+            SinkResponse sinkResponse) {
 
         payload.forEach(meta -> {
             if (!meta.isValid()) {
@@ -83,21 +99,30 @@ public class BigQueryStorageResponseParser {
         });
     }
 
-    public static void setSinkResponseForErrors(
+    private void instrumentErrors(Object error) {
+        instrumentation.incrementCounter(
+                bigQueryMetrics.getBigqueryTotalErrorsMetrics(),
+                String.format(BigQueryMetrics.BIGQUERY_TABLE_TAG, sinkConfig.getTableName()),
+                String.format(BigQueryMetrics.BIGQUERY_DATASET_TAG, sinkConfig.getDatasetName()),
+                String.format(BigQueryMetrics.BIGQUERY_PROJECT_TAG, sinkConfig.getGCloudProjectID()),
+                String.format(BigQueryMetrics.BIGQUERY_ERROR_TAG, error));
+    }
+
+    public void setSinkResponseForErrors(
             BigQueryPayload payload,
             AppendRowsResponse appendRowsResponse,
             List<Message> messages,
-            SinkResponse sinkResponse,
-            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
-
+            SinkResponse sinkResponse) {
         if (appendRowsResponse.hasError()) {
             instrumentation.logError("received an error in stream :{} ", appendRowsResponse.getError());
             com.google.rpc.Status error = appendRowsResponse.getError();
             ErrorInfo errorInfo = BigQueryStorageResponseParser.getError(error);
             Set<Long> payloadIndexes = payload.getPayloadIndexes();
+            com.google.rpc.Code code = com.google.rpc.Code.forNumber(error.getCode());
             payloadIndexes.forEach(index -> {
                 long inputIndex = payload.getInputIndex(index);
                 sinkResponse.addErrors(inputIndex, errorInfo);
+                instrumentErrors(code);
             });
         }
 
@@ -113,23 +138,25 @@ public class BigQueryStorageResponseParser {
                     errorInfo,
                     metadataString,
                     rowError);
+            instrumentErrors(rowError.getCode());
         });
     }
 
-    public static void setSinkResponseForException(
+    public void setSinkResponseForException(
             Throwable cause,
             BigQueryPayload payload,
             List<Message> messages,
-            SinkResponse sinkResponse,
-            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
+            SinkResponse sinkResponse) {
         io.grpc.Status status = io.grpc.Status.fromThrowable(cause);
         instrumentation.logError("Error from exception: {} ", status.getDescription());
         if (BigQueryStorageResponseParser.shouldRetry(status)) {
             IntStream.range(0, messages.size())
                     .forEach(index -> sinkResponse.addErrors(index, new ErrorInfo(new Exception(cause), ErrorType.SINK_5XX_ERROR)));
+            instrumentErrors(status);
         } else {
             IntStream.range(0, messages.size())
                     .forEach(index -> sinkResponse.addErrors(index, new ErrorInfo(new Exception(cause), ErrorType.SINK_4XX_ERROR)));
+            instrumentErrors(status);
         }
         if (cause instanceof Exceptions.AppendSerializationError) {
             Exceptions.AppendSerializationError ase = (Exceptions.AppendSerializationError) cause;
@@ -143,11 +170,8 @@ public class BigQueryStorageResponseParser {
                         errorInfo,
                         metadataString);
                 sinkResponse.addErrors(inputIndex, errorInfo);
+                instrumentErrors(BigQueryMetrics.BigQueryStorageAPIError.ROW_APPEND_ERROR);
             });
         }
-    }
-
-    public static AppendRowsResponse get4xxErrorResponse() {
-        return AppendRowsResponse.newBuilder().setError(Status.newBuilder().setCode(com.google.rpc.Code.FAILED_PRECONDITION.ordinal()).build()).build();
     }
 }

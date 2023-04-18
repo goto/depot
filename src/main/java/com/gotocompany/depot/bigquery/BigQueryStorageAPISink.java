@@ -17,30 +17,33 @@ import java.util.concurrent.ExecutionException;
 
 public class BigQueryStorageAPISink implements Sink {
     private final BigQueryStorageClient bigQueryStorageClient;
-    private BigQueryMetrics bigQueryMetrics;
     private final Instrumentation instrumentation;
+    private final BigQueryStorageResponseParser responseParser;
+    private final BigQueryMetrics bigQueryMetrics;
 
     public BigQueryStorageAPISink(
             BigQueryStorageClient bigQueryStorageClient,
             BigQueryMetrics bigQueryMetrics,
-            Instrumentation instrumentation) {
+            Instrumentation instrumentation,
+            BigQueryStorageResponseParser responseParser) {
         this.bigQueryStorageClient = bigQueryStorageClient;
         this.bigQueryMetrics = bigQueryMetrics;
         this.instrumentation = instrumentation;
+        this.responseParser = responseParser;
     }
 
     @Override
     public SinkResponse pushToSink(List<Message> messages) throws SinkException {
         SinkResponse sinkResponse = new SinkResponse();
         BigQueryPayload payload = bigQueryStorageClient.convert(messages);
-        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse, instrumentation, bigQueryMetrics);
+        responseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse);
         try {
             AppendRowsResponse appendRowsResponse = bigQueryStorageClient.appendAndGet(payload);
-            BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
+            responseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse);
         } catch (ExecutionException e) {
             e.printStackTrace();
             Throwable cause = e.getCause();
-            BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, sinkResponse, instrumentation, bigQueryMetrics);
+            responseParser.setSinkResponseForException(cause, payload, messages, sinkResponse);
         } catch (InterruptedException e) {
             // Something bad has happened
             e.printStackTrace();

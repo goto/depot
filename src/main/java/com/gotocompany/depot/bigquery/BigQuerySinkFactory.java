@@ -9,6 +9,7 @@ import com.gotocompany.depot.bigquery.handler.ErrorHandler;
 import com.gotocompany.depot.bigquery.handler.ErrorHandlerFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClientFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageResponseParser;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
@@ -38,6 +39,7 @@ public class BigQuerySinkFactory {
     private ErrorHandler errorHandler;
     private MessageRecordConverterCache converterCache;
     private BigQueryStorageClient bigQueryStorageClient;
+    private BigQueryStorageResponseParser responseParser;
 
     public BigQuerySinkFactory(Map<String, String> env, StatsDReporter statsDReporter, Function<Map<String, Object>, String> rowIDCreator) {
         this(ConfigFactory.create(BigQuerySinkConfig.class, env), statsDReporter, rowIDCreator);
@@ -90,6 +92,10 @@ public class BigQuerySinkFactory {
                                 bigQueryMetrics);
                 bigQueryWriter.init();
                 bigQueryStorageClient = BigQueryStorageClientFactory.createBigQueryStorageClient(sinkConfig, messageParser, bigQueryWriter);
+                responseParser = new BigQueryStorageResponseParser(
+                        sinkConfig,
+                        new Instrumentation(statsDReporter, BigQueryStorageResponseParser.class),
+                        bigQueryMetrics);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Exception occurred while creating sink", e);
@@ -100,7 +106,11 @@ public class BigQuerySinkFactory {
 
     public Sink create() {
         if (sinkConfig.getSinkBigqueryStorageAPIEnable()) {
-            return new BigQueryStorageAPISink(bigQueryStorageClient, bigQueryMetrics, new Instrumentation(statsDReporter, BigQueryStorageAPISink.class));
+            return new BigQueryStorageAPISink(
+                    bigQueryStorageClient,
+                    bigQueryMetrics,
+                    new Instrumentation(statsDReporter, BigQueryStorageAPISink.class),
+                    responseParser);
         } else {
             return new BigQuerySink(
                     bigQueryClient,
