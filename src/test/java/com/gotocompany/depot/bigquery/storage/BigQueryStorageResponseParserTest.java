@@ -3,11 +3,13 @@ package com.gotocompany.depot.bigquery.storage;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.Exceptions;
 import com.google.cloud.bigquery.storage.v1.RowError;
+import com.google.rpc.Code;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.bigquery.storage.proto.BigQueryRecordMeta;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.message.Message;
+import com.gotocompany.depot.metrics.BigQueryMetrics;
 import com.gotocompany.depot.metrics.Instrumentation;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -22,22 +24,21 @@ import java.util.Map;
 
 public class BigQueryStorageResponseParserTest {
 
+    private final BigQueryMetrics bigQueryMetrics = Mockito.mock(BigQueryMetrics.class);
+
     @Test
     public void shouldReturnErrorFromStatus() {
-        com.google.rpc.Status status = com.google.rpc.Status.newBuilder().setCode(404).setMessage("test error").build();
+        com.google.rpc.Status status = com.google.rpc.Status.newBuilder().setCode(Code.PERMISSION_DENIED_VALUE).setMessage("test error").build();
         ErrorInfo error = BigQueryStorageResponseParser.getError(status);
+        assert error != null;
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, error.getErrorType());
         Assert.assertEquals("test error", error.getException().getMessage());
 
-        status = com.google.rpc.Status.newBuilder().setCode(504).setMessage("test 5xx error").build();
+        status = com.google.rpc.Status.newBuilder().setCode(Code.INTERNAL_VALUE).setMessage("test 5xx error").build();
         error = BigQueryStorageResponseParser.getError(status);
+        assert error != null;
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, error.getErrorType());
         Assert.assertEquals("test 5xx error", error.getException().getMessage());
-
-        status = com.google.rpc.Status.newBuilder().setCode(900).setMessage("test unknown error").build();
-        error = BigQueryStorageResponseParser.getError(status);
-        Assert.assertEquals(ErrorType.SINK_UNKNOWN_ERROR, error.getErrorType());
-        Assert.assertEquals("test unknown error", error.getException().getMessage());
     }
 
     @Test
@@ -84,7 +85,7 @@ public class BigQueryStorageResponseParserTest {
         Mockito.when(messages.get(4).getMetadataString()).thenReturn("meta3");
         SinkResponse response = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, response, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, response, instrumentation, bigQueryMetrics);
         Assert.assertEquals(3, response.getErrors().size());
         Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, response.getErrors().get(1L).getErrorType());
         Assert.assertEquals(ErrorType.UNKNOWN_FIELDS_ERROR, response.getErrors().get(3L).getErrorType());
@@ -112,10 +113,10 @@ public class BigQueryStorageResponseParserTest {
         payload.putValidIndexToInputIndex(1L, 3L);
         payload.putValidIndexToInputIndex(2L, 4L);
         List<Message> messages = createMockMessages();
-        AppendRowsResponse appendRowsResponse = AppendRowsResponse.newBuilder().setError(com.google.rpc.Status.newBuilder().setMessage("test error").setCode(504).build()).build();
+        AppendRowsResponse appendRowsResponse = AppendRowsResponse.newBuilder().setError(com.google.rpc.Status.newBuilder().setMessage("test error").setCode(Code.UNAVAILABLE_VALUE).build()).build();
         SinkResponse sinkResponse = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
         Assert.assertEquals(3, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(3L).getErrorType());
@@ -134,13 +135,13 @@ public class BigQueryStorageResponseParserTest {
         payload.putValidIndexToInputIndex(2L, 4L);
         List<Message> messages = createMockMessages();
         AppendRowsResponse appendRowsResponse = AppendRowsResponse.newBuilder()
-                .setError(com.google.rpc.Status.newBuilder().setMessage("test error").setCode(504).build())
+                .setError(com.google.rpc.Status.newBuilder().setMessage("test error").setCode(Code.UNAVAILABLE_VALUE).build())
                 .addRowErrors(RowError.newBuilder().setIndex(1L).setMessage("row error1").build())
                 .addRowErrors(RowError.newBuilder().setIndex(2L).setMessage("row error2").build())
                 .build();
         SinkResponse sinkResponse = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
         Assert.assertEquals(3, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, sinkResponse.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, sinkResponse.getErrors().get(3L).getErrorType());
@@ -173,7 +174,7 @@ public class BigQueryStorageResponseParserTest {
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, response.getErrors().get(1L).getErrorType());
@@ -194,7 +195,7 @@ public class BigQueryStorageResponseParserTest {
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(1L).getErrorType());
@@ -221,7 +222,7 @@ public class BigQueryStorageResponseParserTest {
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, response, instrumentation, bigQueryMetrics);
         Assert.assertEquals(5, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(0L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(1L).getErrorType());

@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 
 public class BigQueryStorageAPISink implements Sink {
     private final BigQueryStorageClient bigQueryStorageClient;
+    private BigQueryMetrics bigQueryMetrics;
     private final Instrumentation instrumentation;
 
     public BigQueryStorageAPISink(
@@ -24,6 +25,7 @@ public class BigQueryStorageAPISink implements Sink {
             BigQueryMetrics bigQueryMetrics,
             Instrumentation instrumentation) {
         this.bigQueryStorageClient = bigQueryStorageClient;
+        this.bigQueryMetrics = bigQueryMetrics;
         this.instrumentation = instrumentation;
     }
 
@@ -31,14 +33,14 @@ public class BigQueryStorageAPISink implements Sink {
     public SinkResponse pushToSink(List<Message> messages) throws SinkException {
         SinkResponse sinkResponse = new SinkResponse();
         BigQueryPayload payload = bigQueryStorageClient.convert(messages);
-        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse, instrumentation);
+        BigQueryStorageResponseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse, instrumentation, bigQueryMetrics);
         try {
             AppendRowsResponse appendRowsResponse = bigQueryStorageClient.appendAndGet(payload);
-            BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation);
+            BigQueryStorageResponseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse, instrumentation, bigQueryMetrics);
         } catch (ExecutionException e) {
             e.printStackTrace();
             Throwable cause = e.getCause();
-            BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, sinkResponse, instrumentation);
+            BigQueryStorageResponseParser.setSinkResponseForException(cause, payload, messages, sinkResponse, instrumentation, bigQueryMetrics);
         } catch (InterruptedException e) {
             // Something bad has happened
             e.printStackTrace();

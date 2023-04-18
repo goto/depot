@@ -10,6 +10,8 @@ import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterFactory;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.config.enums.SinkConnectorSchemaDataType;
+import com.gotocompany.depot.metrics.BigQueryMetrics;
+import com.gotocompany.depot.metrics.Instrumentation;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,11 +21,13 @@ import java.util.concurrent.ExecutionException;
 
 public class BigQueryProtoWriterTest {
     private final StreamWriter writer = Mockito.mock(StreamWriter.class);
+    private final Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
     private BigQueryWriter bigQueryWriter;
 
     @Before
     public void setup() {
         BigQuerySinkConfig config = Mockito.mock(BigQuerySinkConfig.class);
+        BigQueryMetrics metrics = new BigQueryMetrics(config);
         Mockito.when(config.getSinkConnectorSchemaDataType()).thenReturn(SinkConnectorSchemaDataType.PROTOBUF);
         Mockito.when(config.getGCloudProjectID()).thenReturn("test-project");
         Mockito.when(config.getDatasetName()).thenReturn("dataset");
@@ -46,7 +50,7 @@ public class BigQueryProtoWriterTest {
                 .build();
         Mockito.when(ws.getTableSchema()).thenReturn(schema);
         Mockito.when(bqwc.getWriteStream(Mockito.any(GetWriteStreamRequest.class))).thenReturn(ws);
-        bigQueryWriter = BigQueryWriterFactory.createBigQueryWriter(config, c -> bqwc, c -> cp, (c, cr, p) -> bqs);
+        bigQueryWriter = BigQueryWriterFactory.createBigQueryWriter(config, c -> bqwc, c -> cp, (c, cr, p) -> bqs, instrumentation, metrics);
         bigQueryWriter.init();
     }
 

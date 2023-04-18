@@ -7,11 +7,11 @@ import com.gotocompany.depot.bigquery.client.BigQueryRowWithoutInsertId;
 import com.gotocompany.depot.bigquery.converter.MessageRecordConverterCache;
 import com.gotocompany.depot.bigquery.handler.ErrorHandler;
 import com.gotocompany.depot.bigquery.handler.ErrorHandlerFactory;
-import com.gotocompany.depot.bigquery.storage.BigQueryStorageClientFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
+import com.gotocompany.depot.bigquery.storage.BigQueryStorageClientFactory;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterFactory;
 import com.gotocompany.depot.bigquery.storage.BigQueryWriterUtils;
-import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoWriter;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
@@ -80,12 +80,14 @@ public class BigQuerySinkFactory {
                 this.rowCreator = new BigQueryRowWithoutInsertId();
             }
             if (sinkConfig.getSinkBigqueryStorageAPIEnable()) {
-                BigQueryProtoWriter bigQueryWriter = (BigQueryProtoWriter) BigQueryWriterFactory
+                BigQueryWriter bigQueryWriter = BigQueryWriterFactory
                         .createBigQueryWriter(
                                 sinkConfig,
                                 BigQueryWriterUtils::getBigQueryWriterClient,
                                 BigQueryWriterUtils::getCredentialsProvider,
-                                BigQueryWriterUtils::getStreamWriter);
+                                BigQueryWriterUtils::getStreamWriter,
+                                new Instrumentation(statsDReporter, BigQueryWriter.class),
+                                bigQueryMetrics);
                 bigQueryWriter.init();
                 bigQueryStorageClient = BigQueryStorageClientFactory.createBigQueryStorageClient(sinkConfig, messageParser, bigQueryWriter);
             }

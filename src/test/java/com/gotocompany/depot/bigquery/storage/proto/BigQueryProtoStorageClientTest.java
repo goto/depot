@@ -9,6 +9,7 @@ import com.gotocompany.depot.*;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
+import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
 import com.gotocompany.depot.message.proto.TestProtoUtil;
@@ -169,6 +170,7 @@ public class BigQueryProtoStorageClientTest {
             add(new Message(null, m1.toByteArray()));
         }};
         BigQueryPayload payload = converter.convert(inputList);
+        Assert.assertEquals(1, payload.getPayloadIndexes().size());
         ProtoRows protoPayload = (ProtoRows) payload.getPayload();
         Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
         ByteString serializedRows = protoPayload.getSerializedRows(0);
@@ -492,10 +494,17 @@ public class BigQueryProtoStorageClientTest {
         List<Message> inputList = new ArrayList<Message>() {{
             add(new Message(null, m1.toByteArray(), new Tuple<>("message_offset", 11)));
             add(new Message(null, "invalid".getBytes(StandardCharsets.UTF_8), new Tuple<>("message_offset", 12)));
+            add(new Message(null, m1.toByteArray(), new Tuple<>("message_offset", 13)));
         }};
         BigQueryPayload payload = converter.convert(inputList);
         ProtoRows protoPayload = (ProtoRows) payload.getPayload();
-        Assert.assertEquals(1, protoPayload.getSerializedRowsCount());
+        Assert.assertEquals(2, protoPayload.getSerializedRowsCount());
+        Assert.assertEquals(2, payload.getPayloadIndexes().size());
+        Assert.assertTrue(payload.getPayloadIndexes().contains(0L));
+        Assert.assertTrue(payload.getPayloadIndexes().contains(1L));
+        Assert.assertFalse(payload.getPayloadIndexes().contains(2L));
+        Assert.assertEquals(0L, payload.getInputIndex(0L));
+        Assert.assertEquals(2L, payload.getInputIndex(1L));
         ByteString serializedRows = protoPayload.getSerializedRows(0);
         DynamicMessage convertedMessage = DynamicMessage.parseFrom(testDescriptor, serializedRows);
         long createdAt = (long) convertedMessage.getField(testDescriptor.findFieldByName("created_at"));
@@ -514,5 +523,8 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertNotNull(invalidRecord.getErrorInfo());
         Assert.assertEquals(0, validRecord.getInputIndex());
         Assert.assertEquals(1, invalidRecord.getInputIndex());
+        Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, invalidRecord.getErrorInfo().getErrorType());
+        Assert.assertEquals("While parsing a protocol message, the input ended unexpectedly in the middle of a field.  This could mean either that the input has been truncated or that an embedded message misreported its own length.",
+                invalidRecord.getErrorInfo().getException().getMessage());
     }
 }

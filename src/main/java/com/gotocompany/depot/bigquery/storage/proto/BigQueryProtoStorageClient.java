@@ -7,6 +7,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.bigquery.storage.BigQueryPayload;
 import com.gotocompany.depot.bigquery.storage.BigQueryStorageClient;
+import com.gotocompany.depot.bigquery.storage.BigQueryWriter;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
@@ -37,8 +38,8 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
     private final String schemaClass;
     private final SinkConnectorSchemaMessageMode mode;
 
-    public BigQueryProtoStorageClient(BigQueryProtoWriter writer, BigQuerySinkConfig config, MessageParser parser) {
-        this.writer = writer;
+    public BigQueryProtoStorageClient(BigQueryWriter writer, BigQuerySinkConfig config, MessageParser parser) {
+        this.writer = (BigQueryProtoWriter) writer;
         this.config = config;
         this.parser = parser;
         this.mode = config.getSinkConnectorSchemaMessageMode();

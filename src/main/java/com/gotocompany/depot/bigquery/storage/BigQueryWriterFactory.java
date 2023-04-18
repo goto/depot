@@ -7,6 +7,8 @@ import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoWriter;
 import com.gotocompany.depot.bigquery.storage.json.BigQueryJsonWriter;
 import com.gotocompany.depot.common.Function3;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
+import com.gotocompany.depot.metrics.BigQueryMetrics;
+import com.gotocompany.depot.metrics.Instrumentation;
 
 import java.util.function.Function;
 
@@ -17,10 +19,12 @@ public class BigQueryWriterFactory {
             BigQuerySinkConfig config,
             Function<BigQuerySinkConfig, BigQueryWriteClient> bqWriterCreator,
             Function<BigQuerySinkConfig, CredentialsProvider> credCreator,
-            Function3<BigQuerySinkConfig, CredentialsProvider, ProtoSchema, BigQueryStream> streamCreator) {
+            Function3<BigQuerySinkConfig, CredentialsProvider, ProtoSchema, BigQueryStream> streamCreator,
+            Instrumentation instrumentation,
+            BigQueryMetrics metrics) {
         switch (config.getSinkConnectorSchemaDataType()) {
             case PROTOBUF:
-                return new BigQueryProtoWriter(config, bqWriterCreator, credCreator, streamCreator);
+                return new BigQueryProtoWriter(config, bqWriterCreator, credCreator, streamCreator, instrumentation, metrics);
             case JSON:
                 return new BigQueryJsonWriter(config);
             default:

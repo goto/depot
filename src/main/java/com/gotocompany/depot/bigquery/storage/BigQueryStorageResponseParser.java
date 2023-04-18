@@ -5,6 +5,7 @@ import com.google.cloud.bigquery.storage.v1.Exceptions;
 import com.google.cloud.bigquery.storage.v1.RowError;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.message.Message;
+import com.gotocompany.depot.metrics.BigQueryMetrics;
 import com.gotocompany.depot.metrics.Instrumentation;
 import io.grpc.Status.Code;
 import com.google.rpc.Status;
@@ -18,10 +19,6 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 public class BigQueryStorageResponseParser {
-    private static final int STATUS_4XX = 400;
-    private static final int STATUS_5XX = 500;
-    private static final int STATUS_6XX = 600;
-
     private static final Set<Code> RETRYABLE_ERROR_CODES =
             new HashSet<Code>() {{
                 add(Code.INTERNAL);
@@ -32,15 +29,32 @@ public class BigQueryStorageResponseParser {
                 add(Code.UNAVAILABLE);
             }};
 
-
     public static ErrorInfo getError(Status error) {
-        if (error.getCode() >= STATUS_4XX && error.getCode() < STATUS_5XX) {
-            return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_4XX_ERROR);
-        }
-        if (error.getCode() >= STATUS_5XX && error.getCode() < STATUS_6XX) {
-            return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_5XX_ERROR);
-        } else {
-            return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_UNKNOWN_ERROR);
+        com.google.rpc.Code code = com.google.rpc.Code.forNumber(error.getCode());
+        switch (code) {
+            case OK:
+                return null;
+            case CANCELLED:
+            case INVALID_ARGUMENT:
+            case NOT_FOUND:
+            case ALREADY_EXISTS:
+            case PERMISSION_DENIED:
+            case UNAUTHENTICATED:
+            case RESOURCE_EXHAUSTED:
+            case FAILED_PRECONDITION:
+            case ABORTED:
+            case OUT_OF_RANGE:
+                return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_4XX_ERROR);
+            case UNKNOWN:
+            case INTERNAL:
+            case DATA_LOSS:
+            case UNAVAILABLE:
+            case UNIMPLEMENTED:
+            case UNRECOGNIZED:
+            case DEADLINE_EXCEEDED:
+                return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_5XX_ERROR);
+            default:
+                return new ErrorInfo(new Exception(error.getMessage()), ErrorType.SINK_UNKNOWN_ERROR);
         }
     }
 
@@ -56,7 +70,7 @@ public class BigQueryStorageResponseParser {
             BigQueryPayload payload,
             List<Message> messages,
             SinkResponse sinkResponse,
-            Instrumentation instrumentation) {
+            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
 
         payload.forEach(meta -> {
             if (!meta.isValid()) {
@@ -74,7 +88,7 @@ public class BigQueryStorageResponseParser {
             AppendRowsResponse appendRowsResponse,
             List<Message> messages,
             SinkResponse sinkResponse,
-            Instrumentation instrumentation) {
+            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
 
         if (appendRowsResponse.hasError()) {
             instrumentation.logError("received an error in stream :{} ", appendRowsResponse.getError());
@@ -107,7 +121,7 @@ public class BigQueryStorageResponseParser {
             BigQueryPayload payload,
             List<Message> messages,
             SinkResponse sinkResponse,
-            Instrumentation instrumentation) {
+            Instrumentation instrumentation, BigQueryMetrics bigQueryMetrics) {
         io.grpc.Status status = io.grpc.Status.fromThrowable(cause);
         instrumentation.logError("Error from exception: {} ", status.getDescription());
         if (BigQueryStorageResponseParser.shouldRetry(status)) {
@@ -134,6 +148,6 @@ public class BigQueryStorageResponseParser {
     }
 
     public static AppendRowsResponse get4xxErrorResponse() {
-        return AppendRowsResponse.newBuilder().setError(Status.newBuilder().setCode(STATUS_4XX).build()).build();
+        return AppendRowsResponse.newBuilder().setError(Status.newBuilder().setCode(com.google.rpc.Code.FAILED_PRECONDITION.ordinal()).build()).build();
     }
 }
