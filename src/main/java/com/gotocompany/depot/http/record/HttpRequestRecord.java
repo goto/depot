@@ -62,11 +62,19 @@ public class HttpRequestRecord implements Iterable<Integer> {
     }
 
     public String getRequestString() throws IOException {
-        return String.format("\nRequest Method: %s\nRequest Url: %s\nRequest Headers: %s\nRequest Body: %s",
-                httpRequest.getMethod(),
-                httpRequest.getURI(),
-                Arrays.asList(httpRequest.getAllHeaders()),
-                getRequestBody());
+        StringBuilder requestString = new StringBuilder();
+        requestString.append("\nRequest Method: ").append(httpRequest.getMethod())
+                .append("\nRequest Url: ").append(httpRequest.getURI())
+                .append("\nRequest Headers: ").append(Arrays.asList(httpRequest.getAllHeaders()));
+        if (httpRequest.getEntity() != null) {
+            requestString.append("\nRequest Body: ").append(getRequestBody());
+        }
+        return requestString.toString();
+//        return String.format("\nRequest Method: %s\nRequest Url: %s\nRequest Headers: %s\nRequest Body: %s",
+//                httpRequest.getMethod(),
+//                httpRequest.getURI(),
+//                Arrays.asList(httpRequest.getAllHeaders()),
+//                getRequestBody());
     }
 
     @NotNull
