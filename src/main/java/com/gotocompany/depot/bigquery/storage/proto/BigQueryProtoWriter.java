@@ -24,14 +24,12 @@ import com.gotocompany.depot.config.BigQuerySinkConfig;
 import com.gotocompany.depot.metrics.BigQueryMetrics;
 import com.gotocompany.depot.metrics.Instrumentation;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-@Slf4j
 public class BigQueryProtoWriter implements BigQueryWriter {
 
     private final BigQuerySinkConfig config;
@@ -91,7 +89,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
     public void close() throws IOException {
         synchronized (this) {
             isClosed = true;
-            log.info("Closing StreamWriter");
+            instrumentation.logInfo("Closing StreamWriter");
             Instant start = Instant.now();
             this.streamWriter.close();
             instrument(start, BigQueryMetrics.BigQueryStorageAPIType.STREAM_WRITER_CLOSED);
@@ -105,14 +103,14 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         ProtoRows payload = (ProtoRows) rows.getPayload();
         Instant start;
         if (isClosed) {
-            log.error("The client is permanently closed. More tasks can not be added");
+            instrumentation.logError("The client is permanently closed. More tasks can not be added");
             return BigQueryStorageResponseParser.get4xxErrorResponse();
         }
         // need to synchronize
         synchronized (this) {
             TableSchema updatedSchema = this.streamWriter.getUpdatedSchema();
             if (updatedSchema != null) {
-                log.info("Updated table schema detected, recreating stream writer");
+                instrumentation.logInfo("Updated table schema detected, recreating stream writer");
                 try {
                     // Close the StreamWriter
                     start = Instant.now();
