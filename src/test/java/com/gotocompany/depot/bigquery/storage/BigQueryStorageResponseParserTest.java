@@ -179,6 +179,11 @@ public class BigQueryStorageResponseParserTest {
     public void shouldSetSinkResponseForException() {
         Throwable cause = new StatusRuntimeException(Status.INTERNAL);
         BigQueryPayload payload = new BigQueryPayload();
+        payload.putValidIndexToInputIndex(0L, 0L);
+        payload.putValidIndexToInputIndex(1L, 1L);
+        payload.putValidIndexToInputIndex(2L, 2L);
+        payload.putValidIndexToInputIndex(3L, 3L);
+        payload.putValidIndexToInputIndex(4L, 4L);
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         responseParser.setSinkResponseForException(cause, payload, messages, response);
@@ -199,6 +204,11 @@ public class BigQueryStorageResponseParserTest {
     public void shouldSetSinkResponseForExceptionWithNonRetry() {
         Throwable cause = new StatusRuntimeException(Status.RESOURCE_EXHAUSTED);
         BigQueryPayload payload = new BigQueryPayload();
+        payload.putValidIndexToInputIndex(0L, 0L);
+        payload.putValidIndexToInputIndex(1L, 1L);
+        payload.putValidIndexToInputIndex(2L, 2L);
+        payload.putValidIndexToInputIndex(3L, 3L);
+        payload.putValidIndexToInputIndex(4L, 4L);
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         responseParser.setSinkResponseForException(cause, payload, messages, response);
@@ -228,15 +238,11 @@ public class BigQueryStorageResponseParserTest {
         List<Message> messages = createMockMessages();
         SinkResponse response = new SinkResponse();
         responseParser.setSinkResponseForException(cause, payload, messages, response);
-        Assert.assertEquals(5, response.getErrors().size());
+        Assert.assertEquals(3, response.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(0L).getErrorType());
-        Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(1L).getErrorType());
-        Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(2L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(3L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_4XX_ERROR, response.getErrors().get(4L).getErrorType());
         Assert.assertEquals("message1", response.getErrors().get(0L).getException().getMessage());
-        Assert.assertEquals("com.google.cloud.bigquery.storage.v1.Exceptions$AppendSerializationError: UNKNOWN: test error", response.getErrors().get(1L).getException().getMessage());
-        Assert.assertEquals("com.google.cloud.bigquery.storage.v1.Exceptions$AppendSerializationError: UNKNOWN: test error", response.getErrors().get(2L).getException().getMessage());
         Assert.assertEquals("com.google.cloud.bigquery.storage.v1.Exceptions$AppendSerializationError: UNKNOWN: test error", response.getErrors().get(3L).getException().getMessage());
         Assert.assertEquals("message2", response.getErrors().get(4L).getException().getMessage());
     }

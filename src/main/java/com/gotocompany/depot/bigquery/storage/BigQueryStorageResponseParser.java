@@ -150,13 +150,17 @@ public class BigQueryStorageResponseParser {
         io.grpc.Status status = io.grpc.Status.fromThrowable(cause);
         instrumentation.logError("Error from exception: {} ", status.getDescription());
         if (BigQueryStorageResponseParser.shouldRetry(status)) {
-            IntStream.range(0, messages.size())
-                    .forEach(index -> sinkResponse.addErrors(index, new ErrorInfo(new Exception(cause), ErrorType.SINK_5XX_ERROR)));
-            instrumentErrors(status);
+            IntStream.range(0, payload.getPayloadIndexes().size())
+                    .forEach(index -> {
+                        sinkResponse.addErrors(payload.getInputIndex(index), new ErrorInfo(new Exception(cause), ErrorType.SINK_5XX_ERROR));
+                        instrumentErrors(status);
+                    });
         } else {
-            IntStream.range(0, messages.size())
-                    .forEach(index -> sinkResponse.addErrors(index, new ErrorInfo(new Exception(cause), ErrorType.SINK_4XX_ERROR)));
-            instrumentErrors(status);
+            IntStream.range(0, payload.getPayloadIndexes().size())
+                    .forEach(index -> {
+                        sinkResponse.addErrors(payload.getInputIndex(index), new ErrorInfo(new Exception(cause), ErrorType.SINK_4XX_ERROR));
+                        instrumentErrors(status);
+                    });
         }
         if (cause instanceof Exceptions.AppendSerializationError) {
             Exceptions.AppendSerializationError ase = (Exceptions.AppendSerializationError) cause;

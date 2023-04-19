@@ -37,16 +37,18 @@ public class BigQueryStorageAPISink implements Sink {
         SinkResponse sinkResponse = new SinkResponse();
         BigQueryPayload payload = bigQueryStorageClient.convert(messages);
         responseParser.setSinkResponseForInvalidMessages(payload, messages, sinkResponse);
-        try {
-            AppendRowsResponse appendRowsResponse = bigQueryStorageClient.appendAndGet(payload);
-            responseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            Throwable cause = e.getCause();
-            responseParser.setSinkResponseForException(cause, payload, messages, sinkResponse);
-        } catch (InterruptedException e) {
-            // Something bad has happened
-            e.printStackTrace();
+        if (payload.getPayloadIndexes().size() > 0) {
+            try {
+                AppendRowsResponse appendRowsResponse = bigQueryStorageClient.appendAndGet(payload);
+                responseParser.setSinkResponseForErrors(payload, appendRowsResponse, messages, sinkResponse);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+                Throwable cause = e.getCause();
+                responseParser.setSinkResponseForException(cause, payload, messages, sinkResponse);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                throw new SinkException("Interrupted exception occurred", e);
+            }
         }
         return sinkResponse;
     }
