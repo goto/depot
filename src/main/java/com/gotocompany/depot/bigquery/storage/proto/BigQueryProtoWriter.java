@@ -143,9 +143,9 @@ public class BigQueryProtoWriter implements BigQueryWriter {
     }
 
     private void captureSizeMetric(ProtoRows payload) {
-        instrumentation.captureValue(
+        instrumentation.captureCount(
                 metrics.getBigqueryPayloadSizeMetrics(),
-                payload.getSerializedSize(),
+                (long) payload.getSerializedSize(),
                 String.format(BigQueryMetrics.BIGQUERY_TABLE_TAG, config.getTableName()),
                 String.format(BigQueryMetrics.BIGQUERY_DATASET_TAG, config.getDatasetName()),
                 String.format(BigQueryMetrics.BIGQUERY_PROJECT_TAG, config.getGCloudProjectID()));

@@ -313,9 +313,9 @@ public class BigQueryProtoWriterTest {
         String datasetName = String.format(BigQueryMetrics.BIGQUERY_DATASET_TAG, config.getDatasetName());
         String projectId = String.format(BigQueryMetrics.BIGQUERY_PROJECT_TAG, config.getGCloudProjectID());
 
-        Mockito.verify(instrumentation, Mockito.times(1)).captureValue(
+        Mockito.verify(instrumentation, Mockito.times(1)).captureCount(
                 Mockito.eq(metrics.getBigqueryPayloadSizeMetrics()),
-                Mockito.anyInt(),
+                Mockito.anyLong(),
                 Mockito.eq(tableName),
                 Mockito.eq(datasetName),
                 Mockito.eq(projectId));
