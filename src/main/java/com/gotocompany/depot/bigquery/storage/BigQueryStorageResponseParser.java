@@ -105,7 +105,7 @@ public class BigQueryStorageResponseParser {
                 String.format(BigQueryMetrics.BIGQUERY_TABLE_TAG, sinkConfig.getTableName()),
                 String.format(BigQueryMetrics.BIGQUERY_DATASET_TAG, sinkConfig.getDatasetName()),
                 String.format(BigQueryMetrics.BIGQUERY_PROJECT_TAG, sinkConfig.getGCloudProjectID()),
-                String.format(BigQueryMetrics.BIGQUERY_ERROR_TAG, error));
+                String.format(BigQueryMetrics.BIGQUERY_ERROR_TAG, error.toString()));
     }
 
     public void setSinkResponseForErrors(
@@ -148,18 +148,18 @@ public class BigQueryStorageResponseParser {
             List<Message> messages,
             SinkResponse sinkResponse) {
         io.grpc.Status status = io.grpc.Status.fromThrowable(cause);
-        instrumentation.logError("Error from exception: {} ", status.getDescription());
+        instrumentation.logError("Error from exception: {} ", status);
         if (BigQueryStorageResponseParser.shouldRetry(status)) {
             IntStream.range(0, payload.getPayloadIndexes().size())
                     .forEach(index -> {
                         sinkResponse.addErrors(payload.getInputIndex(index), new ErrorInfo(new Exception(cause), ErrorType.SINK_5XX_ERROR));
-                        instrumentErrors(status);
+                        instrumentErrors(status.getCode());
                     });
         } else {
             IntStream.range(0, payload.getPayloadIndexes().size())
                     .forEach(index -> {
                         sinkResponse.addErrors(payload.getInputIndex(index), new ErrorInfo(new Exception(cause), ErrorType.SINK_4XX_ERROR));
-                        instrumentErrors(status);
+                        instrumentErrors(status.getCode());
                     });
         }
         if (cause instanceof Exceptions.AppendSerializationError) {
