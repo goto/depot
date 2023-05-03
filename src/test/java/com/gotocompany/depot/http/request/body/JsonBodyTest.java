@@ -14,6 +14,7 @@ import com.gotocompany.depot.message.json.JsonMessageParser;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
 import com.gotocompany.depot.metrics.StatsDReporter;
 import org.aeonbits.owner.ConfigFactory;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -75,14 +76,14 @@ public class JsonBodyTest {
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
         RequestBody body = new JsonBody(sinkConfig);
         String stringBody = body.build(messageContainer);
-        String expected = "{\"log_key\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
+        String expected = "{\"logKey\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
                 + "\"topic\":\"sample-topic\","
-                + "\"log_message\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
+                + "\"logMessage\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
                 + "\\\"stringValue\\\":\\\"test-string\\\",\\\"listMessageValues\\\":[{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\","
                 + "\\\"orderNumber\\\":\\\"test-order-1\\\"},{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}],"
                 + "\\\"timestampValue\\\":\\\"Apr 12, 2023 12:47:55 PM\\\",\\\"floatValue\\\":10,\\\"boolValue\\\":true,"
                 + "\\\"messageValue\\\":{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}}\"}";
-        assertEquals(expected, stringBody);
+        jsonEquals(expected, stringBody);
     }
 
     @Test
@@ -93,13 +94,13 @@ public class JsonBodyTest {
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
         RequestBody body = new JsonBody(sinkConfig);
         String stringBody = body.build(messageContainer);
-        String expected = "{\"log_key\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
-                + "\"log_message\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
+        String expected = "{\"logKey\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
+                + "\"logMessage\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
                 + "\\\"stringValue\\\":\\\"test-string\\\",\\\"listMessageValues\\\":[{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\","
                 + "\\\"orderNumber\\\":\\\"test-order-1\\\"},{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}],"
                 + "\\\"timestampValue\\\":\\\"2023-04-12T12:47:55.600020Z\\\",\\\"floatValue\\\":10,\\\"boolValue\\\":true,"
                 + "\\\"messageValue\\\":{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}}\"}";
-        assertEquals(expected, stringBody);
+        jsonEquals(expected, stringBody);
     }
 
     @Test
@@ -115,7 +116,11 @@ public class JsonBodyTest {
         when(messageContainer.getParsedLogKey("")).thenReturn(jsonParsedKey);
         RequestBody body = new JsonBody(httpSinkConfig);
         String stringBody = body.build(messageContainer);
-        String expected = "{\"log_key\":\"{\\\"first_name\\\":\\\"john doe\\\"}\",\"log_message\":\"{\\\"first_name\\\":\\\"john doe\\\"}\"}";
-        assertEquals(expected, stringBody);
+        String expected = "{\"logKey\":\"{\\\"first_name\\\":\\\"john doe\\\"}\",\"logMessage\":\"{\\\"first_name\\\":\\\"john doe\\\"}\"}";
+        jsonEquals(expected, stringBody);
+    }
+
+    private void jsonEquals(String expected, String actual) {
+        assertEquals(new JSONObject(expected).toString(), new JSONObject(actual).toString());
     }
 }

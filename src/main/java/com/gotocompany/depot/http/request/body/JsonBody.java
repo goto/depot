@@ -33,8 +33,8 @@ public class JsonBody implements RequestBody {
         ParsedMessage parsedLogKey = messageContainer.getParsedLogKey(config.getSinkConnectorSchemaProtoKeyClass());
         ParsedMessage parsedLogMessage = messageContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         JSONObject payload = new JSONObject();
-        payload.put("log_key", buildJsonMessage(parsedLogKey));
-        payload.put("log_message", buildJsonMessage(parsedLogMessage));
+        payload.put("logKey", buildJsonMessage(parsedLogKey));
+        payload.put("logMessage", buildJsonMessage(parsedLogMessage));
         MessageUtils.getMetaData(messageContainer.getMessage(), config, Date::new)
                 .forEach((key, value) -> payload.put(removePrefixMetadata(key), value));
         return payload.toString();
