@@ -32,7 +32,7 @@ public class HttpSinkClient {
         return responseList;
     }
 
-    public void instrument(HttpSinkResponse httpSinkResponse) {
+    private void instrument(HttpSinkResponse httpSinkResponse) {
         String statusCode = httpSinkResponse.getResponseCode();
         String httpCodeTag = statusCode.equals("null") ? "status_code=" : "status_code=" + statusCode;
         instrumentation.captureCount(httpSinkMetrics.getHttpResponseCodeTotalMetric(), 1L, httpCodeTag);
