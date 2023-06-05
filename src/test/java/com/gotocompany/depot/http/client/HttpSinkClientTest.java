@@ -2,6 +2,7 @@ package com.gotocompany.depot.http.client;
 
 import com.gotocompany.depot.http.record.HttpRequestRecord;
 import com.gotocompany.depot.http.response.HttpSinkResponse;
+import com.gotocompany.depot.metrics.HttpSinkMetrics;
 import com.gotocompany.depot.metrics.Instrumentation;
 import org.apache.http.client.HttpClient;
 import org.junit.Assert;
@@ -23,11 +24,14 @@ public class HttpSinkClientTest {
     private HttpClient client;
 
     @Mock
+    private HttpSinkMetrics httpSinkMetrics;
+
+    @Mock
     private Instrumentation instrumentation;
 
     @Test
     public void shouldSendRecords() throws IOException {
-        HttpSinkClient sinkClient = new HttpSinkClient(client, instrumentation);
+        HttpSinkClient sinkClient = new HttpSinkClient(client, httpSinkMetrics, instrumentation);
 
         List<HttpRequestRecord> requestRecords = new ArrayList<HttpRequestRecord>() {{
             add(Mockito.mock(HttpRequestRecord.class));
