@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static org.mockito.Mockito.when;
+
 @RunWith(MockitoJUnitRunner.class)
 public class HttpSinkClientTest {
 
@@ -52,11 +54,15 @@ public class HttpSinkClientTest {
         IntStream.range(0, requestRecords.size()).forEach(
                 index -> {
                     try {
-                        Mockito.when(requestRecords.get(index).send(client)).thenReturn(responses.get(index));
+                        when(requestRecords.get(index).send(client)).thenReturn(responses.get(index));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
+        );
+
+        IntStream.range(0, responses.size()).forEach(
+                index -> when(responses.get(index).getResponseCode()).thenReturn("200")
         );
         List<HttpSinkResponse> actualResponses = sinkClient.send(requestRecords);
         IntStream.range(0, actualResponses.size()).forEach(
