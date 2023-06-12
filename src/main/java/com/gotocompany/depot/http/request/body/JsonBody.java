@@ -65,7 +65,12 @@ public class JsonBody implements RequestBody {
     private Object getTimestampValue(Object value) {
         Instant time = ((ParsedMessage) value).getLogicalValue().getTimestamp();
         LocalDateTime datetime = LocalDateTime.ofInstant(time, ZoneOffset.UTC);
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a");
+        DateTimeFormatter format;
+        if (config.isSinkHttpSimpleDateFormatEnable()) {
+            format = DateTimeFormatter.ofPattern(config.getSinkHttpSimpleDateFormatString());
+        } else {
+            format = DateTimeFormatter.ISO_INSTANT;
+        }
         return datetime.format(format);
     }
 
