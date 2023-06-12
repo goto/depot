@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class JsonBody implements RequestBody {
 
     private Object getTimestampValue(Object value) {
         Instant time = ((ParsedMessage) value).getLogicalValue().getTimestamp();
-        LocalDateTime datetime = LocalDateTime.ofInstant(time, ZoneOffset.UTC);
+        ZonedDateTime datetime = ZonedDateTime.ofInstant(time, ZoneOffset.UTC);
         DateTimeFormatter format;
         if (config.isSinkHttpSimpleDateFormatEnable()) {
             format = DateTimeFormatter.ofPattern(config.getSinkHttpSimpleDateFormatString());
