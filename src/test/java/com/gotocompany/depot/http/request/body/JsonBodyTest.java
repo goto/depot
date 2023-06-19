@@ -85,7 +85,6 @@ public class JsonBodyTest {
                 + "\\\"messageValue\\\":{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}}\"}";
         jsonEquals(expected, stringBody);
     }
-    
     @Test
     public void shouldReturnPayloadWithStringTimestampAndWithoutMetadata() throws IOException {
         configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "false");
