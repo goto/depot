@@ -79,6 +79,7 @@ public class HttpClientUtilsTest {
         Map<String, String> configuration = new HashMap<>();
         configuration.put("SINK_HTTPV2_OAUTH2_ENABLE", "true");
         configuration.put("SINK_HTTPV2_OAUTH2_ACCESS_TOKEN_URL", "http://127.0.0.1:1080/oauth2/token");
+
         clientConfig = ConfigFactory.create(HttpClientConfig.class, configuration);
         CloseableHttpClient closeableHttpClient = HttpClientUtils.newHttpClient(clientConfig, statsDReporter);
 
