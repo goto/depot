@@ -69,8 +69,9 @@ public class JsonBodyTest {
     }
 
     @Test
-    public void shouldReturnPayloadWithDateFormatAndMetadata() throws IOException {
-        configuration.put("SINK_HTTP_DATE_FORMAT_ENABLE", "true");
+    public void shouldReturnPayloadWithSimpleDateFormatAndMetadata() throws IOException {
+        configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "true");
+        configuration.put("SINK_HTTPV2_SIMPLE_DATE_FORMAT_ENABLE", "true");
         configuration.put("SINK_ADD_METADATA_ENABLED", "true");
         configuration.put("SINK_METADATA_COLUMNS_TYPES", "message_topic=string");
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
@@ -87,8 +88,46 @@ public class JsonBodyTest {
     }
 
     @Test
+    public void shouldReturnPayloadWithSimpleDateFormatAndMetadataWithCustomFormatString() throws IOException {
+        configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "true");
+        configuration.put("SINK_HTTPV2_SIMPLE_DATE_FORMAT_ENABLE", "true");
+        configuration.put("SINK_HTTPV2_SIMPLE_DATE_FORMAT_STRING", "MM, d, yyyy h:mm:ss a");
+        configuration.put("SINK_ADD_METADATA_ENABLED", "true");
+        configuration.put("SINK_METADATA_COLUMNS_TYPES", "message_topic=string");
+        sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
+        RequestBody body = new JsonBody(sinkConfig);
+        String stringBody = body.build(messageContainer);
+        String expected = "{\"logKey\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
+                + "\"topic\":\"sample-topic\","
+                + "\"logMessage\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
+                + "\\\"stringValue\\\":\\\"test-string\\\",\\\"listMessageValues\\\":[{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\","
+                + "\\\"orderNumber\\\":\\\"test-order-1\\\"},{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}],"
+                + "\\\"timestampValue\\\":\\\"04, 12, 2023 12:47:55 PM\\\",\\\"floatValue\\\":10,\\\"boolValue\\\":true,"
+                + "\\\"messageValue\\\":{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}}\"}";
+        jsonEquals(expected, stringBody);
+    }
+
+    @Test
+    public void shouldReturnPayloadWithISODateFormatAndMetadata() throws IOException {
+        configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "true");
+        configuration.put("SINK_ADD_METADATA_ENABLED", "true");
+        configuration.put("SINK_METADATA_COLUMNS_TYPES", "message_topic=string");
+        sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
+        RequestBody body = new JsonBody(sinkConfig);
+        String stringBody = body.build(messageContainer);
+        String expected = "{\"logKey\":\"{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}\","
+                + "\"topic\":\"sample-topic\","
+                + "\"logMessage\":\"{\\\"listValues\\\":[\\\"test-list-1\\\",\\\"test-list-2\\\",\\\"test-list-3\\\"],"
+                + "\\\"stringValue\\\":\\\"test-string\\\",\\\"listMessageValues\\\":[{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\","
+                + "\\\"orderNumber\\\":\\\"test-order-1\\\"},{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}],"
+                + "\\\"timestampValue\\\":\\\"2023-04-12T12:47:55.600020Z\\\",\\\"floatValue\\\":10,\\\"boolValue\\\":true,"
+                + "\\\"messageValue\\\":{\\\"orderDetails\\\":\\\"ORDER-DETAILS-1\\\",\\\"orderNumber\\\":\\\"test-order-1\\\"}}\"}";
+        jsonEquals(expected, stringBody);
+    }
+
+    @Test
     public void shouldReturnPayloadWithStringTimestampAndWithoutMetadata() throws IOException {
-        configuration.put("SINK_HTTP_DATE_FORMAT_ENABLE", "false");
+        configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "false");
         configuration.put("SINK_ADD_METADATA_ENABLED", "false");
         configuration.put("SINK_METADATA_COLUMNS_TYPES", "message_topic=string");
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
