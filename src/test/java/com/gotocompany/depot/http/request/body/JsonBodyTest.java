@@ -69,9 +69,8 @@ public class JsonBodyTest {
     }
 
     @Test
-    public void shouldReturnPayloadWithSimpleDateFormatAndMetadata() throws IOException {
+    public void shouldReturnPayloadWithDateFormatAndMetadata() throws IOException {
         configuration.put("SINK_HTTPV2_DATE_FORMAT_ENABLE", "true");
-        configuration.put("SINK_HTTPV2_SIMPLE_DATE_FORMAT_ENABLE", "true");
         configuration.put("SINK_ADD_METADATA_ENABLED", "true");
         configuration.put("SINK_METADATA_COLUMNS_TYPES", "message_topic=string");
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
