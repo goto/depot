@@ -84,12 +84,4 @@ public interface HttpSinkConfig extends HttpClientConfig {
     @Key("SINK_HTTPV2_DELETE_BODY_ENABLE")
     @DefaultValue("true")
     Boolean isSinkHttpDeleteBodyEnable();
-
-    @Key("SINK_HTTPV2_SIMPLE_DATE_FORMAT_ENABLE")
-    @DefaultValue("false")
-    Boolean isSinkHttpSimpleDateFormatEnable();
-
-    @Key("SINK_HTTPV2_SIMPLE_DATE_FORMAT_STRING")
-    @DefaultValue("MMM d, yyyy h:mm:ss a")
-    String getSinkHttpSimpleDateFormatString();
 }
