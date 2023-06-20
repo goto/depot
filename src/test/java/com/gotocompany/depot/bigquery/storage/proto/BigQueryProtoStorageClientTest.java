@@ -597,7 +597,7 @@ public class BigQueryProtoStorageClientTest {
             metas.add(r);
         }
         Assert.assertEquals(1, metas.size());
-        Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, metas.get(0).getErrorInfo().getErrorType());
+        Assert.assertEquals(ErrorType.INVALID_MESSAGE_ERROR, metas.get(0).getErrorInfo().getErrorType());
         Assert.assertTrue(metas.get(0).getErrorInfo().getException().getMessage()
                 .contains("is outside the allowed bounds. You can only stream to date range within 1825 days in the past and 366 days in the future relative to the current date."));
     }
@@ -644,9 +644,33 @@ public class BigQueryProtoStorageClientTest {
             metas.add(r);
         }
         Assert.assertEquals(1, metas.size());
-        Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, metas.get(0).getErrorInfo().getErrorType());
+        Assert.assertEquals(ErrorType.INVALID_MESSAGE_ERROR, metas.get(0).getErrorInfo().getErrorType());
         Assert.assertTrue(metas.get(0).getErrorInfo().getException().getMessage()
                 .contains("is outside the allowed bounds. You can only stream to date range within 1825 days in the past and 366 days in the future relative to the current date."));
+    }
+    @Test
+    public void shouldNotConvertIfInvalidTimeStamp() throws IOException {
+        Instant now = Instant.now();
+        Instant invalid = Instant.ofEpochSecond(1111111111111111L);
+        TestMessageBQ m1 = TestMessageBQ.newBuilder()
+                .setCreatedAt(Timestamp.newBuilder().setSeconds(now.getEpochSecond()).build())
+                .addUpdatedAt(Timestamp.newBuilder().setSeconds(invalid.getEpochSecond()).build())
+                .addUpdatedAt(Timestamp.newBuilder().setSeconds(now.getEpochSecond()).build())
+                .build();
+        List<Message> inputList = new ArrayList<Message>() {{
+            add(new Message(null, m1.toByteArray()));
+        }};
+        BigQueryPayload payload = converter.convert(inputList);
+        ProtoRows protoPayload = (ProtoRows) payload.getPayload();
+        Assert.assertEquals(0, protoPayload.getSerializedRowsCount());
+        List<BigQueryRecordMeta> metas = new ArrayList<>();
+        for (BigQueryRecordMeta r : payload) {
+            metas.add(r);
+        }
+        Assert.assertEquals(1, metas.size());
+        Assert.assertEquals(ErrorType.INVALID_MESSAGE_ERROR, metas.get(0).getErrorInfo().getErrorType());
+        Assert.assertTrue(metas.get(0).getErrorInfo().getException().getMessage()
+                .contains("is outside the allowed bounds in BQ"));
     }
 
     @Test
