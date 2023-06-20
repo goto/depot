@@ -32,7 +32,7 @@ public class JsonBody implements RequestBody {
     public String build(MessageContainer messageContainer) throws IOException {
         ParsedMessage parsedLogKey = messageContainer.getParsedLogKey(config.getSinkConnectorSchemaProtoKeyClass());
         ParsedMessage parsedLogMessage = messageContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
-        JSONObject payload = new JSONObject();
+        JSONObject payload = new JSONObject();aa
         payload.put("logKey", buildJsonMessage(parsedLogKey));
         payload.put("logMessage", buildJsonMessage(parsedLogMessage));
         MessageUtils.getMetaData(messageContainer.getMessage(), config, Date::new)
