@@ -32,11 +32,19 @@ import java.util.stream.Collectors;
 public class ProtoJsonProvider implements JsonProvider {
 
     private static final Long LONG_MASK = 0x00000000FFFFFFFFL;
-    private static final JsonFormat.Printer PRINTER = JsonFormat.printer()
+    private static JsonFormat.Printer PRINTER = JsonFormat.printer()
             .preservingProtoFieldNames()
-            .includingDefaultValueFields()
             .omittingInsignificantWhitespace();
     private static final JsonOrgJsonProvider JSON_P = new JsonOrgJsonProvider();
+
+    public ProtoJsonProvider(boolean defaultFieldValueEnable) {
+        if (defaultFieldValueEnable)
+            PRINTER = PRINTER.includingDefaultValueFields();
+    }
+
+    public ProtoJsonProvider() {
+
+    }
 
     private static String printMessage(DynamicMessage msg) {
         try {
@@ -247,6 +255,7 @@ public class ProtoJsonProvider implements JsonProvider {
         private boolean isArray() {
             return value instanceof List;
         }
+
         private Object getJsonValue() {
             Descriptors.Descriptor parent = fd.getContainingType();
             if (isArray() && ((List) value).isEmpty()) {

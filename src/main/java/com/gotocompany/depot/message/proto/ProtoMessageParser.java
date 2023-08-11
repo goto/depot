@@ -31,6 +31,7 @@ public class ProtoMessageParser implements MessageParser {
 
     private final StencilClient stencilClient;
     private final ProtoFieldParser protoMappingParser = new ProtoFieldParser();
+    private boolean defaultFieldValueEnable;
 
     public ProtoMessageParser(SinkConfig sinkConfig, StatsDReporter reporter, DepotStencilUpdateListener protoUpdateListener) {
         StencilConfig stencilConfig = StencilUtils.getStencilConfig(sinkConfig, reporter.getClient(), protoUpdateListener);
@@ -39,6 +40,7 @@ public class ProtoMessageParser implements MessageParser {
         } else {
             stencilClient = StencilClientFactory.getClient();
         }
+        defaultFieldValueEnable = sinkConfig.getSinkDefaultFieldValueEnable();
     }
 
     public ProtoMessageParser(StencilClient stencilClient) {
@@ -66,7 +68,7 @@ public class ProtoMessageParser implements MessageParser {
             throw new EmptyMessageException();
         }
         DynamicMessage dynamicMessage = stencilClient.parse(schemaClass, payload);
-        return new ProtoParsedMessage(dynamicMessage);
+        return new ProtoParsedMessage(dynamicMessage,defaultFieldValueEnable);
     }
 
     public Map<String, Descriptors.Descriptor> getDescriptorMap() {

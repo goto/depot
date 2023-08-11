@@ -27,12 +27,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProtoParsedMessage implements ParsedMessage {
 
-    private static final Configuration JSON_PATH_CONFIG = Configuration.builder()
+    private static Configuration JSON_PATH_CONFIG = Configuration.builder()
             .jsonProvider(new ProtoJsonProvider())
             .build();
     private final Message dynamicMessage;
 
-    public ProtoParsedMessage(DynamicMessage dynamicMessage) {
+    public ProtoParsedMessage(DynamicMessage dynamicMessage, boolean includeDefaultFieldsEnable) {
+        JSON_PATH_CONFIG = Configuration.builder()
+                .jsonProvider(new ProtoJsonProvider(includeDefaultFieldsEnable))
+                .build();
         this.dynamicMessage = dynamicMessage;
     }
 
