@@ -34,6 +34,7 @@ public class ProtoJsonProvider implements JsonProvider {
     private static final Long LONG_MASK = 0x00000000FFFFFFFFL;
     private static final JsonFormat.Printer PRINTER = JsonFormat.printer()
             .preservingProtoFieldNames()
+            .includingDefaultValueFields()
             .omittingInsignificantWhitespace();
     private static final JsonOrgJsonProvider JSON_P = new JsonOrgJsonProvider();
 
