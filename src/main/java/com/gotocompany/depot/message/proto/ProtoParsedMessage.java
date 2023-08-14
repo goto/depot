@@ -27,13 +27,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProtoParsedMessage implements ParsedMessage {
 
-    private static Configuration JSON_PATH_CONFIG = Configuration.builder()
+    private static Configuration jsonPathConfig = Configuration.builder()
             .jsonProvider(new ProtoJsonProvider())
             .build();
     private final Message dynamicMessage;
 
     public ProtoParsedMessage(DynamicMessage dynamicMessage, boolean includeDefaultFieldsEnable) {
-        JSON_PATH_CONFIG = Configuration.builder()
+        jsonPathConfig = Configuration.builder()
                 .jsonProvider(new ProtoJsonProvider(includeDefaultFieldsEnable))
                 .build();
         this.dynamicMessage = dynamicMessage;
@@ -106,7 +106,7 @@ public class ProtoParsedMessage implements ParsedMessage {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Invalid field config : name can not be empty");
         }
-        return MessageUtils.getFieldFromJsonObject(name, dynamicMessage, JSON_PATH_CONFIG);
+        return MessageUtils.getFieldFromJsonObject(name, dynamicMessage, jsonPathConfig);
     }
 
     @Override

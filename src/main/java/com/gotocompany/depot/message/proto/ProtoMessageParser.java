@@ -68,7 +68,7 @@ public class ProtoMessageParser implements MessageParser {
             throw new EmptyMessageException();
         }
         DynamicMessage dynamicMessage = stencilClient.parse(schemaClass, payload);
-        return new ProtoParsedMessage(dynamicMessage,defaultFieldValueEnable);
+        return new ProtoParsedMessage(dynamicMessage, defaultFieldValueEnable);
     }
 
     public Map<String, Descriptors.Descriptor> getDescriptorMap() {

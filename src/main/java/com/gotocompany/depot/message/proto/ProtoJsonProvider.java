@@ -32,14 +32,15 @@ import java.util.stream.Collectors;
 public class ProtoJsonProvider implements JsonProvider {
 
     private static final Long LONG_MASK = 0x00000000FFFFFFFFL;
-    private static JsonFormat.Printer PRINTER = JsonFormat.printer()
+    private static JsonFormat.Printer printer = JsonFormat.printer()
             .preservingProtoFieldNames()
             .omittingInsignificantWhitespace();
     private static final JsonOrgJsonProvider JSON_P = new JsonOrgJsonProvider();
 
     public ProtoJsonProvider(boolean defaultFieldValueEnable) {
-        if (defaultFieldValueEnable)
-            PRINTER = PRINTER.includingDefaultValueFields();
+        if (defaultFieldValueEnable) {
+            printer = printer.includingDefaultValueFields();
+        }
     }
 
     public ProtoJsonProvider() {
@@ -48,7 +49,7 @@ public class ProtoJsonProvider implements JsonProvider {
 
     private static String printMessage(DynamicMessage msg) {
         try {
-            return PRINTER.print(msg);
+            return printer.print(msg);
         } catch (InvalidProtocolBufferException e) {
             String name = msg.getDescriptorForType().getFullName();
             throw new DeserializerException("Unable to convert message to JSON" + name, e);
@@ -279,7 +280,7 @@ public class ProtoJsonProvider implements JsonProvider {
             }
             String jsonValue;
             try {
-                jsonValue = PRINTER.print(builder);
+                jsonValue = printer.print(builder);
             } catch (InvalidProtocolBufferException e) {
                 throw new DeserializerException("Unable to get JSON value at " + fd.getFullName(), e);
             }
