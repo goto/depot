@@ -6,6 +6,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import com.gotocompany.depot.config.SinkConfig;
 import com.jayway.jsonpath.InvalidJsonException;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.spi.json.JsonOrgJsonProvider;
@@ -32,22 +33,22 @@ import java.util.stream.Collectors;
 public class ProtoJsonProvider implements JsonProvider {
 
     private static final Long LONG_MASK = 0x00000000FFFFFFFFL;
-    private static JsonFormat.Printer printer = JsonFormat.printer()
-            .preservingProtoFieldNames()
-            .omittingInsignificantWhitespace();
+    private final JsonFormat.Printer printer;
     private static final JsonOrgJsonProvider JSON_P = new JsonOrgJsonProvider();
 
-    public ProtoJsonProvider(boolean defaultFieldValueEnable) {
-        if (defaultFieldValueEnable) {
-            printer = printer.includingDefaultValueFields();
+    public ProtoJsonProvider(SinkConfig sinkConfig) {
+
+        JsonFormat.Printer tempPrinter = JsonFormat.printer()
+                .preservingProtoFieldNames()
+                .omittingInsignificantWhitespace();
+        if (sinkConfig.getSinkDefaultFieldValueEnable()) {
+            tempPrinter = tempPrinter.includingDefaultValueFields();
         }
+        this.printer = tempPrinter;
     }
 
-    public ProtoJsonProvider() {
 
-    }
-
-    private static String printMessage(DynamicMessage msg) {
+    private String printMessage(DynamicMessage msg) {
         try {
             return printer.print(msg);
         } catch (InvalidProtocolBufferException e) {
@@ -56,11 +57,11 @@ public class ProtoJsonProvider implements JsonProvider {
         }
     }
 
-    private static boolean isPrimitive(Descriptors.FieldDescriptor fd) {
+    private boolean isPrimitive(Descriptors.FieldDescriptor fd) {
         return !fd.getJavaType().equals(Descriptors.FieldDescriptor.JavaType.MESSAGE);
     }
 
-    private static Object getPrimitiveValue(Descriptors.FieldDescriptor fd, Object value) {
+    private Object getPrimitiveValue(Descriptors.FieldDescriptor fd, Object value) {
         switch (fd.getType()) {
             case UINT32:
             case FIXED32:
@@ -84,7 +85,7 @@ public class ProtoJsonProvider implements JsonProvider {
     /**
      * Convert an unsigned 32-bit integer to a string.
      */
-    private static String unsignedToString(final int value) {
+    private String unsignedToString(final int value) {
         if (value >= 0) {
             return Integer.toString(value);
         } else {
@@ -95,7 +96,7 @@ public class ProtoJsonProvider implements JsonProvider {
     /**
      * Convert an unsigned 64-bit integer to a string.
      */
-    private static String unsignedToString(final long value) {
+    private String unsignedToString(final long value) {
         if (value >= 0) {
             return Long.toString(value);
         } else {

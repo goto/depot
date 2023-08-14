@@ -27,20 +27,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProtoParsedMessage implements ParsedMessage {
 
-    private static Configuration jsonPathConfig = Configuration.builder()
-            .jsonProvider(new ProtoJsonProvider())
-            .build();
-    private final Message dynamicMessage;
 
-    public ProtoParsedMessage(DynamicMessage dynamicMessage, boolean includeDefaultFieldsEnable) {
-        jsonPathConfig = Configuration.builder()
-                .jsonProvider(new ProtoJsonProvider(includeDefaultFieldsEnable))
-                .build();
+    private final Message dynamicMessage;
+    private final Configuration jsonPathConfig;
+
+    public ProtoParsedMessage(DynamicMessage dynamicMessage, Configuration jsonPathConfig) {
         this.dynamicMessage = dynamicMessage;
+        this.jsonPathConfig = jsonPathConfig;
     }
 
-    public ProtoParsedMessage(Message dynamicMessage) {
+    public ProtoParsedMessage(Message dynamicMessage, Configuration jsonPathConfig) {
         this.dynamicMessage = dynamicMessage;
+        this.jsonPathConfig = jsonPathConfig;
+
     }
 
     public String toString() {
@@ -76,7 +75,7 @@ public class ProtoParsedMessage implements ParsedMessage {
             case ENUM:
                 return value.toString();
             case MESSAGE:
-                return new ProtoParsedMessage((Message) value);
+                return new ProtoParsedMessage((Message) value, jsonPathConfig);
             default:
                 return value;
         }
