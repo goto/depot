@@ -10,10 +10,12 @@ import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.proto.ProtoParsedMessage;
 import com.gotocompany.stencil.Parser;
 import com.gotocompany.stencil.StencilClientFactory;
+import com.jayway.jsonpath.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -24,6 +26,9 @@ import static org.junit.Assert.assertThrows;
 public class TemplateTest {
     private ParsedMessage parsedTestMessage;
     private ParsedMessage parsedBookingMessage;
+    @Mock
+    private Configuration jsonPathConfig;
+
     @Before
     public void setUp() throws Exception {
         TestKey testKey = TestKey.newBuilder().setOrderNumber("ORDER-1-FROM-KEY").build();
@@ -37,9 +42,9 @@ public class TemplateTest {
         Message message = new Message(testKey.toByteArray(), testMessage.toByteArray());
         Message bookingMessage = new Message(testKey.toByteArray(), testBookingLogMessage.toByteArray());
         Parser protoParserTest = StencilClientFactory.getClient().getParser(TestMessage.class.getName());
-        parsedTestMessage = new ProtoParsedMessage(protoParserTest.parse((byte[]) message.getLogMessage()));
+        parsedTestMessage = new ProtoParsedMessage(protoParserTest.parse((byte[]) message.getLogMessage()), jsonPathConfig);
         Parser protoParserBooking = StencilClientFactory.getClient().getParser(TestBookingLogMessage.class.getName());
-        parsedBookingMessage = new ProtoParsedMessage(protoParserBooking.parse((byte[]) bookingMessage.getLogMessage()));
+        parsedBookingMessage = new ProtoParsedMessage(protoParserBooking.parse((byte[]) bookingMessage.getLogMessage()), jsonPathConfig);
     }
 
     @Test
