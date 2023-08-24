@@ -320,7 +320,7 @@ public class BigqueryProtoUpdateListenerTest {
         HashMap<String, Descriptor> descriptorsMap = new HashMap<String, Descriptor>() {{
             put(String.format("%s", TestKeyBQ.class.getName()), TestKeyBQ.getDescriptor());
         }};
-        Configuration jsonPathConfig = Configuration.builder()
+        jsonPathConfig = Configuration.builder()
                 .jsonProvider(new ProtoJsonProvider(config))
                 .build();
         MessageParser parser = new ProtoMessageParser(stencilClient, jsonPathConfig);

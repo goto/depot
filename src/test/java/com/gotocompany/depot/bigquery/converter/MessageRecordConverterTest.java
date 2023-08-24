@@ -64,7 +64,6 @@ public class MessageRecordConverterTest {
     @Mock
     private ClassLoadStencilClient stencilClient;
     private Instant now;
-    private Configuration jsonPathConfig;
 
     @Before
     public void setUp() throws IOException {

@@ -8,7 +8,6 @@ import com.gotocompany.depot.TestServiceType;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.config.BigTableSinkConfig;
-import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.message.proto.ProtoJsonProvider;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
