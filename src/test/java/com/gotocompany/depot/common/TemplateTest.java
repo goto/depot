@@ -4,33 +4,44 @@ import com.gotocompany.depot.TestBookingLogMessage;
 import com.gotocompany.depot.TestKey;
 import com.gotocompany.depot.TestLocation;
 import com.gotocompany.depot.TestMessage;
+import com.gotocompany.depot.config.BigQuerySinkConfig;
+import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.ParsedMessage;
+import com.gotocompany.depot.message.proto.ProtoJsonProvider;
 import com.gotocompany.depot.message.proto.ProtoParsedMessage;
 import com.gotocompany.stencil.Parser;
 import com.gotocompany.stencil.StencilClientFactory;
 import com.jayway.jsonpath.Configuration;
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TemplateTest {
     private ParsedMessage parsedTestMessage;
     private ParsedMessage parsedBookingMessage;
     @Mock
-    private Configuration jsonPathConfig;
+    private SinkConfig sinkConfig;
 
     @Before
     public void setUp() throws Exception {
+        sinkConfig = Mockito.mock(SinkConfig.class);
+        when(sinkConfig.getSinkDefaultFieldValueEnable()).thenReturn(false);
+        Configuration jsonPathConfig = Configuration.builder()
+                .jsonProvider(new ProtoJsonProvider(sinkConfig))
+                .build();
         TestKey testKey = TestKey.newBuilder().setOrderNumber("ORDER-1-FROM-KEY").build();
         TestBookingLogMessage testBookingLogMessage = TestBookingLogMessage.newBuilder()
                 .setOrderNumber("booking-order-1")
