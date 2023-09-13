@@ -71,9 +71,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
                             .setView(WriteStreamView.FULL)
                             .build();
             try (BigQueryWriteClient bigQueryInstance = bqWriterCreator.apply(config)) {
-                // This WriteStream is to get the schema of the table.
                 WriteStream writeStream = bigQueryInstance.getWriteStream(writeStreamRequest);
-                // saving the descriptor for conversion
                 createAndStreamWriter(writeStream.getTableSchema());
             }
         } catch (Descriptors.DescriptorValidationException e) {
@@ -110,7 +108,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         }
         // need to synchronize
         synchronized (this) {
-            if (streamWriter.isClosed() || checkInactiveConnection()) {
+            if (streamWriter == null || streamWriter.isClosed() || checkInactiveConnection()) {
                 init();
             }
             TableSchema updatedSchema = streamWriter.getUpdatedSchema();
