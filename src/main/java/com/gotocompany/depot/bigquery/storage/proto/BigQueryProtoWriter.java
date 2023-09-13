@@ -63,6 +63,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
 
     @Override
     public void init() {
+        // Creates the connection with schema fetched from the server.
         try {
             String streamName = BigQueryWriterUtils.getDefaultStreamName(config);
             GetWriteStreamRequest writeStreamRequest =
@@ -72,14 +73,14 @@ public class BigQueryProtoWriter implements BigQueryWriter {
                             .build();
             try (BigQueryWriteClient bigQueryInstance = bqWriterCreator.apply(config)) {
                 WriteStream writeStream = bigQueryInstance.getWriteStream(writeStreamRequest);
-                createAndStreamWriter(writeStream.getTableSchema());
+                createAndSetStreamWriter(writeStream.getTableSchema());
             }
         } catch (Descriptors.DescriptorValidationException e) {
             throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
         }
     }
 
-    private void createAndStreamWriter(TableSchema updatedSchema) throws Descriptors.DescriptorValidationException {
+    private void createAndSetStreamWriter(TableSchema updatedSchema) throws Descriptors.DescriptorValidationException {
         descriptor = BQTableSchemaToProtoDescriptor.convertBQTableSchemaToProtoDescriptor(updatedSchema);
         schema = ProtoSchemaConverter.convert(descriptor);
         streamWriter = createStreamWriter();
@@ -118,7 +119,7 @@ public class BigQueryProtoWriter implements BigQueryWriter {
                 instrumentation.logInfo("Updated table schema detected, recreating stream writer");
                 try {
                     closeStreamWriter();
-                    createAndStreamWriter(updatedSchema);
+                    createAndSetStreamWriter(updatedSchema);
                 } catch (Descriptors.DescriptorValidationException e) {
                     throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
                 }
