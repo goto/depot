@@ -11,7 +11,6 @@ import com.google.cloud.bigquery.storage.v1.TableName;
 import com.gotocompany.depot.bigquery.storage.proto.BigQueryProtoStream;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
