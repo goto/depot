@@ -109,6 +109,8 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         // need to synchronize
         synchronized (this) {
             if (streamWriter == null || streamWriter.isClosed() || checkInactiveConnection()) {
+                instrumentation.logInfo("Recreating stream writer, because it was closed with exception or abandoned by the server");
+                closeStreamWriter();
                 init();
             }
             TableSchema updatedSchema = streamWriter.getUpdatedSchema();
@@ -133,9 +135,11 @@ public class BigQueryProtoWriter implements BigQueryWriter {
     }
 
     private void closeStreamWriter() {
-        Instant start = Instant.now();
-        streamWriter.close();
-        instrument(start, BigQueryMetrics.BigQueryStorageAPIType.STREAM_WRITER_CLOSED);
+        if (streamWriter != null) {
+            Instant start = Instant.now();
+            streamWriter.close();
+            instrument(start, BigQueryMetrics.BigQueryStorageAPIType.STREAM_WRITER_CLOSED);
+        }
     }
 
     private boolean checkInactiveConnection() {
