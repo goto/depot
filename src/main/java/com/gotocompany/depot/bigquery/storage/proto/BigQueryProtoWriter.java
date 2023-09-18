@@ -97,34 +97,18 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         }
     }
 
-    // In the callback one can have the container and set the errors and/or log the response errors
     @Override
     public AppendRowsResponse appendAndGet(BigQueryPayload rows) throws ExecutionException, InterruptedException {
-        ApiFuture<AppendRowsResponse> future;
-        ProtoRows payload = (ProtoRows) rows.getPayload();
-        Instant start;
         if (isClosed) {
             instrumentation.logError("The client is permanently closed. More tasks can not be added");
             return BigQueryStorageResponseParser.get4xxErrorResponse();
         }
-        // need to synchronize
+        ApiFuture<AppendRowsResponse> future;
+        ProtoRows payload = (ProtoRows) rows.getPayload();
+        Instant start;
         synchronized (this) {
-            if (streamWriter == null || streamWriter.isClosed() || checkInactiveConnection()) {
-                instrumentation.logInfo("Recreating stream writer, because it was closed with exception or abandoned by the server");
-                closeStreamWriter();
-                init();
-            }
-            TableSchema updatedSchema = streamWriter.getUpdatedSchema();
-            if (updatedSchema != null) {
-                instrumentation.logInfo("Updated table schema detected, recreating stream writer");
-                try {
-                    closeStreamWriter();
-                    createAndSetStreamWriter(updatedSchema);
-                } catch (Descriptors.DescriptorValidationException e) {
-                    throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
-                }
-            }
-            // timer for append latency
+            checkAndRefreshConnection();
+            checkUpdatedSchema();
             start = Instant.now();
             lastAppendTimeStamp = System.nanoTime();
             future = streamWriter.append(payload);
@@ -133,6 +117,30 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         instrument(start, BigQueryMetrics.BigQueryStorageAPIType.STREAM_WRITER_APPEND);
         captureSizeMetric(payload);
         return appendRowsResponse;
+    }
+
+    private void checkUpdatedSchema() {
+        TableSchema updatedSchema = streamWriter.getUpdatedSchema();
+        if (updatedSchema != null) {
+            instrumentation.logInfo("Updated table schema detected, recreating stream writer");
+            try {
+                closeStreamWriter();
+                createAndSetStreamWriter(updatedSchema);
+            } catch (Descriptors.DescriptorValidationException e) {
+                throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
+            }
+        }
+    }
+
+    public void checkAndRefreshConnection() {
+        // Synchronize this because it's being called from outside
+        synchronized (this) {
+            if (streamWriter == null || streamWriter.isClosed() || checkInactiveConnection()) {
+                instrumentation.logInfo("Recreating stream writer, because it was closed with exception or abandoned by the server");
+                closeStreamWriter();
+                init();
+            }
+        }
     }
 
     private void closeStreamWriter() {
@@ -185,4 +193,6 @@ public class BigQueryProtoWriter implements BigQueryWriter {
                 String.format(BigQueryMetrics.BIGQUERY_PROJECT_TAG, config.getGCloudProjectID()),
                 String.format(BigQueryMetrics.BIGQUERY_API_TAG, type));
     }
+
+
 }
