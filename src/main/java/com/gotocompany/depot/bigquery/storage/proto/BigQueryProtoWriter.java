@@ -103,15 +103,11 @@ public class BigQueryProtoWriter implements BigQueryWriter {
             instrumentation.logError("The client is permanently closed. More tasks can not be added");
             return BigQueryStorageResponseParser.get4xxErrorResponse();
         }
-        ApiFuture<AppendRowsResponse> future;
         ProtoRows payload = (ProtoRows) rows.getPayload();
         Instant start;
-        synchronized (this) {
-            checkAndRefreshConnection();
-            start = Instant.now();
-            lastAppendTimeStamp = System.nanoTime();
-            future = streamWriter.append(payload);
-        }
+        start = Instant.now();
+        lastAppendTimeStamp = System.nanoTime();
+        ApiFuture<AppendRowsResponse> future = streamWriter.append(payload);
         AppendRowsResponse appendRowsResponse = future.get();
         instrument(start, BigQueryMetrics.BigQueryStorageAPIType.STREAM_WRITER_APPEND);
         captureSizeMetric(payload);
