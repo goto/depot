@@ -108,7 +108,6 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         Instant start;
         synchronized (this) {
             checkAndRefreshConnection();
-            checkUpdatedSchema();
             start = Instant.now();
             lastAppendTimeStamp = System.nanoTime();
             future = streamWriter.append(payload);
@@ -119,19 +118,6 @@ public class BigQueryProtoWriter implements BigQueryWriter {
         return appendRowsResponse;
     }
 
-    private void checkUpdatedSchema() {
-        TableSchema updatedSchema = streamWriter.getUpdatedSchema();
-        if (updatedSchema != null) {
-            instrumentation.logInfo("Updated table schema detected, recreating stream writer");
-            try {
-                closeStreamWriter();
-                createAndSetStreamWriter(updatedSchema);
-            } catch (Descriptors.DescriptorValidationException e) {
-                throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
-            }
-        }
-    }
-
     public void checkAndRefreshConnection() {
         // Synchronize this because it's being called from outside
         synchronized (this) {
@@ -139,6 +125,17 @@ public class BigQueryProtoWriter implements BigQueryWriter {
                 instrumentation.logInfo("Recreating stream writer, because it was closed with exception or abandoned by the server");
                 closeStreamWriter();
                 init();
+            } else {
+                TableSchema updatedSchema = streamWriter.getUpdatedSchema();
+                if (updatedSchema != null) {
+                    instrumentation.logInfo("Updated table schema detected, recreating stream writer");
+                    try {
+                        closeStreamWriter();
+                        createAndSetStreamWriter(updatedSchema);
+                    } catch (Descriptors.DescriptorValidationException e) {
+                        throw new IllegalArgumentException("Could not initialise the bigquery writer", e);
+                    }
+                }
             }
         }
     }
