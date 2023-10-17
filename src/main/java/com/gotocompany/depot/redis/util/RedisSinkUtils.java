@@ -1,6 +1,7 @@
 package com.gotocompany.depot.redis.util;
 
 import com.gotocompany.depot.redis.client.response.RedisResponse;
+import com.gotocompany.depot.redis.exception.RedisNonRetryableException;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
@@ -29,7 +30,7 @@ public class RedisSinkUtils {
         return errors;
     }
 
-    public static Map<Long, ErrorInfo> getNonRetryableErrors(List<RedisRecord> redisRecords, JedisConnectionException e, Instrumentation instrumentation) {
+    public static Map<Long, ErrorInfo> getNonRetryableErrors(List<RedisRecord> redisRecords, RedisNonRetryableException e, Instrumentation instrumentation) {
         Map<Long, ErrorInfo> errors = new HashMap<>();
         for (RedisRecord record : redisRecords) {
             instrumentation.logError("Error while inserting to redis for message. Record: {}, Error: {}",

@@ -4,6 +4,7 @@ import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.client.RedisClient;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
+import com.gotocompany.depot.redis.exception.RedisNonRetryableException;
 import com.gotocompany.depot.redis.parsers.RedisParser;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.util.RedisSinkUtils;
@@ -41,7 +42,7 @@ public class RedisSink implements Sink {
             try {
                 List<RedisResponse> responses = redisClient.send(validRecords);
                 errorInfoMap = RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
-            } catch (JedisConnectionException e) {
+            } catch (RedisNonRetryableException e) {
                 errorInfoMap = RedisSinkUtils.getNonRetryableErrors(validRecords, e, instrumentation);
             }
             errorInfoMap.forEach(sinkResponse::addErrors);
