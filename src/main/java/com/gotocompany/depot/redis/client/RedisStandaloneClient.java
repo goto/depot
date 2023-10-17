@@ -2,6 +2,7 @@ package com.gotocompany.depot.redis.client;
 
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
+import com.gotocompany.depot.redis.exception.RedisNonRetryableException;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
 import com.gotocompany.depot.metrics.Instrumentation;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +40,13 @@ public class RedisStandaloneClient implements RedisClient {
                 .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
                 .collect(Collectors.toList());
         Response<List<Object>> executeResponse = jedisPipelined.exec();
-        jedisPipelined.sync();
+        try {
+            jedisPipelined.sync();
+        } catch (JedisConnectionException e) {
+            if (e.getMessage().contains("Attempting to read from a broken connection"))
+                throw new RedisNonRetryableException(e.getMessage());
+
+        }
         instrumentation.logDebug("jedis responses: {}", executeResponse.get());
         return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
     }
