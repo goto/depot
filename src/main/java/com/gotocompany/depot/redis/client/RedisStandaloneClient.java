@@ -43,9 +43,9 @@ public class RedisStandaloneClient implements RedisClient {
         try {
             jedisPipelined.sync();
         } catch (JedisConnectionException e) {
-            if (e.getMessage().contains("Attempting to read from a broken connection"))
+            if (e.getMessage().contains("Attempting to read from a broken connection")) {
                 throw new RedisNonRetryableException(e.getMessage());
-
+            }
         }
         instrumentation.logDebug("jedis responses: {}", executeResponse.get());
         return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());

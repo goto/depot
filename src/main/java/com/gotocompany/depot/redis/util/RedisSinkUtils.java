@@ -6,7 +6,6 @@ import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.metrics.Instrumentation;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.HashMap;
 import java.util.List;
