@@ -11,7 +11,6 @@ import com.gotocompany.depot.redis.util.RedisSinkUtils;
 import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.error.ErrorInfo;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.io.IOException;
 import java.util.List;
