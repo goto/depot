@@ -11,7 +11,6 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,14 +43,9 @@ public class RedisStandaloneClient implements RedisClient {
         List<RedisStandaloneResponse> responses = records.stream()
                 .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
                 .collect(Collectors.toList());
-        try {
-            Response<List<Object>> executeResponse = jedisPipelined.exec();
-            jedisPipelined.sync();
-            instrumentation.logDebug("jedis responses: {}", executeResponse.get());
-        } catch (ClassCastException | JedisConnectionException e) {
-            recreate();
-            throw e;
-        }
+        Response<List<Object>> executeResponse = jedisPipelined.exec();
+        jedisPipelined.sync();
+        instrumentation.logDebug("jedis responses: {}", executeResponse.get());
         return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
     }
 
