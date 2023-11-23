@@ -1,9 +1,8 @@
 package com.gotocompany.depot.redis.client;
 
-import com.gotocompany.depot.config.RedisSinkConfig;
+import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
-import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
 import org.junit.Assert;
@@ -12,6 +11,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
@@ -31,11 +32,13 @@ public class RedisStandaloneClientTest {
     @Mock
     private Jedis jedis;
     @Mock
-    private RedisSinkConfig redisSinkConfig;
+    private DefaultJedisClientConfig defaultJedisClientConfig;
+    @Mock
+    private HostAndPort hostAndPort;
 
     @Test
     public void shouldCloseTheClient() throws IOException {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, jedis, redisSinkConfig);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, jedis, defaultJedisClientConfig, hostAndPort);
         redisClient.close();
 
         Mockito.verify(instrumentation, Mockito.times(1)).logInfo("Closing Jedis client");
@@ -44,7 +47,7 @@ public class RedisStandaloneClientTest {
 
     @Test
     public void shouldSendRecordsToJedis() {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, jedis, redisSinkConfig);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, jedis, defaultJedisClientConfig, hostAndPort);
         Pipeline pipeline = Mockito.mock(Pipeline.class);
         Response response = Mockito.mock(Response.class);
         Mockito.when(jedis.pipelined()).thenReturn(pipeline);

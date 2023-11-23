@@ -44,7 +44,7 @@ public class RedisClientFactory {
                 .password(redisSinkConfig.getSinkRedisAuthPassword())
                 .build();
         Jedis jedis = new Jedis(hostAndPort, jedisConfig);
-        return new RedisStandaloneClient(new Instrumentation(statsDReporter, RedisStandaloneClient.class), redisTTL, jedis, redisSinkConfig);
+        return new RedisStandaloneClient(new Instrumentation(statsDReporter, RedisStandaloneClient.class), redisTTL, jedis, jedisConfig, hostAndPort);
     }
 
     private static RedisClusterClient getRedisClusterClient(RedisTtl redisTTL, RedisSinkConfig redisSinkConfig, StatsDReporter statsDReporter) {
