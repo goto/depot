@@ -28,7 +28,7 @@ public class RedisClusterClient implements RedisClient {
     }
 
     @Override
-    public void recreate() {
+    public void init() {
     }
 
     @Override

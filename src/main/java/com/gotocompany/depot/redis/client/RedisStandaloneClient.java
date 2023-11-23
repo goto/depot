@@ -5,7 +5,6 @@ import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
-import lombok.AllArgsConstructor;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 /**
  * Redis standalone client.
  */
-@AllArgsConstructor
 public class RedisStandaloneClient implements RedisClient {
 
     private final Instrumentation instrumentation;
@@ -26,6 +24,14 @@ public class RedisStandaloneClient implements RedisClient {
     private Jedis jedis;
     private final DefaultJedisClientConfig defaultJedisClientConfig;
     private final HostAndPort hostAndPort;
+
+    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, DefaultJedisClientConfig defaultJedisClientConfig, HostAndPort hostAndPort) {
+        this.instrumentation = instrumentation;
+        this.redisTTL = redisTTL;
+        this.defaultJedisClientConfig = defaultJedisClientConfig;
+        this.hostAndPort = hostAndPort;
+        init();
+    }
 
     /**
      * Pushes records in a transaction.
@@ -56,7 +62,7 @@ public class RedisStandaloneClient implements RedisClient {
         jedis.close();
     }
 
-    public void recreate() {
+    public void init() {
 
         jedis = new Jedis(hostAndPort, defaultJedisClientConfig);
     }

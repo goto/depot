@@ -53,7 +53,7 @@ public class RedisSink implements Sink {
                 break;
             } catch (RuntimeException e) {
                 exception = e;
-                redisClient.recreate();
+                redisClient.init();
             }
             retry--;
         }
