@@ -9,7 +9,11 @@ import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import redis.clients.jedis.*;
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.List;
