@@ -1,13 +1,12 @@
 package com.gotocompany.depot.redis.client;
 
 import com.gotocompany.depot.config.RedisSinkConfig;
-import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
+import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
-import com.gotocompany.depot.metrics.Instrumentation;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.*;
