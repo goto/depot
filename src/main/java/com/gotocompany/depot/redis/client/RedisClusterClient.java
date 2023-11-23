@@ -28,6 +28,10 @@ public class RedisClusterClient implements RedisClient {
     }
 
     @Override
+    public void recreate() {
+    }
+
+    @Override
     public void close() {
         instrumentation.logInfo("Closing Jedis client");
         jedisCluster.close();

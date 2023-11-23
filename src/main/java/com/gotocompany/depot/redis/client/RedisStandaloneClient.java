@@ -35,6 +35,8 @@ public class RedisStandaloneClient implements RedisClient {
      * @param records records to send
      * @return Custom response containing status of the API calls.
      */
+
+
     @Override
     public List<RedisResponse> send(List<RedisRecord> records) {
         Pipeline jedisPipelined = jedis.pipelined();
@@ -52,6 +54,7 @@ public class RedisStandaloneClient implements RedisClient {
         }
         return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
     }
+
 
     @Override
     public void close() {

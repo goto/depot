@@ -27,4 +27,15 @@ public class RedisSinkUtils {
         );
         return errors;
     }
+
+    public static Map<Long, ErrorInfo> getNonRetryableErrors(List<RedisRecord> redisRecords, RuntimeException e, Instrumentation instrumentation) {
+        Map<Long, ErrorInfo> errors = new HashMap<>();
+        for (RedisRecord record : redisRecords) {
+            instrumentation.logError("Error while inserting to redis for message. Record: {}, Error: {}",
+                    record.toString(), e.getMessage());
+            errors.put(record.getIndex(), new ErrorInfo(new Exception(e.getMessage()), ErrorType.SINK_NON_RETRYABLE_ERROR));
+
+        }
+        return errors;
+    }
 }
