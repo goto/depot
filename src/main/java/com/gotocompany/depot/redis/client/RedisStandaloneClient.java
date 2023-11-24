@@ -81,6 +81,7 @@ public class RedisStandaloneClient implements RedisClient {
     }
 
     public void init() {
+        instrumentation.logInfo("Initialising Jedis client: Host: {} Port: {}", hostAndPort.getHost(), hostAndPort.getPort());
         jedis = new Jedis(hostAndPort, defaultJedisClientConfig);
     }
 }

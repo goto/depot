@@ -54,6 +54,7 @@ public class RedisSink implements Sink {
                 break;
             } catch (RuntimeException e) {
                 exception = e;
+                instrumentation.logError(e.getMessage());
                 redisClient.init();
             }
             retry--;
