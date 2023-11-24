@@ -11,7 +11,6 @@ import com.gotocompany.depot.redis.ttl.RedisTtl;
 import com.gotocompany.depot.redis.util.RedisSinkUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 
