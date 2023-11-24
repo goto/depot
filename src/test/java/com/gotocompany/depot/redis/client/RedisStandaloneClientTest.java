@@ -1,5 +1,6 @@
 package com.gotocompany.depot.redis.client;
 
+import com.gotocompany.depot.config.RedisSinkConfig;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
@@ -32,13 +33,12 @@ public class RedisStandaloneClientTest {
     @Mock
     private Jedis jedis;
     @Mock
-    private DefaultJedisClientConfig defaultJedisClientConfig;
-    @Mock
-    private HostAndPort hostAndPort;
+    private RedisSinkConfig redisSinkConfig;
+
 
     @Test
     public void shouldCloseTheClient() throws IOException {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, redisSinkConfig);
         redisClient.close();
 
         Mockito.verify(instrumentation, Mockito.times(1)).logInfo("Closing Jedis client");
@@ -47,7 +47,7 @@ public class RedisStandaloneClientTest {
 
     @Test
     public void shouldSendRecordsToJedis() {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, redisSinkConfig);
         Pipeline pipeline = Mockito.mock(Pipeline.class);
         Response response = Mockito.mock(Response.class);
         Mockito.when(jedis.pipelined()).thenReturn(pipeline);

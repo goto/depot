@@ -1,10 +1,13 @@
 package com.gotocompany.depot.redis.client;
 
+import com.gotocompany.depot.config.RedisSinkConfig;
+import com.gotocompany.depot.exception.ConfigurationException;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.client.response.RedisStandaloneResponse;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
+import org.apache.commons.lang3.StringUtils;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
@@ -22,14 +25,12 @@ public class RedisStandaloneClient implements RedisClient {
     private final Instrumentation instrumentation;
     private final RedisTtl redisTTL;
     private Jedis jedis;
-    private final DefaultJedisClientConfig defaultJedisClientConfig;
-    private final HostAndPort hostAndPort;
+    private final RedisSinkConfig redisSinkConfig;
 
-    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, DefaultJedisClientConfig defaultJedisClientConfig, HostAndPort hostAndPort) {
+    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, RedisSinkConfig redisSinkConfig) {
         this.instrumentation = instrumentation;
         this.redisTTL = redisTTL;
-        this.defaultJedisClientConfig = defaultJedisClientConfig;
-        this.hostAndPort = hostAndPort;
+        this.redisSinkConfig = redisSinkConfig;
         init();
     }
 
@@ -63,7 +64,16 @@ public class RedisStandaloneClient implements RedisClient {
     }
 
     public void init() {
-
-        jedis = new Jedis(hostAndPort, defaultJedisClientConfig);
+        HostAndPort hostAndPort;
+        try {
+            hostAndPort = HostAndPort.parseString(StringUtils.trim(redisSinkConfig.getSinkRedisUrls()));
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException(String.format("Invalid url for redis standalone: %s", redisSinkConfig.getSinkRedisUrls()));
+        }
+        DefaultJedisClientConfig jedisConfig = DefaultJedisClientConfig.builder()
+                .user(redisSinkConfig.getSinkRedisAuthUsername())
+                .password(redisSinkConfig.getSinkRedisAuthPassword())
+                .build();
+        jedis = new Jedis(hostAndPort, jedisConfig);
     }
 }
