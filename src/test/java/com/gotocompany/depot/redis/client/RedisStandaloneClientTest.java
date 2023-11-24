@@ -12,9 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
+import redis.clients.jedis.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,11 +30,15 @@ public class RedisStandaloneClientTest {
     private Jedis jedis;
     @Mock
     private RedisSinkConfig redisSinkConfig;
+    @Mock
+    private DefaultJedisClientConfig defaultJedisClientConfig;
+    @Mock
+    private HostAndPort hostAndPort;
 
 
     @Test
     public void shouldCloseTheClient() throws IOException {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, redisSinkConfig);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort, jedis);
         redisClient.close();
 
         Mockito.verify(instrumentation, Mockito.times(1)).logInfo("Closing Jedis client");
@@ -45,7 +47,7 @@ public class RedisStandaloneClientTest {
 
     @Test
     public void shouldSendRecordsToJedis() {
-        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, redisSinkConfig);
+        RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort, jedis);
         Pipeline pipeline = Mockito.mock(Pipeline.class);
         Response response = Mockito.mock(Response.class);
         Mockito.when(jedis.pipelined()).thenReturn(pipeline);

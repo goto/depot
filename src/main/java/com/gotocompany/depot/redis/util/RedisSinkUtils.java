@@ -1,10 +1,12 @@
 package com.gotocompany.depot.redis.util;
 
+import com.gotocompany.depot.config.RedisSinkConfig;
 import com.gotocompany.depot.redis.client.response.RedisResponse;
 import com.gotocompany.depot.redis.record.RedisRecord;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.metrics.Instrumentation;
+import redis.clients.jedis.DefaultJedisClientConfig;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,5 +39,13 @@ public class RedisSinkUtils {
 
         }
         return errors;
+    }
+
+
+    public static DefaultJedisClientConfig getJedisConfig(RedisSinkConfig config) {
+        return DefaultJedisClientConfig.builder()
+                .user(config.getSinkRedisAuthUsername())
+                .password(config.getSinkRedisAuthPassword())
+                .build();
     }
 }

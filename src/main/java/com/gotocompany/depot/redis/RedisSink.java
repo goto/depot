@@ -20,6 +20,7 @@ public class RedisSink implements Sink {
     private final RedisClient redisClient;
     private final RedisParser redisParser;
     private final Instrumentation instrumentation;
+    private static final int CONNECTION_RETRY = 2;
 
     public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation) {
         this.redisClient = redisClient;
@@ -46,7 +47,7 @@ public class RedisSink implements Sink {
     private Map<Long, ErrorInfo> send(List<RedisRecord> validRecords) {
         List<RedisResponse> responses = null;
         RuntimeException exception = null;
-        int retry = 2;
+        int retry = CONNECTION_RETRY;
         while (retry > 0) {
             try {
                 responses = redisClient.send(validRecords);

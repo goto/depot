@@ -8,6 +8,7 @@ import com.gotocompany.depot.metrics.StatsDReporter;
 import com.gotocompany.depot.redis.enums.RedisSinkDeploymentType;
 import com.gotocompany.depot.redis.ttl.RedisTTLFactory;
 import com.gotocompany.depot.redis.ttl.RedisTtl;
+import com.gotocompany.depot.redis.util.RedisSinkUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.DefaultJedisClientConfig;
@@ -28,13 +29,9 @@ public class RedisClientFactory {
         RedisTtl redisTTL = RedisTTLFactory.getTTl(redisSinkConfig);
         return RedisSinkDeploymentType.CLUSTER.equals(redisSinkDeploymentType)
                 ? getRedisClusterClient(redisTTL, redisSinkConfig, statsDReporter)
-                : getRedisStandaloneClient(redisTTL, redisSinkConfig, statsDReporter);
+                : new RedisStandaloneClient(new Instrumentation(statsDReporter, RedisStandaloneClient.class), redisSinkConfig);
     }
 
-    private static RedisStandaloneClient getRedisStandaloneClient(RedisTtl redisTTL, RedisSinkConfig redisSinkConfig, StatsDReporter statsDReporter) {
-
-        return new RedisStandaloneClient(new Instrumentation(statsDReporter, RedisStandaloneClient.class), redisTTL, redisSinkConfig);
-    }
 
     private static RedisClusterClient getRedisClusterClient(RedisTtl redisTTL, RedisSinkConfig redisSinkConfig, StatsDReporter statsDReporter) {
         String[] redisUrls = redisSinkConfig.getSinkRedisUrls().split(DELIMITER);
@@ -46,11 +43,8 @@ public class RedisClientFactory {
         } catch (IllegalArgumentException e) {
             throw new ConfigurationException(String.format("Invalid url(s) for redis cluster: %s", redisSinkConfig.getSinkRedisUrls()));
         }
-        DefaultJedisClientConfig jedisConfig = DefaultJedisClientConfig.builder()
-                .user(redisSinkConfig.getSinkRedisAuthUsername())
-                .password(redisSinkConfig.getSinkRedisAuthPassword())
-                .build();
-        JedisCluster jedisCluster = new JedisCluster(nodes, jedisConfig, redisSinkConfig.getSinkRedisMaxAttempts(), new GenericObjectPoolConfig<>());
+
+        JedisCluster jedisCluster = new JedisCluster(nodes, RedisSinkUtils.getJedisConfig(redisSinkConfig), redisSinkConfig.getSinkRedisMaxAttempts(), new GenericObjectPoolConfig<>());
         return new RedisClusterClient(new Instrumentation(statsDReporter, RedisClusterClient.class), redisTTL, jedisCluster);
     }
 }
