@@ -21,7 +21,7 @@ public class RedisSink implements Sink {
     private final RedisParser redisParser;
     private final Instrumentation instrumentation;
     private static final int CONNECTION_RETRY = 2;
-    private static final int CONNECTION_RETRY_BACKOFF_MILLIS = 2;
+    private static final int CONNECTION_RETRY_BACKOFF_MILLIS = 2000;
 
     public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation) {
         this.redisClient = redisClient;
