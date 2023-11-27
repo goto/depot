@@ -21,7 +21,7 @@ public class RedisSink implements Sink {
     private final RedisParser redisParser;
     private final Instrumentation instrumentation;
     private static final int CONNECTION_RETRY = 2;
-    private static final int CONNECTION_RETRY_BACKOFF = 2;
+    private static final int CONNECTION_RETRY_BACKOFF_MILLIS = 2;
 
     public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation) {
         this.redisClient = redisClient;
@@ -56,9 +56,9 @@ public class RedisSink implements Sink {
             } catch (RuntimeException e) {
                 exception = e;
                 e.printStackTrace();
-                instrumentation.logInfo("Backing off for " + CONNECTION_RETRY_BACKOFF + " seconds.");
+                instrumentation.logInfo("Backing off for " + CONNECTION_RETRY_BACKOFF_MILLIS + " milliseconds.");
                 try {
-                    Thread.sleep(CONNECTION_RETRY_BACKOFF * 1000);
+                    Thread.sleep(CONNECTION_RETRY_BACKOFF_MILLIS);
                 } catch (InterruptedException interruptedException) {
                     interruptedException.printStackTrace();
                 }
