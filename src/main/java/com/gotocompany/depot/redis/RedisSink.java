@@ -20,6 +20,8 @@ public class RedisSink implements Sink {
     private final RedisClient redisClient;
     private final RedisParser redisParser;
     private final Instrumentation instrumentation;
+    private static final int CONNECTION_RETRY = 2;
+    private static final int CONNECTION_RETRY_BACKOFF_MILLIS = 2000;
 
     public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation) {
         this.redisClient = redisClient;
@@ -35,13 +37,42 @@ public class RedisSink implements Sink {
         List<RedisRecord> validRecords = splitterRecords.get(Boolean.TRUE);
         SinkResponse sinkResponse = new SinkResponse();
         invalidRecords.forEach(invalidRecord -> sinkResponse.addErrors(invalidRecord.getIndex(), invalidRecord.getErrorInfo()));
-        if (validRecords.size() > 0) {
-            List<RedisResponse> responses = redisClient.send(validRecords);
-            Map<Long, ErrorInfo> errorInfoMap = RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
+        if (!validRecords.isEmpty()) {
+            Map<Long, ErrorInfo> errorInfoMap = send(validRecords);
             errorInfoMap.forEach(sinkResponse::addErrors);
             instrumentation.logInfo("Pushed a batch of {} records to Redis", validRecords.size());
         }
         return sinkResponse;
+    }
+
+    private Map<Long, ErrorInfo> send(List<RedisRecord> validRecords) {
+        List<RedisResponse> responses = null;
+        RuntimeException exception = null;
+        int retry = CONNECTION_RETRY;
+        while (retry > 0) {
+            try {
+                responses = redisClient.send(validRecords);
+                break;
+            } catch (RuntimeException e) {
+                exception = e;
+                e.printStackTrace();
+                instrumentation.logInfo("Backing off for " + CONNECTION_RETRY_BACKOFF_MILLIS + " milliseconds.");
+                try {
+                    Thread.sleep(CONNECTION_RETRY_BACKOFF_MILLIS);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (CONNECTION_RETRY - retry + 1));
+                redisClient.init();
+
+            }
+            retry--;
+        }
+        if (responses == null) {
+            return RedisSinkUtils.getNonRetryableErrors(validRecords, exception, instrumentation);
+        } else {
+            return RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
+        }
     }
 
     @Override
