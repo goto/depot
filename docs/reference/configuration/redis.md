@@ -77,3 +77,19 @@ The Redis deployment you are using. At present, we support `Standalone` and `Clu
 - Example value: `Standalone`
 - Type: `required`
 - Default value: `Standalone`
+
+### `SINK_REDIS_SOCKET_TIMEOUT_MS`
+
+The max time in milliseconds that the Redis client will wait for response from the Redis server.
+
+- Example value: `4000`
+- Type: `optional`
+- Default value: `2000`
+
+### `SINK_REDIS_CONNECTION_TIMEOUT_MS`
+
+The max time in milliseconds that the Redis client will wait for establishing connection to the Redis server.
+
+- Example value: `4000`
+- Type: `optional`
+- Default value: `2000`
