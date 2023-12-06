@@ -47,32 +47,13 @@ public class RedisSink implements Sink {
 
     private Map<Long, ErrorInfo> send(List<RedisRecord> validRecords) {
         List<RedisResponse> responses = null;
-        RuntimeException exception = null;
-        int retry = CONNECTION_RETRY;
-        while (retry > 0) {
-            try {
-                responses = redisClient.send(validRecords);
-                break;
-            } catch (RuntimeException e) {
-                exception = e;
-                e.printStackTrace();
-                instrumentation.logInfo("Backing off for " + CONNECTION_RETRY_BACKOFF_MILLIS + " milliseconds.");
-                try {
-                    Thread.sleep(CONNECTION_RETRY_BACKOFF_MILLIS);
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (CONNECTION_RETRY - retry + 1));
-                redisClient.init();
-
-            }
-            retry--;
+        try {
+            responses = redisClient.send(validRecords);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return RedisSinkUtils.getNonRetryableErrors(validRecords, e, instrumentation);
         }
-        if (responses == null) {
-            return RedisSinkUtils.getNonRetryableErrors(validRecords, exception, instrumentation);
-        } else {
-            return RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
-        }
+        return RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
     }
 
     @Override
