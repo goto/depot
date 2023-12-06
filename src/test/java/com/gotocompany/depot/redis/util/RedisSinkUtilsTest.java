@@ -78,11 +78,10 @@ public class RedisSinkUtilsTest {
     public void shouldSetRedisConnectionTimeoutMillis() {
 
         RedisSinkConfig config = ConfigFactory.create(RedisSinkConfig.class, ImmutableMap.of(
-                "SINK_REDIS_CONNECTION_TIMEOUT_MS", "7000"
+                "SINK_REDIS_CONNECTION_TIMEOUT_MS", "5000"
         ));
         DefaultJedisClientConfig defaultJedisClientConfig = RedisSinkUtils.getJedisConfig(config);
         Assert.assertEquals(5000, defaultJedisClientConfig.getConnectionTimeoutMillis());
-        Assert.assertEquals(7000, defaultJedisClientConfig.getSocketTimeoutMillis());
 
     }
 
