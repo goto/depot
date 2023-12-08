@@ -20,13 +20,15 @@ public class RedisSink implements Sink {
     private final RedisClient redisClient;
     private final RedisParser redisParser;
     private final Instrumentation instrumentation;
-    private static final int CONNECTION_RETRY = 2;
-    private static final int CONNECTION_RETRY_BACKOFF_MILLIS = 2000;
+    private final int connectionMaxRetries;
+    private final long connectionRetryBackoffMs;
 
-    public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation) {
+    public RedisSink(RedisClient redisClient, RedisParser redisParser, Instrumentation instrumentation, int connectionMaxRetries, long connectionRetryBackoffMs) {
         this.redisClient = redisClient;
         this.redisParser = redisParser;
         this.instrumentation = instrumentation;
+        this.connectionMaxRetries = connectionMaxRetries;
+        this.connectionRetryBackoffMs = connectionRetryBackoffMs;
     }
 
     @Override
@@ -47,13 +49,32 @@ public class RedisSink implements Sink {
 
     private Map<Long, ErrorInfo> send(List<RedisRecord> validRecords) {
         List<RedisResponse> responses = null;
-        try {
-            responses = redisClient.send(validRecords);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return RedisSinkUtils.getNonRetryableErrors(validRecords, e, instrumentation);
+        RuntimeException exception = null;
+        int retry = connectionMaxRetries;
+        while (retry > 0) {
+            try {
+                responses = redisClient.send(validRecords);
+                break;
+            } catch (RuntimeException e) {
+                exception = e;
+                e.printStackTrace();
+                instrumentation.logInfo("Backing off for " + connectionRetryBackoffMs + " milliseconds.");
+                try {
+                    Thread.sleep(connectionRetryBackoffMs);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (connectionMaxRetries - retry + 1));
+                redisClient.init();
+
+            }
+            retry--;
         }
-        return RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
+        if (responses == null) {
+            return RedisSinkUtils.getNonRetryableErrors(validRecords, exception, instrumentation);
+        } else {
+            return RedisSinkUtils.getErrorsFromResponse(validRecords, responses, instrumentation);
+        }
     }
 
     @Override

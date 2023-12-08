@@ -51,7 +51,7 @@ public class RedisSinkTest {
         responses.add(Mockito.mock(RedisResponse.class));
         when(redisParser.convert(messages)).thenReturn(records);
         when(redisClient.send(records)).thenReturn(responses);
-        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation);
+        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation, 0, 2000);
         SinkResponse sinkResponse = redisSink.pushToSink(messages);
         Assert.assertFalse(sinkResponse.hasErrors());
     }
@@ -72,7 +72,7 @@ public class RedisSinkTest {
         when(redisParser.convert(messages)).thenReturn(records);
         List<RedisRecord> validRecords = records.stream().filter(RedisRecord::isValid).collect(Collectors.toList());
         when(redisClient.send(validRecords)).thenReturn(responses);
-        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation);
+        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation, 0, 2000);
         SinkResponse sinkResponse = redisSink.pushToSink(messages);
         Assert.assertTrue(sinkResponse.hasErrors());
         Assert.assertEquals(2, sinkResponse.getErrors().size());
@@ -105,7 +105,7 @@ public class RedisSinkTest {
         List<RedisRecord> validRecords = records.stream().filter(RedisRecord::isValid).collect(Collectors.toList());
         when(redisClient.send(validRecords)).thenReturn(responses);
         when(redisClient.send(records)).thenReturn(responses);
-        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation);
+        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation, 0, 2000);
         SinkResponse sinkResponse = redisSink.pushToSink(messages);
         Assert.assertTrue(sinkResponse.hasErrors());
         Assert.assertEquals(3, sinkResponse.getErrors().size());
@@ -137,7 +137,7 @@ public class RedisSinkTest {
         when(redisParser.convert(messages)).thenReturn(records);
         List<RedisRecord> validRecords = records.stream().filter(RedisRecord::isValid).collect(Collectors.toList());
         when(redisClient.send(validRecords)).thenReturn(responses);
-        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation);
+        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation, 0, 2000);
         SinkResponse sinkResponse = redisSink.pushToSink(messages);
         Assert.assertEquals(4, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.DESERIALIZATION_ERROR, sinkResponse.getErrorsFor(0).getErrorType());
@@ -158,7 +158,7 @@ public class RedisSinkTest {
         when(redisParser.convert(messages)).thenReturn(records);
         List<RedisRecord> validRecords = records.stream().filter(RedisRecord::isValid).collect(Collectors.toList());
         when(redisClient.send(validRecords)).thenThrow(new ClassCastException("[B cannot be cast to java.util.List"));
-        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation);
+        RedisSink redisSink = new RedisSink(redisClient, redisParser, instrumentation, 0, 2000);
         SinkResponse sinkResponse = redisSink.pushToSink(messages);
         Assert.assertEquals(5, sinkResponse.getErrors().size());
         Assert.assertEquals(ErrorType.SINK_NON_RETRYABLE_ERROR, sinkResponse.getErrorsFor(0).getErrorType());

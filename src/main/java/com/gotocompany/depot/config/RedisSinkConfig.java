@@ -72,4 +72,12 @@ public interface RedisSinkConfig extends SinkConfig {
     @ConverterClass(JsonToPropertiesConverter.class)
     @DefaultValue("")
     Properties getSinkRedisHashsetFieldToColumnMapping();
+
+    @Key("SINK_REDIS_CONNECTION_MAX_RETRIES")
+    @DefaultValue("2")
+    int getSinkRedisConnectionMaxRetries();
+
+    @Key("SINK_REDIS_CONNECTION_RETRY_BACKOFF_MS")
+    @DefaultValue("2000")
+    long getSinkRedisConnectionRetryBackoffMs();
 }
