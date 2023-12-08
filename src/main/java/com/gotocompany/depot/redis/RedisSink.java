@@ -50,8 +50,8 @@ public class RedisSink implements Sink {
     private Map<Long, ErrorInfo> send(List<RedisRecord> validRecords) {
         List<RedisResponse> responses = null;
         RuntimeException exception = null;
-        int retry = connectionMaxRetries;
-        while (retry > 0) {
+        int retryCount = connectionMaxRetries;
+        while (retryCount >= 0) {
             try {
                 responses = redisClient.send(validRecords);
                 break;
@@ -64,11 +64,11 @@ public class RedisSink implements Sink {
                 } catch (InterruptedException interruptedException) {
                     interruptedException.printStackTrace();
                 }
-                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (connectionMaxRetries - retry + 1));
+                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (connectionMaxRetries - retryCount + 1));
                 redisClient.init();
 
             }
-            retry--;
+            retryCount--;
         }
         if (responses == null) {
             return RedisSinkUtils.getNonRetryableErrors(validRecords, exception, instrumentation);

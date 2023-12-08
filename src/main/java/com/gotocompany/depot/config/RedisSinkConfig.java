@@ -74,7 +74,7 @@ public interface RedisSinkConfig extends SinkConfig {
     Properties getSinkRedisHashsetFieldToColumnMapping();
 
     @Key("SINK_REDIS_CONNECTION_MAX_RETRIES")
-    @DefaultValue("2")
+    @DefaultValue("1")
     int getSinkRedisConnectionMaxRetries();
 
     @Key("SINK_REDIS_CONNECTION_RETRY_BACKOFF_MS")
