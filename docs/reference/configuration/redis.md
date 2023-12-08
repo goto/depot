@@ -93,3 +93,20 @@ The max time in milliseconds that the Redis client will wait for establishing co
 - Example value: `4000`
 - Type: `optional`
 - Default value: `2000`
+
+### `SINK_REDIS_CONNECTION_RETRY_BACKOFF_MS`
+
+The constant backoff time in milliseconds between subsequent retries to reestablish the Redis connection
+
+- Example value: `4000`
+- Type: `optional`
+- Default value: `2000`
+
+### `SINK_REDIS_CONNECTION_MAX_RETRIES`
+
+The max no. of retries to reestablish the connection between Redis client and server.
+
+- Example value: `5`
+- Type: `optional`
+- Default value: `2`
+
