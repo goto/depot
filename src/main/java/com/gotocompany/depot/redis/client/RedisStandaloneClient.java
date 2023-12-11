@@ -31,16 +31,20 @@ public class RedisStandaloneClient implements RedisClient {
     private final DefaultJedisClientConfig defaultJedisClientConfig;
     private final HostAndPort hostAndPort;
     private Jedis jedis;
+    private final int connectionMaxRetries;
+    private final long connectionRetryBackoffMs;
 
-    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, DefaultJedisClientConfig defaultJedisClientConfig, HostAndPort hostAndPort) {
+    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, DefaultJedisClientConfig defaultJedisClientConfig, HostAndPort hostAndPort, int connectionMaxRetries, long connectionRetryBackoffMs) {
         this.instrumentation = instrumentation;
         this.redisTTL = redisTTL;
         this.defaultJedisClientConfig = defaultJedisClientConfig;
         this.hostAndPort = hostAndPort;
+        this.connectionMaxRetries = connectionMaxRetries;
+        this.connectionRetryBackoffMs = connectionRetryBackoffMs;
     }
 
     public RedisStandaloneClient(Instrumentation instrumentation, RedisSinkConfig config) {
-        this(instrumentation, RedisTTLFactory.getTTl(config), RedisSinkUtils.getJedisConfig(config), getHostPort(config));
+        this(instrumentation, RedisTTLFactory.getTTl(config), RedisSinkUtils.getJedisConfig(config), getHostPort(config), config.getSinkRedisConnectionMaxRetries(), config.getSinkRedisConnectionRetryBackoffMs());
     }
 
     private static HostAndPort getHostPort(RedisSinkConfig config) {
@@ -62,15 +66,37 @@ public class RedisStandaloneClient implements RedisClient {
 
     @Override
     public List<RedisResponse> send(List<RedisRecord> records) {
-        Pipeline jedisPipelined = jedis.pipelined();
-        jedisPipelined.multi();
-        List<RedisStandaloneResponse> responses = records.stream()
-                .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
-                .collect(Collectors.toList());
-        Response<List<Object>> executeResponse = jedisPipelined.exec();
-        jedisPipelined.sync();
-        instrumentation.logDebug("jedis responses: {}", executeResponse.get());
-        return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
+        int retryCount = connectionMaxRetries;
+        List<RedisResponse> redisResponseList = null;
+        while (retryCount >= 0) {
+            try {
+                Pipeline jedisPipelined = jedis.pipelined();
+                jedisPipelined.multi();
+                List<RedisStandaloneResponse> responses = records.stream()
+                        .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
+                        .collect(Collectors.toList());
+                Response<List<Object>> executeResponse = jedisPipelined.exec();
+                jedisPipelined.sync();
+                instrumentation.logDebug("jedis responses: {}", executeResponse.get());
+                redisResponseList = responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
+
+            } catch (RuntimeException e) {
+
+                e.printStackTrace();
+                if (retryCount == 0) throw e;
+                instrumentation.logInfo("Backing off for " + connectionRetryBackoffMs + " milliseconds.");
+                try {
+                    Thread.sleep(connectionRetryBackoffMs);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                instrumentation.logInfo("Attempting to recreate Redis client. Retry attempt count : " + (connectionMaxRetries - retryCount + 1));
+                this.init();
+
+            }
+            retryCount--;
+        }
+        return redisResponseList;
     }
 
 
