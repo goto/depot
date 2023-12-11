@@ -82,8 +82,6 @@ public class RedisSinkFactory {
         return new RedisSink(
                 redisClient,
                 redisParser,
-                new Instrumentation(statsDReporter, RedisSink.class),
-                sinkConfig.getSinkRedisConnectionMaxRetries(),
-                sinkConfig.getSinkRedisConnectionRetryBackoffMs());
+                new Instrumentation(statsDReporter, RedisSink.class));
     }
 }
