@@ -74,7 +74,9 @@ public class RedisStandaloneClient implements RedisClient {
             } catch (RuntimeException e) {
 
                 e.printStackTrace();
-                if (retryCount == 0) throw e;
+                if (retryCount == 0) {
+                    throw e;
+                }
                 instrumentation.logInfo("Backing off for " + connectionRetryBackoffMs + " milliseconds.");
                 try {
                     Thread.sleep(connectionRetryBackoffMs);
