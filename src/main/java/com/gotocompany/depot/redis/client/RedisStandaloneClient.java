@@ -70,16 +70,7 @@ public class RedisStandaloneClient implements RedisClient {
         List<RedisResponse> redisResponseList = null;
         while (retryCount >= 0) {
             try {
-                Pipeline jedisPipelined = jedis.pipelined();
-                jedisPipelined.multi();
-                List<RedisStandaloneResponse> responses = records.stream()
-                        .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
-                        .collect(Collectors.toList());
-                Response<List<Object>> executeResponse = jedisPipelined.exec();
-                jedisPipelined.sync();
-                instrumentation.logDebug("jedis responses: {}", executeResponse.get());
-                redisResponseList = responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
-
+                redisResponseList = sendInternal(records);
             } catch (RuntimeException e) {
 
                 e.printStackTrace();
@@ -97,6 +88,18 @@ public class RedisStandaloneClient implements RedisClient {
             retryCount--;
         }
         return redisResponseList;
+    }
+
+    public List<RedisResponse> sendInternal(List<RedisRecord> records) {
+        Pipeline jedisPipelined = jedis.pipelined();
+        jedisPipelined.multi();
+        List<RedisStandaloneResponse> responses = records.stream()
+                .map(redisRecord -> redisRecord.send(jedisPipelined, redisTTL))
+                .collect(Collectors.toList());
+        Response<List<Object>> executeResponse = jedisPipelined.exec();
+        jedisPipelined.sync();
+        instrumentation.logDebug("jedis responses: {}", executeResponse.get());
+        return responses.stream().map(RedisStandaloneResponse::process).collect(Collectors.toList());
     }
 
 
