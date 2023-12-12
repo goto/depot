@@ -34,17 +34,13 @@ public class RedisStandaloneClient implements RedisClient {
     private final int connectionMaxRetries;
     private final long connectionRetryBackoffMs;
 
-    public RedisStandaloneClient(Instrumentation instrumentation, RedisTtl redisTTL, DefaultJedisClientConfig defaultJedisClientConfig, HostAndPort hostAndPort, int connectionMaxRetries, long connectionRetryBackoffMs) {
-        this.instrumentation = instrumentation;
-        this.redisTTL = redisTTL;
-        this.defaultJedisClientConfig = defaultJedisClientConfig;
-        this.hostAndPort = hostAndPort;
-        this.connectionMaxRetries = connectionMaxRetries;
-        this.connectionRetryBackoffMs = connectionRetryBackoffMs;
-    }
-
     public RedisStandaloneClient(Instrumentation instrumentation, RedisSinkConfig config) {
-        this(instrumentation, RedisTTLFactory.getTTl(config), RedisSinkUtils.getJedisConfig(config), getHostPort(config), config.getSinkRedisConnectionMaxRetries(), config.getSinkRedisConnectionRetryBackoffMs());
+        this.instrumentation = instrumentation;
+        this.connectionMaxRetries = config.getSinkRedisConnectionMaxRetries();
+        this.connectionRetryBackoffMs = config.getSinkRedisConnectionRetryBackoffMs();
+        this.redisTTL = RedisTTLFactory.getTTl(config);
+        this.defaultJedisClientConfig = RedisSinkUtils.getJedisConfig(config);
+        this.hostAndPort = getHostPort(config);
     }
 
     private static HostAndPort getHostPort(RedisSinkConfig config) {
