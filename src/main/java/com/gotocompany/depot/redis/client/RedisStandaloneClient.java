@@ -67,6 +67,7 @@ public class RedisStandaloneClient implements RedisClient {
         while (retryCount >= 0) {
             try {
                 redisResponseList = sendInternal(records);
+                break;
             } catch (RuntimeException e) {
 
                 e.printStackTrace();
