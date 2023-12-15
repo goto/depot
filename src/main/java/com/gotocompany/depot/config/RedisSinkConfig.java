@@ -33,11 +33,11 @@ public interface RedisSinkConfig extends SinkConfig {
     String getSinkRedisAuthPassword();
 
     @Key("SINK_REDIS_CONNECTION_TIMEOUT_MS")
-    @DefaultValue("2000")
+    @DefaultValue("5000")
     int getSinkRedisConnectionTimeoutMs();
 
     @Key("SINK_REDIS_SOCKET_TIMEOUT_MS")
-    @DefaultValue("2000")
+    @DefaultValue("10000")
     int getSinkRedisSocketTimeoutMs();
 
     @Key("SINK_REDIS_KEY_TEMPLATE")
