@@ -17,6 +17,7 @@ public class RedisSinkMetrics extends SinkMetrics {
     public String getRedisNoResponseTotalMetric() {
         return getApplicationPrefix() + SINK_PREFIX + REDIS_SINK_PREFIX + "no_response_total";
     }
+
     public String getRedisConnectionRetryTotalMetric() {
         return getApplicationPrefix() + SINK_PREFIX + REDIS_SINK_PREFIX + "connection_retry_total";
     }
