@@ -144,9 +144,7 @@ public class RedisStandaloneClientTest {
         Pipeline pipeline = Mockito.mock(Pipeline.class);
         Response response = Mockito.mock(Response.class);
         Mockito.when(jedis.pipelined()).thenReturn(pipeline);
-        Mockito.when(pipeline.exec()).thenReturn(response);
         Object ob = new Object();
-        Mockito.when(response.get()).thenReturn(ob);
         List<RedisRecord> redisRecords = new ArrayList<RedisRecord>() {{
             add(Mockito.mock(RedisRecord.class));
             add(Mockito.mock(RedisRecord.class));
@@ -175,10 +173,7 @@ public class RedisStandaloneClientTest {
         RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort, jedis, 1, 2000, redisSinkMetrics);
         Pipeline pipeline = Mockito.mock(Pipeline.class);
         Response response = Mockito.mock(Response.class);
-        Mockito.when(jedis.pipelined()).thenReturn(pipeline);
-        Mockito.when(pipeline.exec()).thenReturn(response);
         Object ob = new Object();
-        Mockito.when(response.get()).thenReturn(ob);
         List<RedisRecord> redisRecords = new ArrayList<RedisRecord>() {{
             add(Mockito.mock(RedisRecord.class));
             add(Mockito.mock(RedisRecord.class));
@@ -187,11 +182,7 @@ public class RedisStandaloneClientTest {
             add(Mockito.mock(RedisRecord.class));
             add(Mockito.mock(RedisRecord.class));
         }};
-        IntStream.range(0, redisRecords.size()).forEach(
-                index -> {
-                    Mockito.when(redisRecords.get(index).send(pipeline, redisTTL)).thenThrow(JedisConnectionException.class);
-                }
-        );
+
         try {
             redisClient.send(redisRecords);
         } catch (Exception ignored) {
