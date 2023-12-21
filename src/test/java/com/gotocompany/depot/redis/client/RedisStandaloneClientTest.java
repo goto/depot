@@ -142,9 +142,7 @@ public class RedisStandaloneClientTest {
 
         RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort, jedis, 0, 2000, redisSinkMetrics);
         Pipeline pipeline = Mockito.mock(Pipeline.class);
-        Response response = Mockito.mock(Response.class);
         Mockito.when(jedis.pipelined()).thenReturn(pipeline);
-        Object ob = new Object();
         List<RedisRecord> redisRecords = new ArrayList<RedisRecord>() {{
             add(Mockito.mock(RedisRecord.class));
             add(Mockito.mock(RedisRecord.class));
@@ -155,9 +153,7 @@ public class RedisStandaloneClientTest {
         }};
 
         IntStream.range(0, redisRecords.size()).forEach(
-                index -> {
-                    Mockito.when(redisRecords.get(index).send(pipeline, redisTTL)).thenThrow(JedisConnectionException.class);
-                }
+                index -> Mockito.when(redisRecords.get(index).send(pipeline, redisTTL)).thenThrow(JedisConnectionException.class)
         );
         try {
             redisClient.send(redisRecords);
@@ -169,11 +165,7 @@ public class RedisStandaloneClientTest {
 
     @Test
     public void shouldInstrumentConnectionRetry() {
-
         RedisClient redisClient = new RedisStandaloneClient(instrumentation, redisTTL, defaultJedisClientConfig, hostAndPort, jedis, 1, 2000, redisSinkMetrics);
-        Pipeline pipeline = Mockito.mock(Pipeline.class);
-        Response response = Mockito.mock(Response.class);
-        Object ob = new Object();
         List<RedisRecord> redisRecords = new ArrayList<RedisRecord>() {{
             add(Mockito.mock(RedisRecord.class));
             add(Mockito.mock(RedisRecord.class));
