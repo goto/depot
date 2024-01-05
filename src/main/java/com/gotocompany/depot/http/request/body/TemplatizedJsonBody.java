@@ -1,5 +1,8 @@
 package com.gotocompany.depot.http.request.body;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
@@ -16,7 +19,7 @@ import java.util.Set;
 
 public class TemplatizedJsonBody implements RequestBody {
 
-    private final JSONObject jsonObject;
+    private final Object jsonObject;
     private final HttpSinkConfig config;
 
     public TemplatizedJsonBody(HttpSinkConfig config) {
@@ -32,7 +35,26 @@ public class TemplatizedJsonBody implements RequestBody {
         } else {
             parsedMessage = msgContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         }
-        return parse(jsonObject, parsedMessage).toString();
+        if (jsonObject instanceof JSONObject) {
+            return parse((JSONObject) jsonObject, parsedMessage).toString();
+        }
+        if (jsonObject instanceof JSONArray) {
+            try {
+                return parseJsonArray((JSONArray) jsonObject, parsedMessage).toString();
+            } catch (InvalidTemplateException e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+        }
+        if (((JsonElement) jsonObject).isJsonPrimitive() && ((JsonElement) jsonObject).getAsJsonPrimitive().isString()) {
+            try {
+                Template templateValue = new Template((String) jsonObject);
+                return templateValue.parseWithType(parsedMessage).toString();
+
+            } catch (InvalidTemplateException e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+        }
+        return jsonObject.toString();
     }
 
     private JSONObject parse(JSONObject object, ParsedMessage parsedMessage) {
@@ -79,13 +101,20 @@ public class TemplatizedJsonBody implements RequestBody {
         return tempJsonArray;
     }
 
-    private JSONObject createJsonObject(String jsonTemplate) {
+    private Object createJsonObject(String jsonTemplate) {
+        jsonTemplate = jsonTemplate.trim();
         if (jsonTemplate.isEmpty()) {
             throw new ConfigurationException("Json body template cannot be empty");
         }
         try {
-            return new JSONObject(jsonTemplate);
-        } catch (JSONException e) {
+            if (jsonTemplate.startsWith("{")) {
+                return new JSONObject(jsonTemplate);
+            }
+            if (jsonTemplate.startsWith("[")) {
+                return new JSONArray(jsonTemplate);
+            }
+            return JsonParser.parseString(jsonTemplate);
+        } catch (JSONException | JsonSyntaxException e) {
             throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
         }
     }
