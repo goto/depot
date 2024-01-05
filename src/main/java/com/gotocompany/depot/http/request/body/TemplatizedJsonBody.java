@@ -19,12 +19,12 @@ import java.util.Set;
 
 public class TemplatizedJsonBody implements RequestBody {
 
-    private final Object jsonObject;
+    private final Object jsonElement;
     private final HttpSinkConfig config;
 
     public TemplatizedJsonBody(HttpSinkConfig config) {
         this.config = config;
-        this.jsonObject = createJsonObject(config.getSinkHttpJsonBodyTemplate());
+        this.jsonElement = createJsonObject(config.getSinkHttpJsonBodyTemplate());
     }
 
     @Override
@@ -35,26 +35,26 @@ public class TemplatizedJsonBody implements RequestBody {
         } else {
             parsedMessage = msgContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         }
-        if (jsonObject instanceof JSONObject) {
-            return parse((JSONObject) jsonObject, parsedMessage).toString();
+        if (jsonElement instanceof JSONObject) {
+            return parse((JSONObject) jsonElement, parsedMessage).toString();
         }
-        if (jsonObject instanceof JSONArray) {
+        if (jsonElement instanceof JSONArray) {
             try {
-                return parseJsonArray((JSONArray) jsonObject, parsedMessage).toString();
+                return parseJsonArray((JSONArray) jsonElement, parsedMessage).toString();
             } catch (InvalidTemplateException e) {
                 throw new IllegalArgumentException(e.getMessage());
             }
         }
-        if (((JsonElement) jsonObject).isJsonPrimitive() && ((JsonElement) jsonObject).getAsJsonPrimitive().isString()) {
+        if (jsonElement instanceof JsonElement && ((JsonElement) jsonElement).isJsonPrimitive() && ((JsonElement) jsonElement).getAsJsonPrimitive().isString()) {
             try {
-                Template templateValue = new Template((String) jsonObject);
+                Template templateValue = new Template((String) jsonElement);
                 return templateValue.parseWithType(parsedMessage).toString();
 
             } catch (InvalidTemplateException e) {
                 throw new IllegalArgumentException(e.getMessage());
             }
         }
-        return jsonObject.toString();
+        return jsonElement.toString();
     }
 
     private JSONObject parse(JSONObject object, ParsedMessage parsedMessage) {
