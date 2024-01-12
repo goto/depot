@@ -15,29 +15,22 @@ public class JsonObjectParser implements JsonElementParser {
 
     @Override
     public String parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
-        return parseInternal(jsonElement, parsedMessage).toString();
+        return parseInternal((JsonObject) jsonElement, parsedMessage).toString();
     }
 
 
-    private JsonObject parseInternal(JsonElement jsonElement, ParsedMessage parsedMessage) {
+    private JsonObject parseInternal(JsonObject object, ParsedMessage parsedMessage) {
         try {
             Set<String> keys = object.keySet();
-            JSONObject finalJsonObject = new JSONObject();
+            JsonObject finalJsonObject = new JsonObject();
             for (String key : keys) {
-                Object value = object.get(key);
+                JsonElement value = object.get(key);
                 Template templateKey = new Template(key);
                 Object parsedKey = templateKey.parseWithType(parsedMessage);
-                if (value instanceof JSONObject) {
-                    finalJsonObject.put(parsedKey.toString(), parse((JSONObject) value, parsedMessage));
-                } else if (value instanceof JSONArray) {
-                    JSONArray tempJsonArray = parseJsonArray((JSONArray) value, parsedMessage);
-                    finalJsonObject.put(parsedKey.toString(), tempJsonArray);
-                } else if (value instanceof String) {
-                    Template templateValue = new Template((String) value);
-                    finalJsonObject.put(parsedKey.toString(), templateValue.parseWithType(parsedMessage));
-                } else {
-                    finalJsonObject.put(parsedKey.toString(), value);
-                }
+                JsonElementParser jsonElementParser = JsonElementParser.getParser(value);
+                String parsedValue = jsonElementParser.parse(value, parsedMessage);
+                finalJsonObject.add(parsedKey.toString(), parsedValue);
+
             }
             return finalJsonObject;
         } catch (InvalidTemplateException e) {
