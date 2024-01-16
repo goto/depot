@@ -6,7 +6,6 @@ import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.ParsedMessage;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Set;
@@ -15,25 +14,20 @@ public class JsonObjectParser implements JsonElementParser {
 
 
     @Override
-    public String parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
-        return parseInternal((JsonObject) jsonElement, parsedMessage).toString();
-    }
-
-
-    private JsonObject parseInternal(JsonObject object, ParsedMessage parsedMessage) {
+    public String parse(JsonElement object, ParsedMessage parsedMessage) {
         try {
-            Set<String> keys = object.keySet();
-            JsonObject finalJsonObject = new JsonObject();
+            Set<String> keys = ((JsonObject) object).keySet();
+            JSONObject finalJsonObject = new JSONObject();
             for (String key : keys) {
-                JsonElement value = object.get(key);
+                JsonElement value = ((JsonObject) object).get(key);
                 Template templateKey = new Template(key);
                 Object parsedKey = templateKey.parseWithType(parsedMessage);
                 JsonElementParser jsonElementParser = JsonParserUtils.getParser(value);
                 String parsedValue = jsonElementParser.parse(value, parsedMessage);
-                finalJsonObject.add(parsedKey.toString(), parsedValue);
+                finalJsonObject.put(parsedKey.toString(), parsedValue);
 
             }
-            return finalJsonObject;
+            return finalJsonObject.toString();
         } catch (InvalidTemplateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
