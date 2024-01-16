@@ -7,6 +7,7 @@ import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
 import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.http.request.parser.JsonElementParser;
+import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.MessageContainer;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
@@ -35,7 +36,7 @@ public class TemplatizedJsonBody implements RequestBody {
         } else {
             parsedMessage = msgContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         }
-        JsonElementParser jsonElementParser = JsonElementParser.getParser(jsonElement);
+        JsonElementParser jsonElementParser = JsonParserUtils.getParser(jsonElement);
         return jsonElementParser.parse(jsonElement, parsedMessage);
     }
 

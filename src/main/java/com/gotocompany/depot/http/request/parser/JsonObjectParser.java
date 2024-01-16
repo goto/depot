@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.exception.InvalidTemplateException;
+import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.ParsedMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,7 +28,7 @@ public class JsonObjectParser implements JsonElementParser {
                 JsonElement value = object.get(key);
                 Template templateKey = new Template(key);
                 Object parsedKey = templateKey.parseWithType(parsedMessage);
-                JsonElementParser jsonElementParser = JsonElementParser.getParser(value);
+                JsonElementParser jsonElementParser = JsonParserUtils.getParser(value);
                 String parsedValue = jsonElementParser.parse(value, parsedMessage);
                 finalJsonObject.add(parsedKey.toString(), parsedValue);
 
