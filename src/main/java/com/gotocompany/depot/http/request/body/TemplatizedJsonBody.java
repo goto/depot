@@ -1,5 +1,9 @@
 package com.gotocompany.depot.http.request.body;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.gotocompany.depot.common.Template;
@@ -46,9 +50,11 @@ public class TemplatizedJsonBody implements RequestBody {
             throw new ConfigurationException("Json body template cannot be empty");
         }
         try {
-            new JSONObject(jsonTemplate);
+            ObjectMapper mapper = new ObjectMapper()
+                    .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+            mapper.readTree(jsonTemplate);
             return JsonParser.parseString(jsonTemplate);
-        } catch (JSONException | JsonParseException e) {
+        } catch (JSONException | JsonProcessingException e) {
             throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
         }
     }
