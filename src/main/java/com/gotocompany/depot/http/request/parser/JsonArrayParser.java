@@ -9,13 +9,13 @@ public class JsonArrayParser implements JsonElementParser {
 
 
     @Override
-    public String parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
+    public JsonElement parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
         JsonArray tempJsonArray = new JsonArray();
         for (JsonElement jsonElement1 : (JsonArray) jsonElement) {
             JsonElementParser jsonElementParser = JsonParserUtils.getParser(jsonElement1);
 
             tempJsonArray.add(jsonElementParser.parse(jsonElement, parsedMessage));
         }
-        return tempJsonArray.getAsString();
+        return tempJsonArray;
     }
 }

@@ -5,7 +5,7 @@ import com.gotocompany.depot.message.ParsedMessage;
 
 public class JsonNullParser implements JsonElementParser{
     @Override
-    public String parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
-        return "null";
+    public JsonElement parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
+        return jsonElement;
     }
 }

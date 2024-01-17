@@ -6,6 +6,6 @@ import com.gotocompany.depot.message.ParsedMessage;
 public class JsonPrimitiveParser implements JsonElementParser{
     @Override
     public JsonElement parse(JsonElement jsonElement, ParsedMessage parsedMessage) {
-        return  jsonElement.toString();
+        return  jsonElement;
     }
 }

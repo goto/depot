@@ -14,20 +14,20 @@ public class JsonObjectParser implements JsonElementParser {
 
 
     @Override
-    public String parse(JsonElement object, ParsedMessage parsedMessage) {
+    public JsonElement parse(JsonElement object, ParsedMessage parsedMessage) {
         try {
             Set<String> keys = ((JsonObject) object).keySet();
-            JSONObject finalJsonObject = new JSONObject();
+            JsonObject finalJsonObject = new JsonObject();
             for (String key : keys) {
                 JsonElement value = ((JsonObject) object).get(key);
                 Template templateKey = new Template(key);
                 Object parsedKey = templateKey.parseWithType(parsedMessage);
                 JsonElementParser jsonElementParser = JsonParserUtils.getParser(value);
-                String parsedValue = jsonElementParser.parse(value, parsedMessage);
-                finalJsonObject.put(parsedKey.toString(), parsedValue);
+                JsonElement parsedValue = jsonElementParser.parse(value, parsedMessage);
+                finalJsonObject.add(parsedKey.toString(), parsedValue);
 
             }
-            return finalJsonObject.toString();
+            return finalJsonObject;
         } catch (InvalidTemplateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

@@ -5,7 +5,7 @@ import com.gotocompany.depot.message.ParsedMessage;
 
 public interface JsonElementParser {
 
-    String parse(JsonElement jsonElement, ParsedMessage parsedMessage);
+    JsonElement parse(JsonElement jsonElement, ParsedMessage parsedMessage);
 
 
 

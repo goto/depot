@@ -1,7 +1,7 @@
 package com.gotocompany.depot.http.request.body;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
@@ -16,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Set;
 
 public class TemplatizedJsonBody implements RequestBody {
@@ -37,7 +38,7 @@ public class TemplatizedJsonBody implements RequestBody {
             parsedMessage = msgContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         }
         JsonElementParser jsonElementParser = JsonParserUtils.getParser(jsonElement);
-        return jsonElementParser.parse(jsonElement, parsedMessage);
+        return jsonElementParser.parse(jsonElement, parsedMessage).toString();
     }
 
     private JsonElement createJsonElement(String jsonTemplate) {
@@ -45,8 +46,9 @@ public class TemplatizedJsonBody implements RequestBody {
             throw new ConfigurationException("Json body template cannot be empty");
         }
         try {
+            new JSONObject(jsonTemplate);
             return JsonParser.parseString(jsonTemplate);
-        } catch (JSONException e) {
+        } catch (JSONException | JsonParseException e) {
             throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
         }
     }
