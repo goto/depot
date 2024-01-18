@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
-import com.gotocompany.depot.exception.ConfigurationException;
 import com.gotocompany.depot.http.request.parser.*;
 
 public class JsonParserUtils {

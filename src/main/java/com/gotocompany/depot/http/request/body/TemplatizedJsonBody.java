@@ -39,12 +39,16 @@ public class TemplatizedJsonBody implements RequestBody {
         if (jsonTemplate.isEmpty()) {
             throw new ConfigurationException("Json body template cannot be empty");
         }
+
+
         try {
             JsonParserUtils.validateJson(jsonTemplate);
 
         } catch (JsonProcessingException e) {
             throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
         }
+
+
         return JsonParser.parseString(jsonTemplate);
 
     }

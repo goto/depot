@@ -8,6 +8,4 @@ public interface JsonElementParser {
     JsonElement parse(JsonElement jsonElement, ParsedMessage parsedMessage);
 
 
-
-
 }

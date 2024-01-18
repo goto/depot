@@ -1,8 +1,10 @@
 package com.gotocompany.depot.http.request.body;
 
+import com.google.gson.*;
 import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
+import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageContainer;
 import com.gotocompany.depot.message.MessageParserFactory;
@@ -111,6 +113,7 @@ public class TemplatizedJsonBodyTest {
         assertEquals("Json body template is not a valid json. Unexpected character ('=' (code 61)): was expecting a colon to separate field name and value\n" +
                 " at [Source: (String)\"{\"a\"=\"b\"}\"; line: 1, column: 6]", thrown.getMessage());
     }
+
 
     @Test
     public void shouldThrowExceptionForUnknownFieldInTemplate() {
