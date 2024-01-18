@@ -1,27 +1,17 @@
 package com.gotocompany.depot.http.request.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
-import com.gotocompany.depot.common.Template;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
-import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.http.request.parser.JsonElementParser;
 import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.MessageContainer;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.Set;
 
 public class TemplatizedJsonBody implements RequestBody {
 
@@ -50,12 +40,12 @@ public class TemplatizedJsonBody implements RequestBody {
             throw new ConfigurationException("Json body template cannot be empty");
         }
         try {
-            ObjectMapper mapper = new ObjectMapper()
-                    .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
-            mapper.readTree(jsonTemplate);
-            return JsonParser.parseString(jsonTemplate);
-        } catch (JSONException | JsonProcessingException e) {
+            JsonParserUtils.validateJson(jsonTemplate);
+
+        } catch (JsonProcessingException e) {
             throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
         }
+        return JsonParser.parseString(jsonTemplate);
+
     }
 }
