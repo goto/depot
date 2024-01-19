@@ -1,35 +1,48 @@
 package com.gotocompany.depot.http.request.util;
 
-import com.google.gson.JsonElement;
-import com.gotocompany.depot.http.request.parser.JsonArrayParser;
-import com.gotocompany.depot.http.request.parser.JsonNullParser;
-import com.gotocompany.depot.http.request.parser.JsonObjectParser;
-import com.gotocompany.depot.http.request.parser.JsonStringParser;
-import com.gotocompany.depot.http.request.parser.JsonPrimitiveParser;
-import com.gotocompany.depot.http.request.parser.JsonElementParser;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gotocompany.depot.http.request.parser.*;
 
 
 public class JsonParserUtils {
 
-    public static JsonElementParser getParser(JsonElement jsonElement) {
+    private static final ObjectMapper OBJECT_MAPPER;
 
-        if (jsonElement.isJsonArray()) {
-            return new JsonArrayParser();
-        }
-        if (jsonElement.isJsonObject()) {
-            return new JsonObjectParser();
-        }
-        if (jsonElement.isJsonNull()) {
-            return new JsonNullParser();
-        }
-        if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
-            return new JsonStringParser();
-        }
-        if (jsonElement.isJsonPrimitive()) {
-            return new JsonPrimitiveParser();
+    static {
+        OBJECT_MAPPER = new ObjectMapper()
+                .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+    }
+
+    public static JsonNodeParser getParser(JsonNode jsonNode) {
+
+
+        switch (jsonNode.getNodeType()) {
+
+            case ARRAY: {
+                return new JsonArrayParser();
+            }
+            case OBJECT: {
+                return new JsonObjectParser();
+            }
+            case STRING: {
+                return new JsonStringParser();
+            }
+            case NUMBER:
+            case BOOLEAN:
+            case NULL:
+                return new JsonDefaultParser();
+
+            default: {
+                throw new IllegalArgumentException("The provided Json type is not supported");
+            }
         }
 
-        throw new IllegalArgumentException("Invalid json");
+    }
+
+    public static ObjectMapper getObjectMapper() {
+
+        return OBJECT_MAPPER;
     }
 }

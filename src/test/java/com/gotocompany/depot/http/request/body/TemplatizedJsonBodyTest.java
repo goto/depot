@@ -105,7 +105,7 @@ public class TemplatizedJsonBodyTest {
 
     @Test
     public void shouldThrowExceptionIfJsonTemplateBodyIsNotValid() {
-        configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "{\"a\"=\"b\"}");
+        configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "{\"a\":\"b\"}");
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
         ConfigurationException thrown = assertThrows(ConfigurationException.class, () -> new TemplatizedJsonBody(sinkConfig));
         assertEquals("Json body template is not a valid json. Use JsonReader.setLenient(true) to accept malformed JSON at line 1 column 6 path $.a", thrown.getMessage());
