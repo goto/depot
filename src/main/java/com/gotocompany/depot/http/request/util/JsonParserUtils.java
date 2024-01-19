@@ -6,6 +6,8 @@ import com.gotocompany.depot.http.request.parser.JsonNullParser;
 import com.gotocompany.depot.http.request.parser.JsonObjectParser;
 import com.gotocompany.depot.http.request.parser.JsonStringParser;
 import com.gotocompany.depot.http.request.parser.JsonPrimitiveParser;
+import com.gotocompany.depot.http.request.parser.JsonElementParser;
+
 
 
 public class JsonParserUtils {
