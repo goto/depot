@@ -16,7 +16,9 @@ public class JsonStringParser implements JsonElementParser {
             e.printStackTrace();
         }
         Object parsedValue = templateValue.parseWithType(parsedMessage);
-        if (parsedValue instanceof String) parsedValue = "\"" + parsedValue + "\"";
+        if (parsedValue instanceof String) {
+            parsedValue = "\"" + parsedValue + "\"";
+        }
         return JsonParser.parseString(parsedValue.toString());
     }
 }

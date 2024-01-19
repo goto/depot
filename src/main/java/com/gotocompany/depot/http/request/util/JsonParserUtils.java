@@ -1,7 +1,12 @@
 package com.gotocompany.depot.http.request.util;
 
 import com.google.gson.JsonElement;
-import com.gotocompany.depot.http.request.parser.*;
+import com.gotocompany.depot.http.request.parser.JsonArrayParser;
+import com.gotocompany.depot.http.request.parser.JsonNullParser;
+import com.gotocompany.depot.http.request.parser.JsonObjectParser;
+import com.gotocompany.depot.http.request.parser.JsonStringParser;
+import com.gotocompany.depot.http.request.parser.JsonPrimitiveParser;
+
 
 public class JsonParserUtils {
 
