@@ -2,13 +2,14 @@ package com.gotocompany.depot.http.request.parser;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestTypesMessage;
 import com.gotocompany.depot.config.HttpSinkConfig;
-import com.gotocompany.depot.http.request.util.JsonParserUtils;
-import com.gotocompany.depot.message.*;
+import com.gotocompany.depot.message.Message;
+import com.gotocompany.depot.message.MessageParserFactory;
+import com.gotocompany.depot.message.ParsedMessage;
+import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
 import com.gotocompany.depot.metrics.StatsDReporter;
 import org.aeonbits.owner.ConfigFactory;

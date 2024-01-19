@@ -1,10 +1,8 @@
 package com.gotocompany.depot.http.request.body;
 
-import com.google.gson.*;
 import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
-import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageContainer;
 import com.gotocompany.depot.message.MessageParserFactory;
