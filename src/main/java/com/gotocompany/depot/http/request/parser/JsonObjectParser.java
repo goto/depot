@@ -6,7 +6,6 @@ import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.ParsedMessage;
-import org.json.JSONObject;
 
 import java.util.Set;
 
@@ -25,7 +24,6 @@ public class JsonObjectParser implements JsonElementParser {
                 JsonElementParser jsonElementParser = JsonParserUtils.getParser(value);
                 JsonElement parsedValue = jsonElementParser.parse(value, parsedMessage);
                 finalJsonObject.add(parsedKey.toString(), parsedValue);
-
             }
             return finalJsonObject;
         } catch (InvalidTemplateException e) {
