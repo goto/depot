@@ -108,8 +108,7 @@ public class TemplatizedJsonBodyTest {
         configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "{\"a\"=\"b\"}");
         sinkConfig = ConfigFactory.create(HttpSinkConfig.class, configuration);
         ConfigurationException thrown = assertThrows(ConfigurationException.class, () -> new TemplatizedJsonBody(sinkConfig));
-        assertEquals("Json body template is not a valid json. Unexpected character ('=' (code 61)): was expecting a colon to separate field name and value\n"
-                + " at [Source: (String)\"{\"a\"=\"b\"}\"; line: 1, column: 6]", thrown.getMessage());
+        assertEquals("Json body template is not a valid json. Use JsonReader.setLenient(true) to accept malformed JSON at line 1 column 6 path $.a", thrown.getMessage());
     }
 
 
