@@ -32,7 +32,7 @@ public class JsonPrimitiveParserTest {
     private StatsDReporter statsDReporter;
     private Instant time;
     private HttpSinkConfig sinkConfig;
-    ParsedMessage parsedLogMessage;
+    private ParsedMessage parsedLogMessage;
     private final Map<String, String> configuration = new HashMap<>();
 
     @Before
