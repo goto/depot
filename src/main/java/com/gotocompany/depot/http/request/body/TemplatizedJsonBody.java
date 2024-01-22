@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonSyntaxException;
 import com.gotocompany.depot.config.HttpSinkConfig;
 import com.gotocompany.depot.exception.ConfigurationException;
-import com.gotocompany.depot.http.request.parser.JsonNodeParser;
 import com.gotocompany.depot.http.request.util.JsonParserUtils;
 import com.gotocompany.depot.message.MessageContainer;
 import com.gotocompany.depot.message.ParsedMessage;
@@ -15,12 +14,10 @@ import java.io.IOException;
 public class TemplatizedJsonBody implements RequestBody {
     private final JsonNode templateJsonNode;
     private final HttpSinkConfig config;
-    private final JsonNodeParser jsonNodeParser;
 
     public TemplatizedJsonBody(HttpSinkConfig config) {
         this.config = config;
         this.templateJsonNode = createJsonNode(config.getSinkHttpJsonBodyTemplate());
-        this.jsonNodeParser = JsonParserUtils.getParser(templateJsonNode);
     }
 
     @Override
@@ -32,7 +29,7 @@ public class TemplatizedJsonBody implements RequestBody {
             parsedMessage = msgContainer.getParsedLogMessage(config.getSinkConnectorSchemaProtoMessageClass());
         }
 
-        JsonNode parsedJsonNode = jsonNodeParser.parse(templateJsonNode, parsedMessage);
+        JsonNode parsedJsonNode = JsonParserUtils.parse(templateJsonNode, parsedMessage);
         return parsedJsonNode.toString();
     }
 
