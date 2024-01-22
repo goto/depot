@@ -9,10 +9,19 @@ import com.gotocompany.depot.http.request.parser.*;
 public class JsonParserUtils {
 
     private static final ObjectMapper OBJECT_MAPPER;
+    private static final JsonArrayParser JSON_ARRAY_PARSER;
+    private static final JsonDefaultParser JSON_DEFAULT_PARSER;
+    private static final JsonObjectParser JSON_OBJECT_PARSER;
+    private static final JsonStringParser JSON_STRING_PARSER;
+
 
     static {
         OBJECT_MAPPER = new ObjectMapper()
                 .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+        JSON_ARRAY_PARSER = new JsonArrayParser();
+        JSON_DEFAULT_PARSER = new JsonDefaultParser();
+        JSON_STRING_PARSER = new JsonStringParser();
+        JSON_OBJECT_PARSER = new JsonObjectParser();
     }
 
     public static JsonNodeParser getParser(JsonNode jsonNode) {
@@ -21,18 +30,18 @@ public class JsonParserUtils {
         switch (jsonNode.getNodeType()) {
 
             case ARRAY: {
-                return new JsonArrayParser();
+                return JSON_ARRAY_PARSER;
             }
             case OBJECT: {
-                return new JsonObjectParser();
+                return JSON_OBJECT_PARSER;
             }
             case STRING: {
-                return new JsonStringParser();
+                return JSON_STRING_PARSER;
             }
             case NUMBER:
             case BOOLEAN:
             case NULL:
-                return new JsonDefaultParser();
+                return JSON_DEFAULT_PARSER;
 
             default: {
                 throw new IllegalArgumentException("The provided Json type is not supported");
