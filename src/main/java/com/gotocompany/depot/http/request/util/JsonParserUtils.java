@@ -24,7 +24,6 @@ public class JsonParserUtils {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
-
     public static JsonNode createJsonNode(String jsonTemplate) {
         if (jsonTemplate.isEmpty()) {
             throw new ConfigurationException("Json body template cannot be empty");
@@ -39,23 +38,19 @@ public class JsonParserUtils {
 
     public static JsonNode parse(JsonNode jsonNode, ParsedMessage parsedMessage) {
         switch (jsonNode.getNodeType()) {
-            case ARRAY: {
+            case ARRAY:
                 return parseInternal((ArrayNode) jsonNode, parsedMessage);
-            }
-            case OBJECT: {
+            case OBJECT:
                 return parseInternal((ObjectNode) jsonNode, parsedMessage);
-            }
-            case STRING: {
+            case STRING:
                 return parseInternal((TextNode) jsonNode, parsedMessage);
-            }
             case NUMBER:
             case BOOLEAN:
-            case NULL: {
+            case NULL:
                 return parseInternal(jsonNode, parsedMessage);
-            }
-            default: {
+            default:
                 throw new IllegalArgumentException("The provided Json type is not supported");
-            }
+
         }
     }
 
@@ -76,10 +71,9 @@ public class JsonParserUtils {
 
     public static JsonNode parseInternal(ArrayNode arrayNode, ParsedMessage parsedMessage) {
         ArrayNode tempJsonArray = new JsonNodeFactory(false).arrayNode();
-        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext(); ) {
+        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
             JsonNode jsonElement1 = it.next();
             JsonNode parsedJsonNode = JsonParserUtils.parse(jsonElement1, parsedMessage);
-
             tempJsonArray.add(parsedJsonNode);
         }
         return tempJsonArray;
