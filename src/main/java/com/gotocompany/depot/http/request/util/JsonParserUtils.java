@@ -74,7 +74,7 @@ public class JsonParserUtils {
 
     public static JsonNode parseInternal(ArrayNode arrayNode, ParsedMessage parsedMessage) {
         ArrayNode tempJsonArray = new JsonNodeFactory(false).arrayNode();
-        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext(); ) {
             JsonNode jsonElement1 = it.next();
             JsonNode parsedJsonNode = JsonParserUtils.parse(jsonElement1, parsedMessage);
             tempJsonArray.add(parsedJsonNode);
@@ -90,11 +90,17 @@ public class JsonParserUtils {
             throw new IllegalArgumentException(e.getMessage());
         }
         Object parsedValue = templateValue.parseWithType(parsedMessage);
-        if (parsedValue instanceof String) {
-            parsedValue = "\"" + parsedValue + "\"";
-        }
+
         String parsedJsonString = parsedValue.toString();
+
         JsonNode parsedJsonNode;
+        if (parsedValue instanceof String) {
+            if (parsedJsonString.startsWith("\"") && parsedJsonString.endsWith("\"")) {
+                parsedJsonString = parsedJsonString.substring(1, parsedJsonString.length() - 1);
+            }
+            parsedJsonNode = new JsonNodeFactory(false).textNode(parsedJsonString);
+            return parsedJsonNode;
+        }
         try {
             parsedJsonNode = OBJECT_MAPPER.readTree(parsedJsonString);
         } catch (JsonProcessingException e) {
