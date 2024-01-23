@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestTypesMessage;
@@ -33,7 +31,6 @@ public class JsonParserUtilTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
-
 
     @Mock
     private StatsDReporter statsDReporter;
@@ -134,8 +131,6 @@ public class JsonParserUtilTest {
 
     @Test
     public void shouldParseJsonStringTemplateWithBooleanArgument() throws JsonProcessingException {
-
-
         JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,bool_value\"");
         JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
         assertEquals("true", parsedJsonElement.toString());

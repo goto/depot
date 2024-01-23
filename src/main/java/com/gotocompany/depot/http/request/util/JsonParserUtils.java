@@ -4,12 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.gson.JsonSyntaxException;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.exception.ConfigurationException;
 import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.message.ParsedMessage;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -20,11 +25,20 @@ public class JsonParserUtils {
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
 
+    public static JsonNode createJsonNode(String jsonTemplate) {
+        if (jsonTemplate.isEmpty()) {
+            throw new ConfigurationException("Json body template cannot be empty");
+        }
+        try {
+            return OBJECT_MAPPER.readTree(jsonTemplate);
+
+        } catch (JsonSyntaxException | IOException e) {
+            throw new ConfigurationException(String.format("Json body template is not a valid json. %s", e.getMessage()));
+        }
+    }
+
     public static JsonNode parse(JsonNode jsonNode, ParsedMessage parsedMessage) {
-
-
         switch (jsonNode.getNodeType()) {
-
             case ARRAY: {
                 return parseInternal((ArrayNode) jsonNode, parsedMessage);
             }
@@ -39,16 +53,13 @@ public class JsonParserUtils {
             case NULL: {
                 return parseInternal(jsonNode, parsedMessage);
             }
-
             default: {
                 throw new IllegalArgumentException("The provided Json type is not supported");
             }
         }
-
     }
 
     public static JsonNode parseInternal(ObjectNode objectNode, ParsedMessage parsedMessage) {
-
         ObjectNode finalJsonObject = new JsonNodeFactory(false).objectNode();
         for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
             String keyString = entry.getKey();
@@ -60,7 +71,6 @@ public class JsonParserUtils {
             finalJsonObject.put(parsedKeyString, parsedValue);
         }
         return finalJsonObject;
-
     }
 
 
@@ -76,7 +86,6 @@ public class JsonParserUtils {
     }
 
     public static JsonNode parseInternal(TextNode textNode, ParsedMessage parsedMessage) {
-
         Template templateValue;
         try {
             templateValue = new Template(textNode.asText());
@@ -87,13 +96,10 @@ public class JsonParserUtils {
         if (parsedValue instanceof String) {
             parsedValue = "\"" + parsedValue + "\"";
         }
-
-        ObjectMapper objectMapper = JsonParserUtils.getObjectMapper();
         String parsedJsonString = parsedValue.toString();
-
         JsonNode parsedJsonNode;
         try {
-            parsedJsonNode = objectMapper.readTree(parsedJsonString);
+            parsedJsonNode = OBJECT_MAPPER.readTree(parsedJsonString);
         } catch (JsonProcessingException e) {
             throw new ConfigurationException("An error occurred while parsing the template string : " + parsedJsonString + "\nError: " + e.getMessage());
         }
@@ -102,11 +108,5 @@ public class JsonParserUtils {
 
     public static JsonNode parseInternal(JsonNode jsonElement, ParsedMessage parsedMessage) {
         return jsonElement;
-    }
-
-
-    public static ObjectMapper getObjectMapper() {
-
-        return OBJECT_MAPPER;
     }
 }
