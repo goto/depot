@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.*;
 import com.google.gson.JsonSyntaxException;
 import com.gotocompany.depot.common.Template;
 import com.gotocompany.depot.exception.ConfigurationException;
@@ -61,6 +58,9 @@ public class JsonParserUtils {
             TextNode keyStringNode = new TextNode(keyString);
             JsonNode parsedKeyNode = parseInternal(keyStringNode, parsedMessage);
             String parsedKeyString = parsedKeyNode.toString();
+            if (parsedKeyNode.getNodeType().equals(JsonNodeType.STRING)) {
+                parsedKeyString = parsedKeyString.substring(1, parsedKeyString.length() - 1);
+            }
             JsonNode valueNode = entry.getValue();
             JsonNode parsedValue = JsonParserUtils.parse(valueNode, parsedMessage);
             finalJsonObject.put(parsedKeyString, parsedValue);
@@ -71,7 +71,7 @@ public class JsonParserUtils {
 
     public static JsonNode parseInternal(ArrayNode arrayNode, ParsedMessage parsedMessage) {
         ArrayNode tempJsonArray = new JsonNodeFactory(false).arrayNode();
-        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext(); ) {
             JsonNode jsonElement1 = it.next();
             JsonNode parsedJsonNode = JsonParserUtils.parse(jsonElement1, parsedMessage);
             tempJsonArray.add(parsedJsonNode);
