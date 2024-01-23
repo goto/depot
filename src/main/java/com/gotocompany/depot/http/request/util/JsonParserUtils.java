@@ -74,7 +74,7 @@ public class JsonParserUtils {
 
     public static JsonNode parseInternal(ArrayNode arrayNode, ParsedMessage parsedMessage) {
         ArrayNode tempJsonArray = new JsonNodeFactory(false).arrayNode();
-        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext(); ) {
+        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
             JsonNode jsonElement1 = it.next();
             JsonNode parsedJsonNode = JsonParserUtils.parse(jsonElement1, parsedMessage);
             tempJsonArray.add(parsedJsonNode);
