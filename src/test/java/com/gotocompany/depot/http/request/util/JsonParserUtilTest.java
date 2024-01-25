@@ -72,109 +72,109 @@ public class JsonParserUtilTest {
 
     @Test
     public void shouldParseJsonFloat() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("23.6677");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("23.6677", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("23.6677");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("23.6677", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonInteger() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("234");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("234", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("234");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("234", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonBoolean() throws JsonProcessingException {
 
 
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("false");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("false", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("false");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("false", parsedJsonNode.toString());
     }
 
 
     @Test
     public void shouldParseJSONStringWithoutTemplate() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"sss\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("\"sss\"", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"sss\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("\"sss\"", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithArrayArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,list_values\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("[\"test-list-1\",\"test-list-2\",\"test-list-3\"]", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,list_values\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("[\"test-list-1\",\"test-list-2\",\"test-list-3\"]", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJSONStringTemplateWithObjectArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,message_value\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("{\"order_number\":\"test-order-1\",\"order_details\":\"ORDER-DETAILS-1\"}", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,message_value\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("{\"order_number\":\"test-order-1\",\"order_details\":\"ORDER-DETAILS-1\"}", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithFloatArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,float_value\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("10.0", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,float_value\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("10.0", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithTimestampArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,timestamp_value\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("\"2022-11-22T23:36:47.600Z\"", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,timestamp_value\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("\"2022-11-22T23:36:47.600Z\"", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithBooleanArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,bool_value\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("true", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,bool_value\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("true", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithStringArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("\"%s,string_value\"");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("\"test-string\"", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"%s,string_value\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("\"test-string\"", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJSONObjectStringWithoutTemplate() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("{\"aa\":\"dd\",\"gg\":\"hh\"}");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("{\"aa\":\"dd\",\"gg\":\"hh\"}", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("{\"aa\":\"dd\",\"gg\":\"hh\"}");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("{\"aa\":\"dd\",\"gg\":\"hh\"}", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("{\"ss\":\"%s,bool_value\",\"%s,float_value\":\"hh\"}");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("{\"ss\":true,\"10.0\":\"hh\"}", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("{\"ss\":\"%s,bool_value\",\"%s,float_value\":\"hh\"}");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("{\"ss\":true,\"10.0\":\"hh\"}", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonNullStringWithoutTemplate() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("null");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("null", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("null");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("null", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringWithoutTemplate() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("[\"ss\",23]");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("[\"ss\",23]", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("[\"ss\",23]");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("[\"ss\",23]", parsedJsonNode.toString());
     }
 
     @Test
     public void shouldParseJsonStringTemplateWithObjectArgument() throws JsonProcessingException {
-        JsonNode jsonElement = OBJECT_MAPPER.readTree("[\"%s,message_value\",\"%s,float_value\"]");
-        JsonNode parsedJsonElement = JsonParserUtils.parse(jsonElement, parsedLogMessage);
-        assertEquals("[{\"order_number\":\"test-order-1\",\"order_details\":\"ORDER-DETAILS-1\"},10.0]", parsedJsonElement.toString());
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("[\"%s,message_value\",\"%s,float_value\"]");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("[{\"order_number\":\"test-order-1\",\"order_details\":\"ORDER-DETAILS-1\"},10.0]", parsedJsonNode.toString());
     }
 }

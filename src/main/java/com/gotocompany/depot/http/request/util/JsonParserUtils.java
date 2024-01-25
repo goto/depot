@@ -19,11 +19,23 @@ import java.io.IOException;
 import java.util.Map;
 
 
+/**
+ * This is a utility class for providing functionality for parsing a templatized Json string
+ * using a provided ParsedMessage which contains all the fields of the deserialized Protobuf
+ * message. Thus the arguments in the template string will be replaced by the fields from
+ * the ParsedMessage
+ */
 public class JsonParserUtils {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
+    /**
+     * Creates a raw Json Node object from the provided Json template string.
+     *
+     * @param jsonTemplate the Json template string
+     * @return the raw Json node
+     */
     public static JsonNode createJsonNode(String jsonTemplate) {
         if (jsonTemplate.isEmpty()) {
             throw new ConfigurationException("Json body template cannot be empty");
@@ -36,6 +48,15 @@ public class JsonParserUtils {
         }
     }
 
+    /**
+     * Parses a raw templatized Json Node using a provided ParsedMessage which contains all
+     * the fields of the deserialized Protobuf message. Thus the arguments in the template
+     * string will be replaced by the fields from the ParsedMessage Proto object
+     *
+     * @param rawJsonNode   the raw Json node
+     * @param parsedMessage the parsed message
+     * @return the parsed Json node
+     */
     public static JsonNode parse(JsonNode rawJsonNode, ParsedMessage parsedMessage) {
         switch (rawJsonNode.getNodeType()) {
             case ARRAY:
