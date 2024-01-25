@@ -366,4 +366,25 @@ public class JsonParserUtilTest {
         JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
         assertEquals("{}", parsedJsonNode.toString());
     }
+
+    @Test
+    public void shouldParseEmptyJsonStringInObject() throws JsonProcessingException {
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("{\"ss\":\"\"}");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("{\"ss\":\"\"}", parsedJsonNode.toString());
+    }
+
+    @Test
+    public void shouldParseEmptyJsonStringInArray() throws JsonProcessingException {
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("[\"ss\",\"\"]");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("[\"ss\",\"\"]", parsedJsonNode.toString());
+    }
+
+    @Test
+    public void shouldParseEmptyJsonString() throws JsonProcessingException {
+        JsonNode rawJsonNode = OBJECT_MAPPER.readTree("\"\"");
+        JsonNode parsedJsonNode = JsonParserUtils.parse(rawJsonNode, parsedLogMessage);
+        assertEquals("\"\"", parsedJsonNode.toString());
+    }
 }

@@ -97,10 +97,14 @@ public class JsonParserUtils {
         return parsedJsonArray;
     }
 
-    private static JsonNode parseInternal(TextNode rawJsonString, ParsedMessage parsedMessage) {
+    private static JsonNode parseInternal(TextNode rawJsonStringNode, ParsedMessage parsedMessage) {
+        String rawJsonString = rawJsonStringNode.asText();
+        if (rawJsonString.isEmpty()) {
+            return rawJsonStringNode;
+        }
         Template templateValue;
         try {
-            templateValue = new Template(rawJsonString.asText());
+            templateValue = new Template(rawJsonString);
         } catch (InvalidTemplateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
