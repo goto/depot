@@ -111,7 +111,7 @@ public class JsonParserUtils {
             if (parsedJsonString.startsWith("\"") && parsedJsonString.endsWith("\"")) {
                 parsedJsonString = parsedJsonString.substring(1, parsedJsonString.length() - 1);
             }
-            parsedJsonNode = new JsonNodeFactory(false).textNode(parsedJsonString);
+            parsedJsonNode = JsonNodeFactory.instance.textNode(parsedJsonString);
             return parsedJsonNode;
         }
         try {
