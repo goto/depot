@@ -16,7 +16,6 @@ import com.gotocompany.depot.exception.InvalidTemplateException;
 import com.gotocompany.depot.message.ParsedMessage;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 
@@ -37,62 +36,55 @@ public class JsonParserUtils {
         }
     }
 
-    public static JsonNode parse(JsonNode jsonNode, ParsedMessage parsedMessage) {
-        switch (jsonNode.getNodeType()) {
+    public static JsonNode parse(JsonNode rawJsonNode, ParsedMessage parsedMessage) {
+        switch (rawJsonNode.getNodeType()) {
             case ARRAY:
-                return parseInternal((ArrayNode) jsonNode, parsedMessage);
+                return parseInternal((ArrayNode) rawJsonNode, parsedMessage);
             case OBJECT:
-                return parseInternal((ObjectNode) jsonNode, parsedMessage);
+                return parseInternal((ObjectNode) rawJsonNode, parsedMessage);
             case STRING:
-                return parseInternal((TextNode) jsonNode, parsedMessage);
+                return parseInternal((TextNode) rawJsonNode, parsedMessage);
             case NUMBER:
             case BOOLEAN:
             case NULL:
-                return parseInternal(jsonNode, parsedMessage);
+                return rawJsonNode;
             default:
                 throw new IllegalArgumentException("The provided Json type is not supported");
         }
     }
 
-    public static JsonNode parseInternal(ObjectNode objectNode, ParsedMessage parsedMessage) {
-        ObjectNode finalJsonObject = new JsonNodeFactory(false).objectNode();
-        for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
-            String keyString = entry.getKey();
-            TextNode keyStringNode = new TextNode(keyString);
-            JsonNode parsedKeyNode = parseInternal(keyStringNode, parsedMessage);
-            String parsedKeyString = parsedKeyNode.toString();
-            if (parsedKeyNode.getNodeType().equals(JsonNodeType.STRING)) {
+    private static JsonNode parseInternal(ObjectNode rawJsonObject, ParsedMessage parsedMessage) {
+        ObjectNode parsedJsonObject = JsonNodeFactory.instance.objectNode();
+        for (Map.Entry<String, JsonNode> entry : rawJsonObject.properties()) {
+            String rawKeyString = entry.getKey();
+            TextNode rawKeyStringNode = new TextNode(rawKeyString);
+            JsonNode parsedKeyStringNode = parseInternal(rawKeyStringNode, parsedMessage);
+            String parsedKeyString = parsedKeyStringNode.toString();
+            if (parsedKeyStringNode.getNodeType().equals(JsonNodeType.STRING)) {
                 parsedKeyString = parsedKeyString.substring(1, parsedKeyString.length() - 1);
             }
-            JsonNode valueNode = entry.getValue();
-            JsonNode parsedValue = JsonParserUtils.parse(valueNode, parsedMessage);
-            finalJsonObject.put(parsedKeyString, parsedValue);
+            JsonNode rawValue = entry.getValue();
+            JsonNode parsedValue = parse(rawValue, parsedMessage);
+            parsedJsonObject.put(parsedKeyString, parsedValue);
         }
-        return finalJsonObject;
+        return parsedJsonObject;
     }
 
-
-    public static JsonNode parseInternal(ArrayNode arrayNode, ParsedMessage parsedMessage) {
-        ArrayNode tempJsonArray = new JsonNodeFactory(false).arrayNode();
-        for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
-            JsonNode jsonElement1 = it.next();
-            JsonNode parsedJsonNode = JsonParserUtils.parse(jsonElement1, parsedMessage);
-            tempJsonArray.add(parsedJsonNode);
-        }
-        return tempJsonArray;
+    private static JsonNode parseInternal(ArrayNode rawJsonArray, ParsedMessage parsedMessage) {
+        ArrayNode parsedJsonArray = JsonNodeFactory.instance.arrayNode();
+        rawJsonArray.forEach(jsonNode -> parsedJsonArray.add(parse(jsonNode, parsedMessage)));
+        return parsedJsonArray;
     }
 
-    public static JsonNode parseInternal(TextNode textNode, ParsedMessage parsedMessage) {
+    private static JsonNode parseInternal(TextNode rawJsonString, ParsedMessage parsedMessage) {
         Template templateValue;
         try {
-            templateValue = new Template(textNode.asText());
+            templateValue = new Template(rawJsonString.asText());
         } catch (InvalidTemplateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
         Object parsedValue = templateValue.parseWithType(parsedMessage);
-
         String parsedJsonString = parsedValue.toString();
-
         JsonNode parsedJsonNode;
         if (parsedValue instanceof String) {
             if (parsedJsonString.startsWith("\"") && parsedJsonString.endsWith("\"")) {
@@ -107,9 +99,5 @@ public class JsonParserUtils {
             throw new ConfigurationException("An error occurred while parsing the template string : " + parsedJsonString + "\nError: " + e.getMessage());
         }
         return parsedJsonNode;
-    }
-
-    public static JsonNode parseInternal(JsonNode jsonElement, ParsedMessage parsedMessage) {
-        return jsonElement;
     }
 }
