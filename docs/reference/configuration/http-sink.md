@@ -136,6 +136,14 @@ bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned
 * Type: `required`
 * Default value: `false`
 
+## `SINK_HTTPV2_DELETE_BODY_ENABLE`
+
+This config if set to true will allow body for the HTTP DELETE method, otherwise no payload will be sent with DELETE request.
+
+- Example value: `false`
+- Type: `optional`
+- Default value: `true`
+
 
 ## `SINK_HTTPV2_MAX_CONNECTIONS`
 
