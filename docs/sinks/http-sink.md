@@ -1,4 +1,4 @@
-# Http Sink
+# HTTP Sink
 
 ## Overview
 Firehose [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) sink allows users to read data from Kafka and write to an HTTP endpoint. it requires the following [variables](../sinks/http-sink.md#http-sink) to be set. You need to create your own HTTP endpoint so that the Firehose can send data to it.
@@ -12,10 +12,10 @@ Firehose supports `PUT` and `POST` verbs in its HTTP sink. The method can be con
 Firehose HTTP sink supports [OAuth](https://en.wikipedia.org/wiki/OAuth) authentication. OAuth can be enabled for the HTTP sink by setting [`SINK_HTTP_OAUTH2_ENABLE`](../sinks/http-sink.md#sink_http_oauth2_enable)
 
 ```text
-SINK_HTTP_OAUTH2_ACCESS_TOKEN_URL: https://sample-oauth.my-api.com/oauth2/token  # OAuth2 Token Endpoint.
-SINK_HTTP_OAUTH2_CLIENT_NAME: client-name  # OAuth2 identifier issued to the client.
-SINK_HTTP_OAUTH2_CLIENT_SECRET: client-secret # OAuth2 secret issued for the client.
-SINK_HTTP_OAUTH2_SCOPE: User:read, sys:info  # Space-delimited scope overrides.
+SINK_HTTPV2_OAUTH2_ACCESS_TOKEN_URL: https://sample-oauth.my-api.com/oauth2/token  # OAuth2 Token Endpoint.
+SINK_HTTPV2_OAUTH2_CLIENT_NAME: client-name  # OAuth2 identifier issued to the client.
+SINK_HTTPV2_OAUTH2_CLIENT_SECRET: client-secret # OAuth2 secret issued for the client.
+SINK_HTTPV2_OAUTH2_SCOPE: User:read, sys:info  # Space-delimited scope overrides.
 ```
 
 ## Retries
@@ -25,7 +25,7 @@ Firehose allows for retrying to sink messages in case of failure of HTTP service
 
 ## Templating
 
-Firehose HTTP sink supports payload templating using [`SINK_HTTP_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#sink_http_json_body_template) configuration. It uses [JsonPath](https://github.com/json-path/JsonPath) for creating Templates which is a DSL for basic JSON parsing. Playground for this: [https://jsonpath.com/](https://jsonpath.com/), where users can play around with a given JSON to extract out the elements as required and validate the `jsonpath`. The template works only when the output data format [`SINK_HTTP_DATA_FORMAT`](../sinks/http-sink.md#sink_http_data_format) is JSON.
+Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#sink_http_json_body_template) configuration. It uses [JsonPath](https://github.com/json-path/JsonPath) for creating Templates which is a DSL for basic JSON parsing. Playground for this: [https://jsonpath.com/](https://jsonpath.com/), where users can play around with a given JSON to extract out the elements as required and validate the `jsonpath`. The template works only when the output data format [`SINK_HTTPV2_DATA_FORMAT`](../sinks/http-sink.md#sink_http_data_format) is JSON.
 
 _**Creating Templates:**_
 
