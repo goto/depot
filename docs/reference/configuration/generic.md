@@ -60,7 +60,7 @@ Allow unknown fields in proto schema
 Allow unknown fields in proto schema
 
 * Example value: `true`
-* Type: `required`
+* Type: `optional`
 * Default: `false`
 
 ## `SINK_DEFAULT_FIELD_VALUE_ENABLE`
@@ -68,7 +68,7 @@ Allow unknown fields in proto schema
 Allow unknown fields in proto schema
 
 * Example value: `true`
-* Type: `required`
+* Type: `optional`
 * Default: `false`
 
 ## `METRIC_STATSD_HOST`

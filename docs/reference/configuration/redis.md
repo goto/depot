@@ -77,3 +77,13 @@ The Redis deployment you are using. At present, we support `Standalone` and `Clu
 - Example value: `Standalone`
 - Type: `required`
 - Default value: `Standalone`
+
+### `SINK_REDIS_DEFAULT_FIELD_VALUE_ENABLE`
+
+The Redis deployment you are using. At present, we support `Standalone` and `Cluster` types.
+
+- Example value: `false`
+- Type: `optional`
+- Default value: `true`
+
+
