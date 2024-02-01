@@ -47,6 +47,30 @@ Allow unknown fields in proto schema
 * Type: `required`
 * Default: `false`
 
+## `SINK_ADD_METADATA_ENABLED`
+
+Allow unknown fields in proto schema
+
+* Example value: `true`
+* Type: `required`
+* Default: `false`
+
+## `SINK_METADATA_COLUMNS_TYPES`
+
+Allow unknown fields in proto schema
+
+* Example value: `true`
+* Type: `required`
+* Default: `false`
+
+## `SINK_DEFAULT_FIELD_VALUE_ENABLE`
+
+Allow unknown fields in proto schema
+
+* Example value: `true`
+* Type: `required`
+* Default: `false`
+
 ## `METRIC_STATSD_HOST`
 
 URL of the StatsD host
