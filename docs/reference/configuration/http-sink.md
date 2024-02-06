@@ -29,15 +29,10 @@ Defines the HTTP headers required to push the data to the above URL.
 
 ## `SINK_HTTPV2_HEADERS_TEMPLATE`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines a template for creating  custom headers from the fields of a protobuf message. This should be a valid JSON itself.
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+* Example value: `{"%s,order_id":"Order"}`
+* Type: `optional`
 
 ## `SINK_HTTPV2_HEADERS_PARAMETER_SOURCE`
 
@@ -50,15 +45,10 @@ Defines the source from which the fields should be parsed. This field should be 
 
 ## `SINK_HTTPV2_QUERY_TEMPLATE`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines a template for creating a custom query from the fields of a protobuf message. This should be a valid JSON itself.
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+* Example value: `{"%s,order_id":"Order"}`
+* Type: `optional`
 
 ## `SINK_HTTPV2_QUERY_PARAMETER_SOURCE`
 
@@ -114,20 +104,16 @@ Defines the range of HTTP status codes for which retry will be attempted. Please
 
 Defines a template for creating a custom request body from the fields of a protobuf message. This should be a valid JSON itself.
 
-- Example value: `{"test":"$.routes[0]", "$.order_number" : "xxx"}`
+- Example value: `{"test":"%s,routes[0]", "%s,order_number" : "xxx"}`
 - Type: `optional`
 
 ## `SINK_HTTPV2_DEFAULT_FIELD_VALUE_ENABLE`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines whether to send the default values in the request body for fields which are not present or null in the input Proto message
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+* Example value: `false`
+* Type: `optional`
+* Default value: `true`
 
 ## `SINK_HTTPV2_DELETE_BODY_ENABLE`
 
