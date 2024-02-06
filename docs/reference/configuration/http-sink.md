@@ -39,9 +39,8 @@ Defines a template for creating  custom headers from the fields of a protobuf me
 Defines the source from which the fields should be parsed. This field should be present in order to use this feature.
 
 - Example value: `Key`
-- Example value: `Message`
 - Type: `optional`
-- Default value: `None`
+- Default value: `MESSAGE`
 
 ## `SINK_HTTPV2_QUERY_TEMPLATE`
 
@@ -55,9 +54,8 @@ Defines a template for creating a custom query from the fields of a protobuf mes
 Defines the source from which the fields should be parsed. This field should be present in order to use this feature.
 
 - Example value: `Key`
-- Example value: `Message`
 - Type: `optional`
-- Default value: `None`
+- Default value: `Message`
 
 ## `SINK_HTTPV2_REQUEST_MODE`
 
