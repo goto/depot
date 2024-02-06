@@ -71,41 +71,34 @@ Defines the source from which the fields should be parsed. This field should be 
 
 ## `SINK_HTTPV2_REQUEST_MODE`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines Single or Batch request mode which corresponds to sending a single message payload or sending a batch payload of messages in the body of each http request.
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+* Example value: `BATCH`
+* Type: `optional`
+* Default value: `SINGLE`
 
 
 ## `SINK_HTTPV2_REQUEST_BODY_MODE`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines the type of format of the request body in the payload. This can be either of the following types-
+* `RAW` - The raw Protobuf/ JSON encoded byte string containing both key and message
+* `TEMPLATIZED_JSON` - JSON payload constructed by the provided JSON body template
+* `JSON` - JSON payload containing all the fields of the Proto/JSON message
+* `MESSAGE` - Only the Protobuf/ JSON encoded Message , excluding the key
+  
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+* Example value: `TEMPLATIZED_JSON`
+* Type: `optional`
+* Default value: `RAW`
 
 
 ## `SINK_HTTPV2_REQUEST_LOG_STATUS_CODE_RANGES`
 
-Configuration for enable table partitioning. This config will be used for provide partitioning config when creating the
-bigquery table. Bigquery table partitioning config can only be set once, on the table creation and the partitioning
-cannot be disabled once created. Changing this value of this config later will cause error when the application trying
-to update the bigquery table. Here is further documentation of
-bigquery [table partitioning](https://cloud.google.com/bigquery/docs/partitioned-tables).
+Defines the range of HTTP status codes for which request body will be logged. 
 
-* Example value: `true`
-* Type: `required`
-* Default value: `false`
+- Example value: `400-600`
+- Type: `optional`
+- Default value: `400-600`
 
 
 ## `SINK_HTTPV2_RETRY_STATUS_CODE_RANGES`
@@ -119,7 +112,7 @@ Defines the range of HTTP status codes for which retry will be attempted. Please
 ## `SINK_HTTPV2_JSON_BODY_TEMPLATE`
 
 
-Deifnes a template for creating a custom request body from the fields of a protobuf message. This should be a valid JSON itself.
+Defines a template for creating a custom request body from the fields of a protobuf message. This should be a valid JSON itself.
 
 - Example value: `{"test":"$.routes[0]", "$.order_number" : "xxx"}`
 - Type: `optional`
