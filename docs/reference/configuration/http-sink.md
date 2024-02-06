@@ -9,7 +9,7 @@ The HTTP endpoint of the service to which this consumer should PUT/POST/PATCH/DE
 If service url is constant, messages will be sent as batches while in case of dynamic one each message will be sent as a separate request \(Since they’d be having different endpoints\).
 
 - Example value: `http://http-service.test.io`
-- Example value: `http://http-service.test.io/test-field/%%s,6` This will take the value with index 6 from proto and create the endpoint as per the template
+- Example value: `http://http-service.test.io/test-field/%s,order_number` This will take the value with field name `order_number` from proto and create the endpoint as per the template
 - Type: `required`
 
 ## `SINK_HTTPV2_REQUEST_METHOD`
