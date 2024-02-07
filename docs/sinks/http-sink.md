@@ -30,26 +30,41 @@ Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEM
 The JSON body template should be a valid JSON itself. It can of any JSON data type like integer, boolean, float, object, array or string.
 
 
-###Constants(i.e. without arguments)
+### Constants (i.e. no template parameters)
 
 Constant values of all data types, i.e. primitive, string, array, object are all supported in the JSON body template.
 
 Examples Templates- 
+
 * `SINK_HTTPV2_JSON_BODY_TEMPLATE=4.5601`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=45601`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=432423423556`
 * `SINK_HTTPV2_JSON_BODY_TEMPLATE="text"`
 * `SINK_HTTPV2_JSON_BODY_TEMPLATE=true`
 * `SINK_HTTPV2_JSON_BODY_TEMPLATE=[23,true,"tdff"]`
 * `SINK_HTTPV2_JSON_BODY_TEMPLATE={"err":23,"wee":true}`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={}`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=[]`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=""`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=null`
+
 
 Corresponding payloads-
+
 * `4.5601`
+* `45601`
+* `432423423556`
 * `"text"`
 * `true`
 * `[23,true,"tdff"]`
 * `{"err":23,"wee":true}`
+* `{}`
+* `[]`
+* `""`
+* `null`
 
 
-###JSON Primitive data types
+### JSON Primitive data types
 
 
 All JSON primitive data types are supported, i.e. boolean, integer,long, float. The template will be replaced by the actual data types of the proto, i.e. the parsed template will not be a string. It will be of the type of the Proto field which was passed in the template.
@@ -93,7 +108,21 @@ Corresponding payloads-
 * `"4.560145601"`
 * `"true45601"`
 
-###JSON String data type
+
+You can provide nested primitive fields inside a message proto field in the template arguments.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value.int_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value.bool_value"`
+
+
+Corresponding payloads-
+* `4145601`
+* `true`
+
+
+### JSON String data type
 
 JSON String data type is supported by providing a string proto field in the template arguments
 
@@ -136,7 +165,20 @@ Corresponding payloads-
 * `"{\"ss\":23,\"ww\":true}"`
 * `"[\"wwf\",33,true]"`
 
-###JSON Object data type
+You can provide nested string fields inside a message proto field in the template arguments.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value.string_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",message_value.bool_value"`
+
+
+Corresponding payloads-
+* `"daegaegaesg"`
+* `"true"`
+
+
+### JSON Object data type
 
 You can pass a message type field in the arguments to parse it into a JSON Object
 
@@ -177,5 +219,17 @@ Examples Templates-
 
 Corresponding payloads-
 * `"{\"ss\":23,\"ww\":true}"`
+
+### JSON Array data type
+
+You can pass a repeated proto field in the template arguments, which will get parsed into a JSON array type.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",message_value"`
+
+Corresponding payloads-
+* `"{\"ss\":23,\"ww\":true}"`
+
 
 
