@@ -220,16 +220,62 @@ Examples Templates-
 Corresponding payloads-
 * `"{\"ss\":23,\"ww\":true}"`
 
+You can provide nested message type proto fields inside a message proto field in the template arguments.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value.nested_message_value"`
+
+Corresponding payloads-
+* `{"ss":23.221,"ww":false}`
+
+
+
 ### JSON Array data type
 
 You can pass a repeated proto field in the template arguments, which will get parsed into a JSON array type.
 
+Examples Templates -
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,list_value"`
+
+Corresponding payloads -
+* `["wfwf",true,222]`
+
+You can convert a template argument of repeated data type to a JSON string by using below format-
+
 Examples Templates-
 
-* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",message_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",list_value"`
 
 Corresponding payloads-
-* `"{\"ss\":23,\"ww\":true}"`
+* `"[\"wwf\",33,true]"`
+
+You can construct a JSON array combing various proto fields in the template arguments
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=["ss","%s,float_value","%s,bool_value"]`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=["ss","%s,message_value"]`
+
+Corresponding payloads-
+* `["ss",23.221,false]`
+* `["ss",{"swws":23.221,"ww":false}]`
+
+You can provide nested message type proto fields inside a message proto field in the template arguments.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value.list_value"`
+
+Corresponding payloads-
+
+* `["wfwf",true,222]`
+
+
+
+
+
 
 
 
