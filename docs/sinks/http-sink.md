@@ -64,7 +64,7 @@ Corresponding payloads-
 * `null`
 
 
-### JSON Primitive data types
+### Primitive data types
 
 
 All JSON primitive data types are supported, i.e. boolean, integer,long, float. The template will be replaced by the actual data types of the proto, i.e. the parsed template will not be a string. It will be of the type of the Proto field which was passed in the template.
@@ -122,7 +122,7 @@ Corresponding payloads-
 * `true`
 
 
-### JSON String data type
+### String data type
 
 JSON String data type is supported by providing a string proto field in the template arguments
 
@@ -178,7 +178,7 @@ Corresponding payloads-
 * `"true"`
 
 
-### JSON Object data type
+### Object/Message data type
 
 You can pass a message type field in the arguments to parse it into a JSON Object
 
@@ -231,7 +231,7 @@ Corresponding payloads-
 
 
 
-### JSON Array data type
+### Array/Repeated data type
 
 You can pass a repeated proto field in the template arguments, which will get parsed into a JSON array type.
 
@@ -271,6 +271,17 @@ Examples Templates-
 Corresponding payloads-
 
 * `["wfwf",true,222]`
+
+You can extract an element from a particular index from the repeated proto field.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,list_value[4]"`
+
+Corresponding payloads-
+* `3325`
+
+
 
 
 
