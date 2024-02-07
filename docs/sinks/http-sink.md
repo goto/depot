@@ -46,7 +46,7 @@ Corresponding payloads-
 * `{"err":23,"wee":true}`
 
 
-###Primitive types
+###JSON Primitive data types
 
 
 All JSON primitive data types are supported, i.e. boolean, integer,long, float. The template will be replaced by the actual data types of the proto, i.e. the parsed template will not be a string. It will be of the type of the Proto field which was passed in the template.
@@ -90,4 +90,51 @@ Corresponding payloads-
 * `"4.560145601"`
 * `"true45601"`
 
-###String types
+###JSON String data type
+
+JSON String data type is supported by providing a string proto field in the template arguments
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,string_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s%s,string_value,string_value"`
+
+
+Corresponding payloads-
+* `"dsfweg"`
+* `"dsfwegdsfweg"`
+
+Also you can append a constant string to the string proto field template argument
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="sss %saa,string_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%sa a%s,string_value,string_value"`
+
+
+Corresponding payloads-
+* `"sss dsfwegaa"`
+* `"dsfwega adsfweg"`
+
+If you want to convert a primitive/object/array proto field to a string then you'll have to follow the below example format -
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",float_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",bool_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",int_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",message_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",list_value"`
+
+Corresponding payloads-
+* `"4.5601"`
+* `"true"`
+* `"45601"`
+* `"{\"ss\":23,\"ww\":true}"`
+* `"[\"wwf\",33,true]"`
+
+
+
+
+
+
