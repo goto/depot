@@ -25,7 +25,7 @@ Firehose allows for retrying to sink messages in case of failure of HTTP service
 
 ## Templating
 
-Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#SINK_HTTPV2_json_body_template) configuration. It uses [JsonPath](https://github.com/json-path/JsonPath) for creating Templates which is a DSL for basic JSON parsing. Playground for this: [https://jsonpath.com/](https://jsonpath.com/), where users can play around with a given JSON to extract out the elements as required and validate the `jsonpath`. The template works only when the output data format [`SINK_HTTPV2_DATA_FORMAT`](../sinks/http-sink.md#SINK_HTTPV2_data_format) is JSON.
+Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#SINK_HTTPV2_json_body_template) configuration.  The template works only when the output data format [`SINK_HTTPV2_DATA_FORMAT`](../sinks/http-sink.md#SINK_HTTPV2_data_format) is JSON.
 
 The JSON body template should be a valid JSON itself. It can of any JSON data type like integer, boolean, float, object, array or string.
 
