@@ -27,6 +27,9 @@ Firehose allows for retrying to sink messages in case of failure of HTTP service
 
 Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#SINK_HTTPV2_json_body_template) configuration. It uses [JsonPath](https://github.com/json-path/JsonPath) for creating Templates which is a DSL for basic JSON parsing. Playground for this: [https://jsonpath.com/](https://jsonpath.com/), where users can play around with a given JSON to extract out the elements as required and validate the `jsonpath`. The template works only when the output data format [`SINK_HTTPV2_DATA_FORMAT`](../sinks/http-sink.md#SINK_HTTPV2_data_format) is JSON.
 
+The JSON body template should be a valid JSON itself. It can of any JSON data type like integer, boolean, float, object, array or string.
+
+
 ###Constants(i.e. without arguments)
 
 Constant values of all data types, i.e. primitive, string, array, object are all supported in the JSON body template.
@@ -133,8 +136,46 @@ Corresponding payloads-
 * `"{\"ss\":23,\"ww\":true}"`
 * `"[\"wwf\",33,true]"`
 
+###JSON Object data type
 
+You can pass a message type field in the arguments to parse it into a JSON Object
 
+Examples Templates-
 
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,message_value"`
+
+Corresponding payloads-
+* `{"ss":23,"ww":true}`
+
+You can construct a JSON Object combing various proto fields in the template arguments
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={"ss":"%s,float_value","ww":"%s,bool_value"}`
+
+Corresponding payloads-
+* `{"ss":23.221,"ww":false}`
+
+You can pass template arguments of any data type in the keys of the JSON Object. But it will always be converted to string (only applies to the keys of the JSON Object).
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={"%s,float_value":"%s,float_value","%s,bool_value":"%s,bool_value"}`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={"%s,string_value":"%s,float_value"}`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={"%s,message_value":23234.444}`
+
+Corresponding payloads-
+* `{"23.221":23.221,"false":false}`
+* `{"sfddadz":23.221}`
+* `{"{\"ss\":23,\"ww\":true}":23234.444}`
+
+You can convert a template argument of message data type to a JSON string by using below format-
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",message_value"`
+
+Corresponding payloads-
+* `"{\"ss\":23,\"ww\":true}"`
 
 
