@@ -80,10 +80,10 @@ The Redis deployment you are using. At present, we support `Standalone` and `Clu
 
 ### `SINK_REDIS_DEFAULT_FIELD_VALUE_ENABLE`
 
-The Redis deployment you are using. At present, we support `Standalone` and `Cluster` types.
+Defines whether to send the default values  for fields which are not present or null in the input Proto message
 
-- Example value: `false`
-- Type: `optional`
-- Default value: `true`
+* Example value: `false`
+* Type: `optional`
+* Default value: `true`
 
 
