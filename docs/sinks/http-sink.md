@@ -27,16 +27,67 @@ Firehose allows for retrying to sink messages in case of failure of HTTP service
 
 Firehose HTTP sink supports payload templating using [`SINK_HTTPV2_JSON_BODY_TEMPLATE`](../sinks/http-sink.md#SINK_HTTPV2_json_body_template) configuration. It uses [JsonPath](https://github.com/json-path/JsonPath) for creating Templates which is a DSL for basic JSON parsing. Playground for this: [https://jsonpath.com/](https://jsonpath.com/), where users can play around with a given JSON to extract out the elements as required and validate the `jsonpath`. The template works only when the output data format [`SINK_HTTPV2_DATA_FORMAT`](../sinks/http-sink.md#SINK_HTTPV2_data_format) is JSON.
 
-_**Creating Templates:**_
+###Constants(i.e. without arguments)
 
-This is really simple. Find the paths you need to extract using the JSON path. Create a valid JSON template with the static field names + the paths that need to extract. \(Paths name starts with $.\). Firehose will simply replace the paths with the actual data in the path of the message accordingly. Paths can also be used on keys, but be careful that the element in the key must be a string data type.
+Constant values of all data types, i.e. primitive, string, array, object are all supported in the JSON body template.
 
-One sample configuration\(On XYZ proto\) : `{"test":"$.routes[0]", "$.order_number" : "xxx"}` If you want to dump the entire JSON as it is in the backend, use `"$._all_"` as a path.
+Examples Templates- 
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=4.5601`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="text"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=true`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE=[23,true,"tdff"]`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE={"err":23,"wee":true}`
 
-Limitations:
+Corresponding payloads-
+* `4.5601`
+* `"text"`
+* `true`
+* `[23,true,"tdff"]`
+* `{"err":23,"wee":true}`
 
-- Works when the input DATA TYPE is a protobuf, not a JSON.
-- Supports only on messages, not keys.
-- validation on the level of valid JSON template. But after data has been replaced the resulting string may or may not be a valid JSON. Users must do proper testing/validation from the service side.
-- If selecting fields from complex data types like repeated/messages/map of proto, the user must do filtering based first as selecting a field that does not exist would fail.
 
+###Primitive types
+
+
+All JSON primitive data types are supported, i.e. boolean, integer,long, float. The template will be replaced by the actual data types of the proto, i.e. the parsed template will not be a string. It will be of the type of the Proto field which was passed in the template.
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,float_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,bool_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s,int_value"`
+
+Corresponding payloads-
+* `4.5601`
+* `true`
+* `45601`
+
+
+But if you want the parsed payload to be converted to a string instead of the primitive type then you'll have to follow the below example format -
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",float_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",bool_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="\"%s\",int_value"`
+
+Corresponding payloads-
+* `"4.5601"`
+* `"true"`
+* `"45601"`
+
+
+
+If you provide multiple primitive arguments in the template, then the parsed payload will become a string type
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s%s,float_value,int_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s%s,bool_value,int_value"`
+
+
+Corresponding payloads-
+* `"4.560145601"`
+* `"true45601"`
+
+###String types
