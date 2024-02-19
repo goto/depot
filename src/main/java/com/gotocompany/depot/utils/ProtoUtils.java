@@ -12,7 +12,8 @@ public class ProtoUtils {
     public static boolean hasUnknownField(Message root) {
         List<Message> messageFields = collectNestedFields(root);
         List<Message> messageWithUnknownFields = getMessageWithUnknownFields(messageFields);
-        return messageWithUnknownFields.size() > 0;
+        return !messageWithUnknownFields.isEmpty();
+
     }
 
     private static List<Message> collectNestedFields(Message node) {
@@ -37,6 +38,7 @@ public class ProtoUtils {
     }
 
     private static List<Message> getMessageWithUnknownFields(List<Message> messages) {
-        return messages.stream().filter(message -> message.getUnknownFields().asMap().size() > 0).collect(Collectors.toList());
+        return messages.stream().filter(message -> !message.getUnknownFields().asMap().isEmpty()).collect(Collectors.toList());
+
     }
 }

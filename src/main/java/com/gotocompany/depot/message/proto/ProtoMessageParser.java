@@ -81,6 +81,21 @@ public class ProtoMessageParser implements MessageParser {
         return stencilClient.getAll();
     }
 
+    @Override
+    public MessageSchema getSchema(String schemaClass) throws IOException {
+        ProtoField protoField = new ProtoField();
+        protoField = protoMappingParser.parseFields(protoField, schemaClass, getDescriptorMap(),
+                getTypeNameToPackageNameMap(getDescriptorMap()));
+        return new ProtoMessageSchema(protoField);
+    }
+
+    @Override
+    public void refresh(String schemaClass) {
+        // this will try to fetch the descriptor for the class and reloading the cache in the process
+        // this is useful for batch ingestion with frequency more than TTL and possibility of new data.
+        stencilClient.get(schemaClass);
+    }
+
     private Map<String, String> getTypeNameToPackageNameMap(Map<String, Descriptors.Descriptor> descriptors) {
         return descriptors.entrySet().stream()
                 .filter(distinctByFullName(t -> t.getValue().getFullName()))
