@@ -4,6 +4,8 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.BigQuerySinkConfig;
+import com.gotocompany.depot.message.proto.converter.fields.ProtoField;
+import com.gotocompany.depot.message.proto.converter.fields.ProtoFieldFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -41,12 +43,10 @@ public class BigQueryProtoUtils {
             String type = tuple.getSecond();
             Descriptors.FieldDescriptor field = descriptor.findFieldByName(name);
             if (field != null && metadata.get(name) != null) {
-                Object fieldValue = metadata.get(name);
+                ProtoField protoField = ProtoFieldFactory.getField(field, metadata.get(name));
+                Object fieldValue = protoField.getValue();
                 if ("timestamp".equals(type) && fieldValue instanceof Long) {
                     fieldValue = TimeUnit.MILLISECONDS.toMicros((Long) fieldValue);
-                }
-                if ("integer".equals(type)) {
-                    fieldValue = Long.valueOf(fieldValue.toString());
                 }
                 messageBuilder.setField(field, fieldValue);
             }
