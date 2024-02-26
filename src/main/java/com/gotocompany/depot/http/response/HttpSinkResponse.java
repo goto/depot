@@ -1,10 +1,10 @@
 package com.gotocompany.depot.http.response;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class HttpSinkResponse {
@@ -21,10 +21,9 @@ public class HttpSinkResponse {
     }
 
     private void setIsFail(HttpResponse response) {
+        isFail = true;
         if (response != null && response.getStatusLine() != null) {
-            isFail = Pattern.compile(SUCCESS_CODE_PATTERN).matcher(String.valueOf(response.getStatusLine().getStatusCode())).matches();
-        } else {
-            isFail = true;
+            isFail = !Pattern.compile(SUCCESS_CODE_PATTERN).matcher(String.valueOf(response.getStatusLine().getStatusCode())).matches();
         }
     }
 
@@ -37,8 +36,9 @@ public class HttpSinkResponse {
     }
 
     private void setResponseBody(HttpResponse response) throws IOException {
-        HttpEntity entity = response.getEntity();
-        responseBody = EntityUtils.toString(entity);
+        if (Objects.nonNull(response) && Objects.nonNull(response.getEntity())) {
+            responseBody = EntityUtils.toString(response.getEntity());
+        }
     }
 
     public String getResponseBody() {
