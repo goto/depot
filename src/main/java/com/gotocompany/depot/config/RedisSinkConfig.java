@@ -1,9 +1,11 @@
 package com.gotocompany.depot.config;
 
+import com.gotocompany.depot.config.converter.EmptyStringToNull;
 import com.gotocompany.depot.config.converter.JsonToPropertiesConverter;
 import com.gotocompany.depot.config.converter.RedisSinkDataTypeConverter;
 import com.gotocompany.depot.config.converter.RedisSinkDeploymentTypeConverter;
 import com.gotocompany.depot.config.converter.RedisSinkTtlTypeConverter;
+import com.gotocompany.depot.config.preprocessor.Trim;
 import com.gotocompany.depot.redis.enums.RedisSinkDataType;
 import com.gotocompany.depot.redis.enums.RedisSinkDeploymentType;
 import com.gotocompany.depot.redis.enums.RedisSinkTtlType;
@@ -13,9 +15,30 @@ import java.util.Properties;
 
 
 @Config.DisableFeature(Config.DisableableFeature.PARAMETER_FORMATTING)
+@Config.PreprocessorClasses({Trim.class})
 public interface RedisSinkConfig extends SinkConfig {
     @Key("SINK_REDIS_URLS")
     String getSinkRedisUrls();
+
+    @Key("SINK_REDIS_CLUSTER_MAX_ATTEMPTS")
+    @DefaultValue("5")
+    int getSinkRedisMaxAttempts();
+
+    @Key("SINK_REDIS_AUTH_USERNAME")
+    @ConverterClass(EmptyStringToNull.class)
+    String getSinkRedisAuthUsername();
+
+    @Key("SINK_REDIS_AUTH_PASSWORD")
+    @ConverterClass(EmptyStringToNull.class)
+    String getSinkRedisAuthPassword();
+
+    @Key("SINK_REDIS_CONNECTION_TIMEOUT_MS")
+    @DefaultValue("5000")
+    int getSinkRedisConnectionTimeoutMs();
+
+    @Key("SINK_REDIS_SOCKET_TIMEOUT_MS")
+    @DefaultValue("10000")
+    int getSinkRedisSocketTimeoutMs();
 
     @Key("SINK_REDIS_KEY_TEMPLATE")
     String getSinkRedisKeyTemplate();
@@ -53,4 +76,12 @@ public interface RedisSinkConfig extends SinkConfig {
     @Key("SINK_REDIS_DEFAULT_FIELD_VALUE_ENABLE")
     @DefaultValue("true")
     boolean getSinkDefaultFieldValueEnable();
+
+    @Key("SINK_REDIS_CONNECTION_MAX_RETRIES")
+    @DefaultValue("1")
+    int getSinkRedisConnectionMaxRetries();
+
+    @Key("SINK_REDIS_CONNECTION_RETRY_BACKOFF_MS")
+    @DefaultValue("2000")
+    long getSinkRedisConnectionRetryBackoffMs();
 }

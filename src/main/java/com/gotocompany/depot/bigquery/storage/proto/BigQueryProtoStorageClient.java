@@ -17,24 +17,30 @@ import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageParser;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
-import com.gotocompany.depot.schema.LogicalType;
-import com.gotocompany.depot.schema.SchemaField;
-import com.gotocompany.depot.schema.SchemaFieldType;
-import org.json.JSONObject;
+import com.gotocompany.depot.message.proto.converter.fields.DurationProtoField;
+import com.gotocompany.depot.message.proto.converter.fields.MessageProtoField;
+import com.gotocompany.depot.message.proto.converter.fields.ProtoField;
+import com.gotocompany.depot.message.proto.converter.fields.ProtoFieldFactory;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class BigQueryProtoStorageClient implements BigQueryStorageClient {
 
+    private static final long MESSAGE_PARSER_CHECKER_DELAY_SECONDS = 1;
+    private static final long MESSAGE_PARSER_CHECKER_FREQUENCY_SECONDS = 60;
     private final BigQueryProtoWriter writer;
     private final BigQuerySinkConfig config;
     private final MessageParser parser;
     private final String schemaClass;
     private final SinkConnectorSchemaMessageMode mode;
+    private final ScheduledExecutorService messageParserChecker = Executors.newScheduledThreadPool(1);
 
     public BigQueryProtoStorageClient(BigQueryWriter writer, BigQuerySinkConfig config, MessageParser parser) {
         this.writer = (BigQueryProtoWriter) writer;
@@ -43,12 +49,18 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
         this.mode = config.getSinkConnectorSchemaMessageMode();
         this.schemaClass = mode == SinkConnectorSchemaMessageMode.LOG_MESSAGE
                 ? config.getSinkConnectorSchemaProtoMessageClass() : config.getSinkConnectorSchemaProtoKeyClass();
+        this.messageParserChecker.scheduleWithFixedDelay(
+                () -> parser.refresh(schemaClass),
+                MESSAGE_PARSER_CHECKER_DELAY_SECONDS,
+                MESSAGE_PARSER_CHECKER_FREQUENCY_SECONDS,
+                TimeUnit.SECONDS);
     }
 
 
     public BigQueryPayload convert(List<Message> messages) {
         ProtoRows.Builder rowBuilder = ProtoRows.newBuilder();
         BigQueryPayload payload = new BigQueryPayload();
+        writer.checkAndRefreshConnection();
         Descriptors.Descriptor descriptor = writer.getDescriptor();
         long validIndex = 0;
         for (int index = 0; index < messages.size(); index++) {
@@ -90,68 +102,71 @@ public class BigQueryProtoStorageClient implements BigQueryStorageClient {
     private DynamicMessage convert(Message message, Descriptors.Descriptor descriptor) throws IOException {
         ParsedMessage parsedMessage = parser.parse(message, mode, schemaClass);
         parsedMessage.validate(config);
-        DynamicMessage.Builder messageBuilder = convert(parsedMessage, descriptor, true);
+        DynamicMessage.Builder messageBuilder = convert((DynamicMessage) parsedMessage.getRaw(), descriptor, true);
         BigQueryProtoUtils.addMetadata(message.getMetadata(), messageBuilder, descriptor, config);
         return messageBuilder.build();
     }
 
-    private Object getFieldValue(Descriptors.FieldDescriptor outputField, SchemaField field, Object value, boolean isTopLevel) {
-        // float values converted as java double type
-        if (field.getType().equals(SchemaFieldType.FLOAT) || field.getType().equals(SchemaFieldType.DOUBLE)) {
-            double val = Double.parseDouble(value.toString());
-            boolean valid = !Double.isInfinite(val) && !Double.isNaN(val);
-            if (!valid) {
-                throw new IllegalArgumentException(String.format("Float/Double value is not valid for field \"%s\"", outputField.getFullName()));
-            }
-            return val;
-        }
-        // all integer value types in protobuf converted as long
-        if (field.getType().equals(SchemaFieldType.INT) || field.getType().equals(SchemaFieldType.LONG)) {
-            return Long.valueOf(value.toString());
-        }
-        if (field.getType().equals(SchemaFieldType.MESSAGE)) {
-            ParsedMessage msg = (ParsedMessage) value;
-            if (msg.getSchema().logicalType().equals(LogicalType.TIMESTAMP)) {
-                return TimeStampUtils.getBQInstant(msg.getLogicalValue().getTimestamp(), outputField, isTopLevel, config);
-            }
-            if (msg.getSchema().logicalType().equals(LogicalType.STRUCT)) {
-                JSONObject json = new JSONObject(msg.getLogicalValue().getStruct());
-                return json.toString();
-            }
-            return convert(msg, outputField.getMessageType(), false).build();
-        }
-        return value;
-    }
-
-    private Object getListValue(Descriptors.FieldDescriptor outputField, SchemaField schemaField, List<?> value) {
-        return value
-                .stream()
-                .map(eachValue -> getFieldValue(outputField, schemaField, eachValue, false))
-                .collect(Collectors.toList());
-    }
-
-    private DynamicMessage.Builder convert(ParsedMessage inputMessage, Descriptors.Descriptor descriptor, boolean isTopLevel) {
+    private DynamicMessage.Builder convert(DynamicMessage inputMessage, Descriptors.Descriptor descriptor, boolean isTopLevel) {
         DynamicMessage.Builder messageBuilder = DynamicMessage.newBuilder(descriptor);
-        Map<SchemaField, Object> fields = inputMessage.getFields();
-        for (Map.Entry<SchemaField, Object> inputField : fields.entrySet()) {
-            SchemaField schemaField = inputField.getKey();
-            Descriptors.FieldDescriptor outputField = descriptor.findFieldByName(schemaField.getName().toLowerCase());
+        List<Descriptors.FieldDescriptor> allFields = inputMessage.getDescriptorForType().getFields();
+        for (Descriptors.FieldDescriptor inputField : allFields) {
+            Descriptors.FieldDescriptor outputField = descriptor.findFieldByName(inputField.getName().toLowerCase());
             if (outputField == null) {
+                // not found in table
                 continue;
             }
-            Object value = inputField.getValue();
-            if (schemaField.isRepeated()) {
-                messageBuilder.setField(outputField, getListValue(outputField, schemaField, (List<?>) value));
+            ProtoField protoField = ProtoFieldFactory.getField(inputField, inputMessage.getField(inputField));
+            Object fieldValue = protoField.getValue();
+            if (fieldValue instanceof List) {
+                addRepeatedFields(messageBuilder, outputField, (List<?>) fieldValue);
                 continue;
             }
-            messageBuilder.setField(outputField, getFieldValue(outputField, schemaField, value, isTopLevel));
+            if (fieldValue.toString().isEmpty()) {
+                continue;
+            }
+            if (fieldValue instanceof Instant) {
+                if (((Instant) fieldValue).getEpochSecond() > 0) {
+                    long timeStampValue = TimeStampUtils.getBQInstant((Instant) fieldValue, outputField, isTopLevel, config);
+                    messageBuilder.setField(outputField, timeStampValue);
+                }
+            } else if (protoField.getClass().getName().equals(MessageProtoField.class.getName())
+                    || protoField.getClass().getName().equals(DurationProtoField.class.getName())) {
+                Descriptors.Descriptor messageType = outputField.getMessageType();
+                messageBuilder.setField(outputField, convert((DynamicMessage) fieldValue, messageType, false).build());
+            } else {
+                messageBuilder.setField(outputField, fieldValue);
+            }
         }
         return messageBuilder;
+    }
+
+    private void addRepeatedFields(DynamicMessage.Builder messageBuilder, Descriptors.FieldDescriptor outputField, List<?> fieldValue) {
+        if (fieldValue.isEmpty()) {
+            return;
+        }
+        List<Object> repeatedNestedFields = new ArrayList<>();
+        for (Object f : fieldValue) {
+            if (f instanceof DynamicMessage) {
+                Descriptors.Descriptor messageType = outputField.getMessageType();
+                repeatedNestedFields.add(convert((DynamicMessage) f, messageType, false).build());
+            } else {
+                if (f instanceof Instant) {
+                    if (((Instant) f).getEpochSecond() > 0) {
+                        repeatedNestedFields.add(TimeStampUtils.getBQInstant((Instant) f, outputField, false, config));
+                    }
+                } else {
+                    repeatedNestedFields.add(f);
+                }
+            }
+        }
+        messageBuilder.setField(outputField, repeatedNestedFields);
     }
 
     @Override
     public void close() throws IOException {
         writer.close();
+        messageParserChecker.shutdownNow();
     }
 }
 
