@@ -64,7 +64,7 @@ public class HttpSinkClientTest {
         IntStream.range(0, requestRecords.size()).forEach(
                 index -> {
                     try {
-                        when(requestRecords.get(index).send(client)).thenReturn(responses.get(index));
+                        when(requestRecords.get(index).send(client, instrumentation)).thenReturn(responses.get(index));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -72,7 +72,7 @@ public class HttpSinkClientTest {
         );
 
         IntStream.range(0, responses.size()).forEach(
-                index -> when(responses.get(index).getResponseCode()).thenReturn("200")
+                index -> when(responses.get(index).getResponseCode()).thenReturn(200)
         );
         List<HttpSinkResponse> actualResponses = sinkClient.send(requestRecords);
         IntStream.range(0, actualResponses.size()).forEach(
@@ -105,7 +105,7 @@ public class HttpSinkClientTest {
         IntStream.range(0, requestRecords.size()).forEach(
                 index -> {
                     try {
-                        when(requestRecords.get(index).send(client)).thenReturn(responses.get(index));
+                        when(requestRecords.get(index).send(client, instrumentation)).thenReturn(responses.get(index));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -113,7 +113,7 @@ public class HttpSinkClientTest {
         );
 
         IntStream.range(0, responses.size()).forEach(
-                index -> when(responses.get(index).getResponseCode()).thenReturn("200")
+                index -> when(responses.get(index).getResponseCode()).thenReturn(200)
         );
         sinkClient.send(requestRecords);
         verify(instrumentation, times(5)).captureCount("xyz_sink_http_response_code_total", 1L, "status_code=200");

@@ -68,11 +68,11 @@ public class HttpSinkTest {
         when(response.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
         when(request.createRecords(messages)).thenReturn(records);
         when(httpSinkClient.send(records)).thenReturn(responses);
 
@@ -94,9 +94,9 @@ public class HttpSinkTest {
         when(response.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
         when(request.createRecords(messages)).thenReturn(records);
         List<HttpRequestRecord> validRecords = records.stream().filter(HttpRequestRecord::isValid).collect(Collectors.toList());
         when(httpSinkClient.send(validRecords)).thenReturn(responses);
@@ -123,11 +123,11 @@ public class HttpSinkTest {
         when(statusLine.getStatusCode()).thenReturn(500);
         when(response.getEntity()).thenReturn(httpEntity);
         List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
 
         when(request.createRecords(messages)).thenReturn(records);
         List<HttpRequestRecord> validRecords = records.stream().filter(HttpRequestRecord::isValid).collect(Collectors.toList());

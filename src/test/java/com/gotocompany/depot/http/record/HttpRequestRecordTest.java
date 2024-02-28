@@ -4,6 +4,7 @@ import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.DeserializerException;
 import com.gotocompany.depot.http.response.HttpSinkResponse;
+import com.gotocompany.depot.metrics.Instrumentation;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -39,6 +40,8 @@ public class HttpRequestRecordTest {
 
     @Mock
     private StatusLine statusLine;
+    @Mock
+    private Instrumentation instrumentation;
 
     @Test
     public void shouldExactlyGetOneRecordIndex() {
@@ -75,7 +78,7 @@ public class HttpRequestRecordTest {
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
         HttpRequestRecord requestRecord = createRecord(null, true);
-        HttpSinkResponse sinkResponse = requestRecord.send(httpClient);
+        HttpSinkResponse sinkResponse = requestRecord.send(httpClient, instrumentation);
         assertFalse(sinkResponse.isFail());
     }
 
@@ -84,8 +87,10 @@ public class HttpRequestRecordTest {
         when(httpClient.execute(httpRequest)).thenReturn(httpResponse);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(500);
+        when(httpResponse.getEntity()).thenReturn(httpEntity);
+
         HttpRequestRecord requestRecord = createRecord(null, true);
-        HttpSinkResponse sinkResponse = requestRecord.send(httpClient);
+        HttpSinkResponse sinkResponse = requestRecord.send(httpClient, instrumentation);
         assertTrue(sinkResponse.isFail());
     }
 

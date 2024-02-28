@@ -2,6 +2,7 @@ package com.gotocompany.depot.http.record;
 
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.http.response.HttpSinkResponse;
+import com.gotocompany.depot.metrics.Instrumentation;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -21,6 +22,7 @@ public class HttpRequestRecord implements Iterable<Integer> {
     private final boolean valid;
     private final HttpEntityEnclosingRequestBase httpRequest;
 
+
     public HttpRequestRecord(ErrorInfo errorInfo, boolean valid, HttpEntityEnclosingRequestBase httpRequest) {
         this.errorInfo = errorInfo;
         this.valid = valid;
@@ -36,9 +38,9 @@ public class HttpRequestRecord implements Iterable<Integer> {
     }
 
 
-    public HttpSinkResponse send(HttpClient httpClient) throws IOException {
+    public HttpSinkResponse send(HttpClient httpClient, Instrumentation instrumentation) throws IOException {
         HttpResponse response = httpClient.execute(httpRequest);
-        return new HttpSinkResponse(response);
+        return new HttpSinkResponse(response, instrumentation);
     }
 
     public String getRequestBody() throws IOException {

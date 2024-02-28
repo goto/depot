@@ -25,7 +25,7 @@ public class HttpSinkClient {
     public List<HttpSinkResponse> send(List<HttpRequestRecord> records) throws IOException {
         List<HttpSinkResponse> responseList = new ArrayList<>();
         for (HttpRequestRecord record : records) {
-            HttpSinkResponse sinkResponse = record.send(httpClient);
+            HttpSinkResponse sinkResponse = record.send(httpClient, instrumentation);
             responseList.add(sinkResponse);
             instrument(sinkResponse);
         }
@@ -33,8 +33,8 @@ public class HttpSinkClient {
     }
 
     private void instrument(HttpSinkResponse httpSinkResponse) {
-        String statusCode = httpSinkResponse.getResponseCode();
-        String httpCodeTag = statusCode.equals("null") ? "status_code=" : "status_code=" + statusCode;
+        int statusCode = httpSinkResponse.getResponseCode();
+        String httpCodeTag = statusCode < 0 ? "status_code=" : "status_code=" + statusCode;
         instrumentation.captureCount(httpSinkMetrics.getHttpResponseCodeTotalMetric(), 1L, httpCodeTag);
 
     }
