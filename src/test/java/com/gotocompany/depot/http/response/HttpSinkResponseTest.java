@@ -1,5 +1,6 @@
 package com.gotocompany.depot.http.response;
 
+import com.gotocompany.depot.metrics.Instrumentation;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -24,58 +25,60 @@ public class HttpSinkResponseTest {
 
     @Mock
     private StatusLine statusLine;
+    @Mock
+    private Instrumentation instrumentation;
 
     @Test
-    public void shouldReportWhenFailed() {
+    public void shouldReportWhenFailed() throws IOException {
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(500);
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        Assert.assertTrue(httpSinkResponse.isFailed());
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        Assert.assertTrue(httpSinkResponse.isFail());
     }
 
     @Test
-    public void shouldReportWhenSuccess() {
+    public void shouldReportWhenSuccess() throws IOException {
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(200);
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        Assert.assertFalse(httpSinkResponse.isFailed());
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        Assert.assertFalse(httpSinkResponse.isFail());
     }
 
     @Test
-    public void shouldGetResponseCodeIfSuccess() {
+    public void shouldGetResponseCodeIfSuccess() throws IOException {
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(200);
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        String responseCode = httpSinkResponse.getResponseCode();
-        Assert.assertFalse(httpSinkResponse.isFailed());
-        Assert.assertEquals("200", responseCode);
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        int responseCode = httpSinkResponse.getResponseCode();
+        Assert.assertFalse(httpSinkResponse.isFail());
+        Assert.assertEquals(200, responseCode);
     }
 
     @Test
-    public void shouldGetResponseCodeIfNotSuccess() {
+    public void shouldGetResponseCodeIfNotSuccess() throws IOException {
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(500);
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        String responseCode = httpSinkResponse.getResponseCode();
-        Assert.assertTrue(httpSinkResponse.isFailed());
-        Assert.assertEquals("500", responseCode);
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        int responseCode = httpSinkResponse.getResponseCode();
+        Assert.assertTrue(httpSinkResponse.isFail());
+        Assert.assertEquals(500, responseCode);
     }
 
     @Test
-    public void shouldReturnNullResponseCodeIfResponseIsNull() {
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        String responseCode = httpSinkResponse.getResponseCode();
-        Assert.assertTrue(httpSinkResponse.isFailed());
-        Assert.assertEquals("null", responseCode);
+    public void shouldReturnNullResponseCodeIfResponseIsNull() throws IOException {
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        int responseCode = httpSinkResponse.getResponseCode();
+        Assert.assertTrue(httpSinkResponse.isFail());
+        Assert.assertEquals(-1, responseCode);
     }
 
     @Test
-    public void shouldReturnNullResponseCodeIfStatusLineIsNull() {
+    public void shouldReturnNullResponseCodeIfStatusLineIsNull() throws IOException {
         Mockito.when(response.getStatusLine()).thenReturn(null);
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
-        String responseCode = httpSinkResponse.getResponseCode();
-        Assert.assertTrue(httpSinkResponse.isFailed());
-        Assert.assertEquals("null", responseCode);
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
+        int responseCode = httpSinkResponse.getResponseCode();
+        Assert.assertTrue(httpSinkResponse.isFail());
+        Assert.assertEquals(-1, responseCode);
     }
 
     @Test
@@ -84,9 +87,9 @@ public class HttpSinkResponseTest {
         Mockito.when(statusLine.getStatusCode()).thenReturn(500);
         Mockito.when(response.getEntity()).thenReturn(httpEntity);
 
-        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response);
+        HttpSinkResponse httpSinkResponse = new HttpSinkResponse(response, instrumentation);
 
-        Assert.assertTrue(httpSinkResponse.isFailed());
+        Assert.assertTrue(httpSinkResponse.isFail());
         Assert.assertNull(httpSinkResponse.getResponseBody());
     }
 }

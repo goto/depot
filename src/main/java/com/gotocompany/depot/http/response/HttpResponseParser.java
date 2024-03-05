@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpResponseParser {
+    private static final int MIN_BAD_REQUEST_CODE = 400;
+    private static final int MAX_BAD_REQUEST_CODE = 499;
+    private static final int MIN_SERVER_ERROR_CODE = 500;
+    private static final int MAX_SERVER_ERROR_CODE = 599;
 
     public static Map<Long, ErrorInfo> getErrorsFromResponse(
             List<HttpRequestRecord> records,
@@ -22,12 +26,15 @@ public class HttpResponseParser {
         for (int i = 0; i < responses.size(); i++) {
             HttpRequestRecord record = records.get(i);
             HttpSinkResponse response = responses.get(i);
-            String responseCode = response.getResponseCode();
+            int responseCode = response.getResponseCode();
             instrumentation.logInfo("Response Status: {}", responseCode);
             if (shouldLogRequest(responseCode, requestLogStatusCodeRanges)) {
                 instrumentation.logInfo(record.getRequestString());
             }
-            if (response.isFailed()) {
+            if (response.shouldLogResponse()) {
+                instrumentation.logDebug(response.getResponseBody());
+            }
+            if (response.isFail()) {
                 errors.putAll(getErrors(record, responseCode, retryStatusCodeRanges));
                 instrumentation.logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", responseCode, response.getResponseBody());
             }
@@ -35,14 +42,14 @@ public class HttpResponseParser {
         return errors;
     }
 
-    private static Map<Long, ErrorInfo> getErrors(HttpRequestRecord record, String responseCode, Map<Integer, Boolean> retryStatusCodeRanges) {
+    private static Map<Long, ErrorInfo> getErrors(HttpRequestRecord record, int responseCode, Map<Integer, Boolean> retryStatusCodeRanges) {
         Map<Long, ErrorInfo> errors = new HashMap<>();
-        for (long messageIndex: record) {
-            if (retryStatusCodeRanges.containsKey(Integer.parseInt(responseCode))) {
+        for (long messageIndex : record) {
+            if (retryStatusCodeRanges.containsKey(responseCode)) {
                 errors.put(messageIndex, new ErrorInfo(new Exception("Error:" + responseCode), ErrorType.SINK_RETRYABLE_ERROR));
-            } else if (responseCode.startsWith("4")) {
+            } else if (isResponseCodeInRange(responseCode, MIN_BAD_REQUEST_CODE, MAX_BAD_REQUEST_CODE)) {
                 errors.put(messageIndex, new ErrorInfo(new Exception("Error:" + responseCode), ErrorType.SINK_4XX_ERROR));
-            } else if (responseCode.startsWith("5")) {
+            } else if (isResponseCodeInRange(responseCode, MIN_SERVER_ERROR_CODE, MAX_SERVER_ERROR_CODE)) {
                 errors.put(messageIndex, new ErrorInfo(new Exception("Error:" + responseCode), ErrorType.SINK_5XX_ERROR));
             } else {
                 errors.put(messageIndex, new ErrorInfo(new Exception("Error:" + responseCode), ErrorType.SINK_UNKNOWN_ERROR));
@@ -51,7 +58,11 @@ public class HttpResponseParser {
         return errors;
     }
 
-    private static boolean shouldLogRequest(String responseCode, Map<Integer, Boolean> requestLogStatusCodeRanges) {
-        return responseCode.equals("null") || requestLogStatusCodeRanges.containsKey(Integer.parseInt(responseCode));
+    private static boolean isResponseCodeInRange(int responseCode, int minRange, int maxRange) {
+        return responseCode >= minRange && responseCode <= maxRange;
+    }
+
+    private static boolean shouldLogRequest(int responseCode, Map<Integer, Boolean> requestLogStatusCodeRanges) {
+        return responseCode == -1 || requestLogStatusCodeRanges.containsKey(responseCode);
     }
 }

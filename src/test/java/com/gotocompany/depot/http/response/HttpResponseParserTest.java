@@ -27,10 +27,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HttpResponseParserTest {
@@ -61,11 +58,11 @@ public class HttpResponseParserTest {
         when(failedStatusLine.getStatusCode()).thenReturn(500);
         when(failedHttpResponse.getEntity()).thenReturn(entity);
         List<HttpSinkResponse> responses = new ArrayList<HttpSinkResponse>() {{
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
         }};
 
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
@@ -74,7 +71,7 @@ public class HttpResponseParserTest {
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(1L).getErrorType());
         assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(7L).getErrorType());
         assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(12L).getErrorType());
-        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", "500", null);
+        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", 500, null);
     }
 
     @Test
@@ -95,7 +92,7 @@ public class HttpResponseParserTest {
 
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
         IntStream.range(0, responses.size()).forEach(
-                index -> when(responses.get(index).getResponseCode()).thenReturn("500")
+                index -> when(responses.get(index).getResponseCode()).thenReturn(500)
         );
         Map<Long, ErrorInfo> errors = HttpResponseParser.getErrorsFromResponse(records, responses, retryStatusCodeRanges, createRequestLogStatusCode(), instrumentation);
         Assert.assertTrue(errors.isEmpty());
@@ -116,9 +113,9 @@ public class HttpResponseParserTest {
         when(failedStatusLine.getStatusCode()).thenReturn(500);
         when(failedHttpResponse.getEntity()).thenReturn(entity);
         List<HttpSinkResponse> responses = new ArrayList<HttpSinkResponse>() {{
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
         }};
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
         Map<Long, ErrorInfo> errors = HttpResponseParser.getErrorsFromResponse(records, responses, retryStatusCodeRanges, createRequestLogStatusCode(), instrumentation);
@@ -132,7 +129,7 @@ public class HttpResponseParserTest {
                         + "\nRequest Headers: [Accept: text/plain]"
                         + "\nRequest Body: [{\"key\":\"value1\"},{\"key\":\"value2\"}]"
         );
-        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", "500", null);
+        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", 500, null);
     }
 
     @Test
@@ -148,9 +145,9 @@ public class HttpResponseParserTest {
         when(failedStatusLine.getStatusCode()).thenReturn(400);
         when(failedHttpResponse.getEntity()).thenReturn(entity);
         List<HttpSinkResponse> responses = new ArrayList<HttpSinkResponse>() {{
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
         }};
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
         Map<Long, ErrorInfo> errors = HttpResponseParser.getErrorsFromResponse(records, responses, retryStatusCodeRanges, createRequestLogStatusCode(), instrumentation);
@@ -186,11 +183,11 @@ public class HttpResponseParserTest {
         when(failedStatusLine.getStatusCode()).thenReturn(500);
         when(failedHttpResponse.getEntity()).thenReturn(entity);
         List<HttpSinkResponse> responses = new ArrayList<HttpSinkResponse>() {{
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
         }};
 
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
@@ -201,7 +198,7 @@ public class HttpResponseParserTest {
         Assert.assertEquals(ErrorType.SINK_RETRYABLE_ERROR, errors.get(1L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_RETRYABLE_ERROR, errors.get(7L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_RETRYABLE_ERROR, errors.get(12L).getErrorType());
-        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", "500", null);
+        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", 500, null);
     }
 
     @Test
@@ -224,11 +221,11 @@ public class HttpResponseParserTest {
         when(failedStatusLine.getStatusCode()).thenReturn(500);
         when(failedHttpResponse.getEntity()).thenReturn(entity);
         List<HttpSinkResponse> responses = new ArrayList<HttpSinkResponse>() {{
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(successHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
-            add(new HttpSinkResponse(failedHttpResponse));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(successHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
+            add(new HttpSinkResponse(failedHttpResponse, instrumentation));
         }};
 
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
@@ -239,7 +236,7 @@ public class HttpResponseParserTest {
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(1L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(7L).getErrorType());
         Assert.assertEquals(ErrorType.SINK_5XX_ERROR, errors.get(12L).getErrorType());
-        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", "500", null);
+        verify(instrumentation, times(3)).logError("Error while pushing message request to http services. Response Code: {}, Response Body: {}", 500, null);
     }
 
     private HttpRequestRecord createRecord(Integer index) {

@@ -65,15 +65,15 @@ public class HttpSinkTest {
         records.add(createRecord(2, null, true));
         records.add(createRecord(3, null, true));
         records.add(createRecord(4, null, true));
-        List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        when(request.createRecords(messages)).thenReturn(records);
         when(response.getStatusLine()).thenReturn(statusLine);
         when(statusLine.getStatusCode()).thenReturn(200);
+        List<HttpSinkResponse> responses = new ArrayList<>();
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        when(request.createRecords(messages)).thenReturn(records);
         when(httpSinkClient.send(records)).thenReturn(responses);
 
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
@@ -91,16 +91,15 @@ public class HttpSinkTest {
         records.add(createRecord(2, new ErrorInfo(new DeserializerException("Deserialization Error"), ErrorType.DESERIALIZATION_ERROR), false));
         records.add(createRecord(3, null, true));
         records.add(createRecord(4, null, true));
+        when(response.getStatusLine()).thenReturn(statusLine);
+        when(statusLine.getStatusCode()).thenReturn(200);
         List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
         when(request.createRecords(messages)).thenReturn(records);
         List<HttpRequestRecord> validRecords = records.stream().filter(HttpRequestRecord::isValid).collect(Collectors.toList());
         when(httpSinkClient.send(validRecords)).thenReturn(responses);
-        when(response.getStatusLine()).thenReturn(statusLine);
-        when(statusLine.getStatusCode()).thenReturn(200);
-
         Map<Integer, Boolean> retryStatusCodeRanges = new HashMap<>();
         HttpSink httpSink = new HttpSink(httpSinkClient, request, retryStatusCodeRanges, createRequestLogStatusCode(), instrumentation);
         SinkResponse sinkResponse = httpSink.pushToSink(messages);
@@ -124,11 +123,11 @@ public class HttpSinkTest {
         when(statusLine.getStatusCode()).thenReturn(500);
         when(response.getEntity()).thenReturn(httpEntity);
         List<HttpSinkResponse> responses = new ArrayList<>();
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
-        responses.add(new HttpSinkResponse(response));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
+        responses.add(new HttpSinkResponse(response, instrumentation));
 
         when(request.createRecords(messages)).thenReturn(records);
         List<HttpRequestRecord> validRecords = records.stream().filter(HttpRequestRecord::isValid).collect(Collectors.toList());

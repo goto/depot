@@ -1,5 +1,7 @@
 package com.gotocompany.depot.http;
 
+import com.gotocompany.depot.Sink;
+import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.exception.SinkException;
 import com.gotocompany.depot.http.client.HttpSinkClient;
@@ -9,8 +11,6 @@ import com.gotocompany.depot.http.response.HttpResponseParser;
 import com.gotocompany.depot.http.response.HttpSinkResponse;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.metrics.Instrumentation;
-import com.gotocompany.depot.Sink;
-import com.gotocompany.depot.SinkResponse;
 
 import java.io.IOException;
 import java.util.List;
