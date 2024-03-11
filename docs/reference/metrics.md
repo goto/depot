@@ -52,3 +52,8 @@ Total number of records which could not be pushed to the Redis server due to bro
 
 Total number of attempts to recreate the connection to Redis server from the Jedis client.
 
+## Http Sink
+
+### `Http Response Code Total`
+
+Total count of each response code, i.e the total number of Kafka records under each response code. So in case of batch request mode, each message in the batch will be counted individually.
