@@ -8,6 +8,7 @@ Sinks can have their own metrics, and they will be emmited while using sink conn
 * [Bigquery Sink](metrics.md#bigquery-sink)
 * [Bigtable Sink](metrics.md#bigtable-sink)
 * [Redis Sink](metrics.md#redis-sink)
+* [Http Sink](metrics.md#http-sink)
 
 
 ## Bigquery Sink
