@@ -96,7 +96,7 @@ public interface SinkConfig extends Config {
     List<TupleString> getMetadataColumnsTypes();
 
     @Key("SINK_DEFAULT_FIELD_VALUE_ENABLE")
-    @DefaultValue("false")
+    @DefaultValue("true")
     boolean getSinkDefaultFieldValueEnable();
 
 }
