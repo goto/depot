@@ -17,21 +17,33 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(Parameterized.class)
 public class TemplateTest {
     private ParsedMessage parsedTestMessage;
     private ParsedMessage parsedBookingMessage;
     @Mock
     private SinkConfig sinkConfig;
+
+    private final String templateString;
+    private final String expectedOutput;
+
+    public TemplateTest(String templateString, String expectedOutput) {
+        this.templateString = templateString;
+        this.expectedOutput = expectedOutput;
+    }
+
 
     @Before
     public void setUp() throws Exception {
@@ -55,6 +67,7 @@ public class TemplateTest {
         Parser protoParserBooking = StencilClientFactory.getClient().getParser(TestBookingLogMessage.class.getName());
         parsedBookingMessage = new ProtoParsedMessage(protoParserBooking.parse((byte[]) bookingMessage.getLogMessage()), jsonPathConfig);
     }
+
 
     @Test
     public void shouldParseStringMessageForCollectionKeyTemplate() throws InvalidTemplateException {
@@ -132,29 +145,25 @@ public class TemplateTest {
         assertEquals("http://dummy.com/%s", template.getTemplateString());
     }
 
-    @Test
-    public void shouldParseCommaEnclosedInDoubleQuotes() throws InvalidTemplateException {
-        Template template = new Template("eeeee\",\"2222");
-        assertEquals("eeeee,2222", template.getTemplateString());
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {"eeeee\",\"2222", "eeeee,2222"},
+                {"eeeee\",\"2222\",\"eeeee\",\"2222", "eeeee,2222,eeeee,2222"},
+                {"\",\"", ","},
+                {"ff\"\",\"\"ss", "ff\",\"ss"},
+                {"%s\",\"%s,order_number,driver_pickup_location", "%s,%s"},
+                {"eeeee\",\"2222\",\"eeeee\",\"2222%s,order_number", "eeeee,2222,eeeee,2222%s"}
+        });
     }
 
     @Test
-    public void shouldParseMultipleCommasEnclosedInDoubleQuotes() throws InvalidTemplateException {
-        Template template = new Template("eeeee\",\"2222\",\"eeeee\",\"2222");
-        assertEquals("eeeee,2222,eeeee,2222", template.getTemplateString());
+    public void testCommaParsingInTemplate() throws InvalidTemplateException {
+
+        Template template = new Template(templateString);
+        assertEquals(expectedOutput, template.getTemplateString());
     }
 
-    @Test
-    public void shouldParseCommaEnclosedInDoubleQuotesWithArguments() throws InvalidTemplateException {
-        Template template = new Template("eeeee\",\"2222\",\"eeeee\",\"2222%s,order_number");
-        assertEquals("eeeee,2222,eeeee,2222%s", template.getTemplateString());
-    }
-
-    @Test
-    public void shouldParseCommaEnclosedInDoubleQuotesWithMultipleArguments() throws InvalidTemplateException {
-        Template template = new Template("%s\",\"%s,order_number,driver_pickup_location");
-        assertEquals("%s,%s", template.getTemplateString());
-    }
 
     @Test
     public void shouldThrowExceptionIfMultipleCommasEnclosedInQuotes() {
@@ -162,11 +171,6 @@ public class TemplateTest {
         assertEquals("Template is not valid, variables=0, validArgs=0, values=2", exception.getMessage());
     }
 
-    @Test
-    public void shouldParseCommaEnclosedInDoubleQuotesWithNoArguments() throws InvalidTemplateException {
-        Template template = new Template("\",\"");
-        assertEquals(",", template.getTemplateString());
-    }
 
     @Test
     public void shouldThrowExceptionIfCommaNotEnclosedWithArguments() {
@@ -178,12 +182,6 @@ public class TemplateTest {
     public void shouldThrowExceptionIfCommaNotEnclosedWithoutArguments() {
         Exception exception = assertThrows(InvalidTemplateException.class, () -> new Template("ss,dd"));
         assertEquals("Template is not valid, variables=0, validArgs=0, values=1", exception.getMessage());
-    }
-
-    @Test
-    public void shouldParseOnlyInternalQuotesInCaseOfNestedQuotes() throws InvalidTemplateException {
-        Template template = new Template("ff\"\",\"\"ss");
-        assertEquals("ff\",\"ss", template.getTemplateString());
     }
 
     @Test
