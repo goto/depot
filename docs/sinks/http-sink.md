@@ -71,7 +71,7 @@ Examples Templates-
 
 Corresponding payloads-
 
-* `"ww,ee""`
+* `"ww,ee"`
 
 
 ### Primitive data types
