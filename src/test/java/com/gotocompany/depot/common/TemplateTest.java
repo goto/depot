@@ -152,8 +152,8 @@ public class TemplateTest {
 
     @Test
     public void shouldParseCommaEnclosedInDoubleQuotesWithMultipleArguments() throws InvalidTemplateException {
-        Template template = new Template("eeeee\",\"2222\",\"eeeee\",\"2222%s\",\"%s,order_number,driver_pickup_location");
-        assertEquals("eeeee,2222,eeeee,2222%s,%s", template.getTemplateString());
+        Template template = new Template("%s\",\"%s,order_number,driver_pickup_location");
+        assertEquals("%s,%s", template.getTemplateString());
     }
 
     @Test
