@@ -11,7 +11,7 @@ import java.util.List;
 
 @EqualsAndHashCode
 public class Template {
-    private String templatePattern;
+    private final String templatePattern;
     private final List<String> patternVariableFieldNames;
 
     public Template(String template) throws InvalidTemplateException {
