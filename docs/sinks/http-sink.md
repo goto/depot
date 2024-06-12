@@ -133,6 +133,15 @@ Corresponding payloads-
 * `4145601`
 * `true`
 
+Note: If you want to add a comma while concatenating multiple primitive types, then you need to enclose it with \", like \",\"
+
+Examples Templates-
+
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s\",\"%s,int_value,float_value"`
+
+Corresponding payloads-
+
+* `"4322,33.5655"`
 
 ### String data type
 
