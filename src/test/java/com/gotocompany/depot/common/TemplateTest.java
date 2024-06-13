@@ -148,12 +148,12 @@ public class TemplateTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {"eeeee\",\"2222", "eeeee,2222"},
-                {"eeeee\",\"2222\",\"eeeee\",\"2222", "eeeee,2222,eeeee,2222"},
-                {"\",\"", ","},
-                {"ff\"\",\"\"ss", "ff\",\"ss"},
-                {"%s\",\"%s,order_number,driver_pickup_location", "%s,%s"},
-                {"eeeee\",\"2222\",\"eeeee\",\"2222%s,order_number", "eeeee,2222,eeeee,2222%s"}
+                {"eeeee/,/2222", "eeeee,2222"},
+                {"eeeee/,/2222/,/eeeee/,/2222", "eeeee,2222,eeeee,2222"},
+                {"/,/", ","},
+                {"ff//,//ss", "ff/,/ss"},
+                {"%s/,/%s,order_number,driver_pickup_location", "%s,%s"},
+                {"eeeee/,/2222/,/eeeee/,/2222%s,order_number", "eeeee,2222,eeeee,2222%s"}
         });
     }
 
@@ -167,7 +167,7 @@ public class TemplateTest {
 
     @Test
     public void shouldThrowExceptionIfMultipleCommasEnclosedInQuotes() {
-        Exception exception = assertThrows(InvalidTemplateException.class, () -> new Template("eee\",,\"222%s,order_number"));
+        Exception exception = assertThrows(InvalidTemplateException.class, () -> new Template("eee/,,/222%s,order_number"));
         assertEquals("Template is not valid, variables=0, validArgs=0, values=2", exception.getMessage());
     }
 
@@ -186,7 +186,7 @@ public class TemplateTest {
 
     @Test
     public void shouldThrowExceptionIfCommaEnclosedOutsideTemplateString() {
-        Exception exception = assertThrows(InvalidTemplateException.class, () -> new Template("%s\",\"order_number"));
+        Exception exception = assertThrows(InvalidTemplateException.class, () -> new Template("%s/,/order_number"));
         assertEquals("Template is not valid, variables=1, validArgs=1, values=0", exception.getMessage());
     }
 }

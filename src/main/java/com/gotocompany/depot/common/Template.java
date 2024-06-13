@@ -20,8 +20,8 @@ public class Template {
         }
         List<String> templateStrings = new ArrayList<>();
 
-        Splitter.onPattern("(?<!\\\\\",),(?!\\\")").omitEmptyStrings().split(template).forEach(s -> templateStrings.add(s.trim()));
-        this.templatePattern = templateStrings.get(0).replaceAll("\",\"", ",");
+        Splitter.onPattern("(?<!/,),(?!/)").omitEmptyStrings().split(template).forEach(s -> templateStrings.add(s.trim()));
+        this.templatePattern = templateStrings.get(0).replaceAll("/,/", ",");
         this.patternVariableFieldNames = templateStrings.subList(1, templateStrings.size());
         validate();
     }
