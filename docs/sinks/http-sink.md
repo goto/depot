@@ -63,11 +63,11 @@ Corresponding payloads-
 * `""`
 * `null`
 
-Note: If you want to add a comma inside the JSON String, then you need to enclose it with \", like \",\" 
+Note: If you want to add a comma inside the JSON String, then you need to enclose it with /, like /,/ 
 
 Examples Templates-
 
-* `SINK_HTTPV2_JSON_BODY_TEMPLATE="ww\",\"ee"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="ww/,/ee"`
 
 Corresponding payloads-
 
@@ -133,11 +133,11 @@ Corresponding payloads-
 * `4145601`
 * `true`
 
-Note: If you want to add a comma while concatenating multiple primitive types, then you need to enclose it with \", like \",\"
+Note: If you want to add a comma while concatenating multiple primitive types, then you need to enclose it with /, like /,/
 
 Examples Templates-
 
-* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s\",\"%s,int_value,float_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s/,/%s,int_value,float_value"`
 
 Corresponding payloads-
 
@@ -199,11 +199,11 @@ Corresponding payloads-
 * `"true"`
 
 
-Note: If you want to add a comma inside the JSON String, then you need to enclose it with \", like \",\"
+Note: If you want to add a comma inside the JSON String, then you need to enclose it with /, like /,/
 
 Examples Templates-
 
-* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s\",\"%s,string_value,string_value"`
+* `SINK_HTTPV2_JSON_BODY_TEMPLATE="%s/,/%s,string_value,string_value"`
 
 Corresponding payloads-
 
