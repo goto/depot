@@ -19,6 +19,7 @@ public class ProtoToSchemaUtils {
                                             TableSchema.Builder tableSchemaBuilder) {
         if (fieldDescriptor.isRepeated()) {
             tableSchemaBuilder.withColumn(Column.newBuilder(fieldDescriptor.getName(), TypeInfoFactory.getArrayTypeInfo(DescriptorUtils.toTypeInfo(fieldDescriptor))).build());
+            return;
         }
         tableSchemaBuilder.withColumn(Column.newBuilder(fieldDescriptor.getName(), DescriptorUtils.toTypeInfo(fieldDescriptor)).build());
     }
