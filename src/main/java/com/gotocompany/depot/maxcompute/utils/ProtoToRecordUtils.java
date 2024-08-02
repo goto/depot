@@ -4,6 +4,7 @@ import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.data.Struct;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
@@ -39,16 +40,16 @@ public class ProtoToRecordUtils {
         }
         if (fieldDescriptor.isRepeated()) {
             return ((List<?>) value).stream()
-                    .map(v -> dynamicMessageToSimpleStruct((DynamicMessage) v))
+                    .map(v -> toStruct((DynamicMessage) v))
                     .collect(Collectors.toList());
         }
         if (Descriptors.FieldDescriptor.JavaType.MESSAGE.equals(fieldDescriptor.getJavaType())) {
-            return dynamicMessageToSimpleStruct((DynamicMessage) value);
+            return toStruct((DynamicMessage) value);
         }
         return value;
     }
 
-    private static SimpleStruct dynamicMessageToSimpleStruct(DynamicMessage dynamicMessage) {
+    private static Struct toStruct(DynamicMessage dynamicMessage) {
         ProtoRecordWrapper protoRecordWrapper = new ProtoRecordWrapper();
         dynamicMessage.getAllFields().forEach((fieldDescriptor, value1) -> {
             Object value = handleField(fieldDescriptor, value1);
