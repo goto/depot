@@ -16,6 +16,12 @@ import java.util.stream.Collectors;
 
 public class ProtoToRecordUtils {
 
+    /**
+     * Converts a dynamic message to a MaxCompute record.
+     * @param tableSchema
+     * @param dynamicMessage
+     * @return
+     */
     public static Record toRecord(TableSchema tableSchema, DynamicMessage dynamicMessage) {
         ArrayRecord arrayRecord = new ArrayRecord(tableSchema);
         dynamicMessage.getAllFields()
@@ -34,6 +40,15 @@ public class ProtoToRecordUtils {
         return arrayRecord;
     }
 
+    /**
+     * Maps the value of a dynamic message field to suitable type for record.
+     * If the field is a repeated field and not a message, the value is returned as is.
+     * If the field is a repeated field and a message, the value is mapped to a list of structs.
+     * If the field is a message, the value is mapped to a struct.
+     * @param fieldDescriptor
+     * @param value
+     * @return
+     */
     private static Object mapFieldToRecordValue(Descriptors.FieldDescriptor fieldDescriptor, Object value) {
         if (fieldDescriptor.isRepeated() && !Descriptors.FieldDescriptor.JavaType.MESSAGE.equals(fieldDescriptor.getJavaType())) {
             return value;
@@ -49,6 +64,12 @@ public class ProtoToRecordUtils {
         return value;
     }
 
+    /**
+     * Maps a dynamic message to a struct.
+     * Recursively maps the fields of the dynamic message to struct, array or primitive fields.
+     * @param dynamicMessage
+     * @return
+     */
     private static Struct mapFieldtoStruct(DynamicMessage dynamicMessage) {
         ProtoRecordWrapper protoRecordWrapper = new ProtoRecordWrapper();
         dynamicMessage.getAllFields().forEach((fieldDescriptor, value1) -> {

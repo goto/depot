@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DescriptorUtils {
+
+    /**
+     * Converts a field descriptor to a type info.
+     * @param fieldDescriptor
+     * @return
+     */
     public static TypeInfo toTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
         TypeInfo baseTypeInfo;
         switch (fieldDescriptor.getJavaType()) {
@@ -41,6 +47,12 @@ public class DescriptorUtils {
         return fieldDescriptor.isRepeated() ? TypeInfoFactory.getArrayTypeInfo(baseTypeInfo) : baseTypeInfo;
     }
 
+    /**
+     * Converts a message field to a struct type.
+     * Recursively converts the fields of the message to struct types.
+     * @param fieldDescriptor
+     * @return
+     */
     private static StructTypeInfo messageToTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
         List<String> fieldNames = fieldDescriptor.getMessageType().getFields().stream()
                 .map(Descriptors.FieldDescriptor::getName)

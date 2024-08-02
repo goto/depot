@@ -7,6 +7,11 @@ import com.google.protobuf.Descriptors;
 
 public class ProtoToSchemaUtils {
 
+    /**
+     * Converts a proto descriptor to a table schema.
+     * @param descriptor
+     * @return
+     */
     public static TableSchema toTableSchema(Descriptors.Descriptor descriptor) {
         TableSchema.Builder tableSchemaBuilder = TableSchema.builder();
         descriptor.getFields()
@@ -14,7 +19,11 @@ public class ProtoToSchemaUtils {
         return tableSchemaBuilder.build();
     }
 
-
+    /**
+     * Maps the field descriptor to a column in the table schema.
+     * @param fieldDescriptor
+     * @param tableSchemaBuilder
+     */
     private static void handleColumnMapping(Descriptors.FieldDescriptor fieldDescriptor,
                                             TableSchema.Builder tableSchemaBuilder) {
         if (fieldDescriptor.isRepeated()) {
