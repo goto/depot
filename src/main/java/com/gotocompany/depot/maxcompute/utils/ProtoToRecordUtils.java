@@ -49,20 +49,11 @@ public class ProtoToRecordUtils {
     }
 
     private static SimpleStruct dynamicMessageToSimpleStruct(DynamicMessage dynamicMessage) {
-        ProtoRecordWrapper protoRecordWrapper = dynamicMessage.getAllFields()
-                .entrySet()
-                .stream()
-                .reduce(new ProtoRecordWrapper(), (wrapper, entry) -> {
-                    Descriptors.FieldDescriptor fieldDescriptor = entry.getKey();
-                    Object value = handleField(fieldDescriptor, entry.getValue());
-                    wrapper.addField(fieldDescriptor.getName(), DescriptorUtils.toTypeInfo(fieldDescriptor), value);
-                    return wrapper;
-                }, (wrapper1, wrapper2) -> {
-                    wrapper1.fieldNames.addAll(wrapper2.fieldNames);
-                    wrapper1.typeInfos.addAll(wrapper2.typeInfos);
-                    wrapper1.values.addAll(wrapper2.values);
-                    return wrapper1;
-                });
+        ProtoRecordWrapper protoRecordWrapper = new ProtoRecordWrapper();
+        dynamicMessage.getAllFields().forEach((fieldDescriptor, value1) -> {
+            Object value = handleField(fieldDescriptor, value1);
+            protoRecordWrapper.addField(fieldDescriptor.getName(), DescriptorUtils.toTypeInfo(fieldDescriptor), value);
+        });
         return new SimpleStruct(TypeInfoFactory.getStructTypeInfo(protoRecordWrapper.fieldNames, protoRecordWrapper.typeInfos), protoRecordWrapper.values);
     }
 
