@@ -58,18 +58,18 @@ public class ProtoToRecordUtils {
     }
 
 
-    private static class ProtoRecordWrapper {
+    private final static class ProtoRecordWrapper {
         private final List<String> fieldNames;
         private final List<TypeInfo> typeInfos;
         private final List<Object> values;
 
-        public ProtoRecordWrapper() {
+        private ProtoRecordWrapper() {
             this.fieldNames = new ArrayList<>();
             this.typeInfos = new ArrayList<>();
             this.values = new ArrayList<>();
         }
 
-        public void addField(String fieldName, TypeInfo typeInfo, Object value) {
+        private void addField(String fieldName, TypeInfo typeInfo, Object value) {
             this.fieldNames.add(fieldName);
             this.typeInfos.add(typeInfo);
             this.values.add(value);
