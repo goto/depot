@@ -5,6 +5,12 @@ import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
+import com.aliyun.odps.tunnel.TableTunnel;
+import com.aliyun.odps.tunnel.TunnelException;
+import com.google.protobuf.DynamicMessage;
+import com.gotocompany.depot.maxcompute.utils.ProtoToRecordUtils;
+
+import java.io.IOException;
 
 public class MaxComputeClient {
     private final String tunnelUrl;
@@ -23,6 +29,16 @@ public class MaxComputeClient {
         } else {
             updateTable(tableName, schema);
         }
+    }
+
+    public void insert(String tableName, DynamicMessage dynamicMessage) throws TunnelException, IOException {
+        TableTunnel tableTunnel = new TableTunnel(odps);
+        tableTunnel.setEndpoint(tunnelUrl);
+        TableTunnel.StreamUploadSession streamUploadSession = tableTunnel.buildStreamUploadSession(odps.getDefaultProject(), tableName)
+                .build();
+        TableTunnel.StreamRecordPack streamRecordPack = streamUploadSession.newRecordPack();
+        streamRecordPack.append(ProtoToRecordUtils.toRecord(streamUploadSession.getSchema(), dynamicMessage));
+        streamRecordPack.flush();
     }
 
     private void updateTable(String tableName, TableSchema schema) {
