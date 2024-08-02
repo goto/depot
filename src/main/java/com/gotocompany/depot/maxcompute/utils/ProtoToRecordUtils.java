@@ -59,7 +59,7 @@ public class ProtoToRecordUtils {
     }
 
 
-    private final static class ProtoRecordWrapper {
+    private static final class ProtoRecordWrapper {
         private final List<String> fieldNames;
         private final List<TypeInfo> typeInfos;
         private final List<Object> values;
