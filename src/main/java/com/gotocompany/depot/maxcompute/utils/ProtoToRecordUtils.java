@@ -20,7 +20,7 @@ public class ProtoToRecordUtils {
         ArrayRecord arrayRecord = new ArrayRecord(tableSchema);
         dynamicMessage.getAllFields()
                 .forEach((fieldDescriptor, value1) -> {
-                    Object value = handleField(fieldDescriptor, value1);
+                    Object value = mapFieldToRecordValue(fieldDescriptor, value1);
                     if (fieldDescriptor.isRepeated()) {
                         arrayRecord.setArray(fieldDescriptor.getName(), (List<?>) value);
                         return;
@@ -34,25 +34,25 @@ public class ProtoToRecordUtils {
         return arrayRecord;
     }
 
-    private static Object handleField(Descriptors.FieldDescriptor fieldDescriptor, Object value) {
+    private static Object mapFieldToRecordValue(Descriptors.FieldDescriptor fieldDescriptor, Object value) {
         if (fieldDescriptor.isRepeated() && !Descriptors.FieldDescriptor.JavaType.MESSAGE.equals(fieldDescriptor.getJavaType())) {
             return value;
         }
         if (fieldDescriptor.isRepeated()) {
             return ((List<?>) value).stream()
-                    .map(v -> toStruct((DynamicMessage) v))
+                    .map(v -> mapFieldtoStruct((DynamicMessage) v))
                     .collect(Collectors.toList());
         }
         if (Descriptors.FieldDescriptor.JavaType.MESSAGE.equals(fieldDescriptor.getJavaType())) {
-            return toStruct((DynamicMessage) value);
+            return mapFieldtoStruct((DynamicMessage) value);
         }
         return value;
     }
 
-    private static Struct toStruct(DynamicMessage dynamicMessage) {
+    private static Struct mapFieldtoStruct(DynamicMessage dynamicMessage) {
         ProtoRecordWrapper protoRecordWrapper = new ProtoRecordWrapper();
         dynamicMessage.getAllFields().forEach((fieldDescriptor, value1) -> {
-            Object value = handleField(fieldDescriptor, value1);
+            Object value = mapFieldToRecordValue(fieldDescriptor, value1);
             protoRecordWrapper.addField(fieldDescriptor.getName(), DescriptorUtils.toTypeInfo(fieldDescriptor), value);
         });
         return new SimpleStruct(TypeInfoFactory.getStructTypeInfo(protoRecordWrapper.fieldNames, protoRecordWrapper.typeInfos), protoRecordWrapper.values);
