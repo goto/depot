@@ -3,7 +3,7 @@ package com.gotocompany.depot.maxcompute;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
-import com.gotocompany.depot.maxcompute.converter.BaseTypeInfoConverter;
+import com.gotocompany.depot.maxcompute.converter.type.BaseTypeInfoConverter;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 

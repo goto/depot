@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter;
+package com.gotocompany.depot.maxcompute.converter.type;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;

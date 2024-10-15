@@ -4,7 +4,7 @@ import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
-import com.gotocompany.depot.maxcompute.converter.StructTypeInfoConverter;
+import com.gotocompany.depot.maxcompute.converter.type.StructTypeInfoConverter;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
