@@ -8,7 +8,7 @@ public class StructTypeInfoConverter implements TypeInfoConverter {
 
     @Override
     public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return TypeInfoFactory.STRING;
+        return wrap(fieldDescriptor, TypeInfoFactory.STRING);
     }
 
     @Override

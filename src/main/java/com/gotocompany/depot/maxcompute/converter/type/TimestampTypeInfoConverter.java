@@ -8,7 +8,7 @@ public class TimestampTypeInfoConverter implements TypeInfoConverter {
 
     @Override
     public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return TypeInfoFactory.TIMESTAMP_NTZ;
+        return wrap(fieldDescriptor, TypeInfoFactory.TIMESTAMP_NTZ);
     }
 
     @Override

@@ -34,7 +34,7 @@ public class PrimitiveTypeInfoConverter implements TypeInfoConverter {
     @Override
     public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
         TypeInfo typeInfo = PROTO_TYPE_MAP.get(fieldDescriptor.getType());
-        return fieldDescriptor.isRepeated() ? TypeInfoFactory.getArrayTypeInfo(typeInfo) : typeInfo;
+        return wrap(fieldDescriptor, typeInfo);
     }
 
     @Override

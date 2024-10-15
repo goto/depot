@@ -21,7 +21,7 @@ public class DurationTypeInfoConverter implements TypeInfoConverter {
         typeInfos.add(TypeInfoFactory.BIGINT);
         typeInfos.add(TypeInfoFactory.INT);
 
-        return TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
+        return wrap(fieldDescriptor, TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos));
     }
 
     @Override

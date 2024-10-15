@@ -28,7 +28,7 @@ public class MessageTypeInfoConverter implements TypeInfoConverter {
                         .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fd.getJavaType())))
                 .collect(Collectors.toList());
         TypeInfo typeInfo = TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
-        return fieldDescriptor.isRepeated() ? TypeInfoFactory.getArrayTypeInfo(typeInfo) : typeInfo;
+        return wrap(fieldDescriptor, typeInfo);
     }
 
     @Override
