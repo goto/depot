@@ -1,14 +1,8 @@
-package com.gotocompany.depot.maxcompute;
+package com.gotocompany.depot.maxcompute.converter.type;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
-import com.gotocompany.depot.maxcompute.converter.type.DurationTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.MessageTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.PrimitiveTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.StructTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.TimestampTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.TypeInfoConverter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;

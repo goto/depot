@@ -1,10 +1,9 @@
-package com.gotocompany.depot.maxcompute;
+package com.gotocompany.depot.maxcompute.converter.type;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
-import com.gotocompany.depot.maxcompute.converter.type.PrimitiveTypeInfoConverter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.Test;
 
