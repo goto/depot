@@ -13,8 +13,8 @@ public class TimestampTypeInfoConverter implements TypeInfoConverter {
 
     @Override
     public boolean canConvert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return Descriptors.FieldDescriptor.Type.MESSAGE.equals(fieldDescriptor.getType()) &&
-                fieldDescriptor.getMessageType().getFullName().equals("google.protobuf.Timestamp");
+        return Descriptors.FieldDescriptor.Type.MESSAGE.equals(fieldDescriptor.getType())
+                && fieldDescriptor.getMessageType().getFullName().equals("google.protobuf.Timestamp");
     }
 
 }

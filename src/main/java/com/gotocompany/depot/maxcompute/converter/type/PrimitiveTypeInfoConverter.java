@@ -10,7 +10,6 @@ import java.util.Map;
 public class PrimitiveTypeInfoConverter implements TypeInfoConverter {
 
     private static final Map<Descriptors.FieldDescriptor.Type, TypeInfo> PROTO_TYPE_MAP;
-    
     static {
         PROTO_TYPE_MAP = new HashMap<>();
         PROTO_TYPE_MAP.put(Descriptors.FieldDescriptor.Type.BYTES, TypeInfoFactory.BINARY);
@@ -41,5 +40,4 @@ public class PrimitiveTypeInfoConverter implements TypeInfoConverter {
     public boolean canConvert(Descriptors.FieldDescriptor fieldDescriptor) {
         return PROTO_TYPE_MAP.containsKey(fieldDescriptor.getType());
     }
-    
 }
