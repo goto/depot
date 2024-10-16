@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter.type;
 
+import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
@@ -17,6 +18,10 @@ public class MessageTypeInfoConverter implements TypeInfoConverter {
 
     @Override
     public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
+        return wrap(fieldDescriptor, convertSingular(fieldDescriptor));
+    }
+
+    public StructTypeInfo convertSingular(Descriptors.FieldDescriptor fieldDescriptor) {
         List<String> fieldNames = fieldDescriptor.getMessageType().getFields().stream()
                 .map(Descriptors.FieldDescriptor::getName)
                 .collect(Collectors.toList());
@@ -27,8 +32,7 @@ public class MessageTypeInfoConverter implements TypeInfoConverter {
                         .map(converter -> converter.convert(fd))
                         .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fd.getJavaType())))
                 .collect(Collectors.toList());
-        TypeInfo typeInfo = TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
-        return wrap(fieldDescriptor, typeInfo);
+        return TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
     }
 
     @Override
