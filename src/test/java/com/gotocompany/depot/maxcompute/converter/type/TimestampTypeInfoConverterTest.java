@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions;
 
 public class TimestampTypeInfoConverterTest {
 
-    private final int TIMESTAMP_INDEX = 3;
+    private static final int TIMESTAMP_INDEX = 3;
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private final TimestampTypeInfoConverter timestampTypeInfoConverter = new TimestampTypeInfoConverter();
 

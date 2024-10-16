@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Assertions;
 
 public class DurationTypeInfoConverterTest {
 
-    private final int DURATION_INDEX = 5;
+    private static final int DURATION_INDEX = 5;
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private final DurationTypeInfoConverter durationTypeInfoConverter = new DurationTypeInfoConverter();
 
     @Test
-    public void shouldConvertToStruct(){
+    public void shouldConvertToStruct() {
         Descriptors.FieldDescriptor fieldDescriptor = descriptor.getFields().get(DURATION_INDEX);
 
         TypeInfo typeInfo = durationTypeInfoConverter.convert(fieldDescriptor);
@@ -22,7 +22,7 @@ public class DurationTypeInfoConverterTest {
     }
 
     @Test
-    public void shouldReturnTrueForDuration(){
+    public void shouldReturnTrueForDuration() {
         Descriptors.FieldDescriptor fieldDescriptor = descriptor.getFields().get(DURATION_INDEX);
 
         boolean canConvert = durationTypeInfoConverter.canConvert(fieldDescriptor);
@@ -31,12 +31,12 @@ public class DurationTypeInfoConverterTest {
     }
 
     @Test
-    public void shouldReturnFalseForNonDuration(){
+    public void shouldReturnFalseForNonDuration() {
         Descriptors.FieldDescriptor fieldDescriptor = descriptor.getFields().get(0);
 
         boolean canConvert = durationTypeInfoConverter.canConvert(fieldDescriptor);
 
         Assertions.assertFalse(canConvert);
     }
-    
+
 }

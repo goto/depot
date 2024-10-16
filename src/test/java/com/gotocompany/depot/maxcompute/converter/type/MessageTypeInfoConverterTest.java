@@ -12,7 +12,7 @@ import java.util.List;
 
 public class MessageTypeInfoConverterTest {
 
-    private final Descriptors.Descriptor DESCRIPTOR = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
+    private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private MessageTypeInfoConverter messageTypeInfoConverter;
 
     @Before
@@ -22,8 +22,8 @@ public class MessageTypeInfoConverterTest {
 
     @Test
     public void shouldConvertMessageToProperTypeInfo() {
-        TypeInfo firstMessageFieldTypeInfo = messageTypeInfoConverter.convert(DESCRIPTOR.getFields().get(1));
-        TypeInfo secondMessageFieldTypeInfo = messageTypeInfoConverter.convert(DESCRIPTOR.getFields().get(2));
+        TypeInfo firstMessageFieldTypeInfo = messageTypeInfoConverter.convert(descriptor.getFields().get(1));
+        TypeInfo secondMessageFieldTypeInfo = messageTypeInfoConverter.convert(descriptor.getFields().get(2));
 
         String expectedFirstMessageTypeRepresentation = "STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>";
         String expectedSecondMessageTypeRepresentation = String.format("ARRAY<%s>", expectedFirstMessageTypeRepresentation);
@@ -35,19 +35,19 @@ public class MessageTypeInfoConverterTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenUnsupportedTypeIsGiven() {
         messageTypeInfoConverter = new MessageTypeInfoConverter(new ArrayList<>());
-        Descriptors.FieldDescriptor unsupportedFieldDescriptor = DESCRIPTOR.getFields().get(1);
+        Descriptors.FieldDescriptor unsupportedFieldDescriptor = descriptor.getFields().get(1);
 
         messageTypeInfoConverter.convert(unsupportedFieldDescriptor);
     }
 
     @Test
     public void shouldReturnTrueWhenCanConvertIsCalledWithMessageFieldDescriptor() {
-        Assertions.assertTrue(messageTypeInfoConverter.canConvert(DESCRIPTOR.getFields().get(1)));
+        Assertions.assertTrue(messageTypeInfoConverter.canConvert(descriptor.getFields().get(1)));
     }
 
     @Test
     public void shouldReturnFalseWhenCanConvertIsCalledWithNonMessageFieldDescriptor() {
-        Assertions.assertFalse(messageTypeInfoConverter.canConvert(DESCRIPTOR.getFields().get(0)));
+        Assertions.assertFalse(messageTypeInfoConverter.canConvert(descriptor.getFields().get(0)));
     }
 
     @Test

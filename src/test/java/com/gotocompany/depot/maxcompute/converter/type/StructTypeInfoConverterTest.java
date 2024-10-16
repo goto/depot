@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Assertions;
 
 public class StructTypeInfoConverterTest {
 
-    private final int STRUCT_INDEX = 4;
-    private final Descriptors.Descriptor DESCRIPTOR = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
+    private static final int STRUCT_INDEX = 4;
+    private static final Descriptors.Descriptor DESCRIPTOR = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private final StructTypeInfoConverter structTypeInfoConverter = new StructTypeInfoConverter();
 
     @Test
