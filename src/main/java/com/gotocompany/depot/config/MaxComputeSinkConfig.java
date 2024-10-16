@@ -36,6 +36,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Separator(ConfToListConverter.ELEMENT_SEPARATOR)
     List<TupleString> getMetadataColumnsTypes();
 
+    @Key("SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE")
+    @DefaultValue("false")
+    Boolean isTablePartitioningEnabled();
+
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_KEY")
     String getTablePartitionKey();
 

@@ -18,8 +18,55 @@ public class TableUtilTest {
     private final Descriptors.Descriptor descriptor = TextMaxComputeTable.Table.getDescriptor();
 
     @Test
-    public void shouldBuildTableSchema() {
+    public void shouldBuildPartitionedTableSchemaWithRootLevelMetadata() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.TRUE);
+        Mockito.when(maxComputeSinkConfig.getMetadataColumnsTypes()).thenReturn(
+                List.of(new TupleString("__message_timestamp", "timestamp"),
+                        new TupleString("__kafka_topic", "string"),
+                        new TupleString("__kafka_offset", "long")
+                )
+        );
+        Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
+        Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
+        int expectedNonPartitionColumnCount = 6;
+        int expectedPartitionColumnCount = 1;
+
+        TableSchema tableSchema = TableUtil.buildTableSchema(
+                descriptor,
+                maxComputeSinkConfig
+        );
+
+        Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
+        Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
+        Assertions.assertThat(tableSchema.getColumns())
+                .extracting("name", "typeInfo")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("id", TypeInfoFactory.STRING),
+                        Tuple.tuple("user", TypeInfoFactory.getStructTypeInfo(
+                                List.of("id", "contacts"),
+                                List.of(TypeInfoFactory.STRING, TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(
+                                        List.of("number"),
+                                        List.of(TypeInfoFactory.STRING)
+                                )))
+                        )),
+                        Tuple.tuple("items", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(
+                                List.of("id", "name"),
+                                List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
+                        ))),
+                        Tuple.tuple("__message_timestamp", TypeInfoFactory.TIMESTAMP_NTZ),
+                        Tuple.tuple("__kafka_topic", TypeInfoFactory.STRING),
+                        Tuple.tuple("__kafka_offset", TypeInfoFactory.BIGINT)
+                );
+        Assertions.assertThat(tableSchema.getPartitionColumns())
+                .extracting("name", "typeInfo")
+                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
+    }
+
+    @Test
+    public void shouldBuildPartitionedTableSchemaWithNestedMetadata() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getMaxcomputeMetadataNamespace()).thenReturn("meta");
         Mockito.when(maxComputeSinkConfig.getMetadataColumnsTypes()).thenReturn(
                 List.of(new TupleString("__message_timestamp", "timestamp"),
@@ -27,6 +74,7 @@ public class TableUtilTest {
                         new TupleString("__kafka_offset", "long")
                 )
         );
+        Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 1;
@@ -62,4 +110,55 @@ public class TableUtilTest {
                 .extracting("name", "typeInfo")
                 .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
     }
+
+    @Test
+    public void shouldBuildTableSchemaWithoutPartitionAndMeta() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.FALSE);
+        Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.FALSE);
+        int expectedNonPartitionColumnCount = 4;
+        int expectedPartitionColumnCount = 0;
+
+        TableSchema tableSchema = TableUtil.buildTableSchema(
+                descriptor,
+                maxComputeSinkConfig
+        );
+
+        Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
+        Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
+        Assertions.assertThat(tableSchema.getColumns())
+                .extracting("name", "typeInfo")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("id", TypeInfoFactory.STRING),
+                        Tuple.tuple("user", TypeInfoFactory.getStructTypeInfo(
+                                List.of("id", "contacts"),
+                                List.of(TypeInfoFactory.STRING, TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(
+                                        List.of("number"),
+                                        List.of(TypeInfoFactory.STRING)
+                                )))
+                        )),
+                        Tuple.tuple("items", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(
+                                List.of("id", "name"),
+                                List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
+                        ))),
+                        Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ)
+                );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowIllegalArgumentExceptionWhenPartitionKeyIsNotFound() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.TRUE);
+        Mockito.when(maxComputeSinkConfig.getMetadataColumnsTypes()).thenReturn(
+                List.of(new TupleString("__message_timestamp", "timestamp"),
+                        new TupleString("__kafka_topic", "string"),
+                        new TupleString("__kafka_offset", "long")
+                )
+        );
+        Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
+        Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("non_existent_partition_key");
+
+        TableUtil.buildTableSchema(descriptor, maxComputeSinkConfig);
+    }
+
 }

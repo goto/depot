@@ -41,7 +41,7 @@ public class TableUtil {
         TableSchema.Builder tableSchemaBuilder = com.aliyun.odps.TableSchema.builder();
         tableSchemaBuilder.withColumns(inferredFields);
         tableSchemaBuilder.withColumns(defaultFields);
-        if (StringUtils.isNotBlank(partitionKey)) {
+        if (maxComputeSinkConfig.isTablePartitioningEnabled()) {
             Column partitionColumn = buildPartitionColumn(descriptor, partitionKey);
             tableSchemaBuilder.withPartitionColumn(partitionColumn);
         }
@@ -69,7 +69,7 @@ public class TableUtil {
     }
 
     private static List<Column> buildDefaultFields(MaxComputeSinkConfig maxComputeSinkConfig) {
-        if (maxComputeSinkConfig.shouldAddMetadata()) {
+        if (!maxComputeSinkConfig.shouldAddMetadata()) {
             return new ArrayList<>();
         }
         if (StringUtils.isBlank(maxComputeSinkConfig.getMaxcomputeMetadataNamespace())) {
