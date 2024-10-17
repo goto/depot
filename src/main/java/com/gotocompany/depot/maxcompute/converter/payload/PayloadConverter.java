@@ -23,6 +23,4 @@ public interface PayloadConverter {
     default int getPriority() {
         return 0;
     }
-
-    ;
 }

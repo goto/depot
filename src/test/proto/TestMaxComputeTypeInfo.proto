@@ -75,7 +75,27 @@ message TestAnotherInner {
   string string_field = 1;
 }
 
+message TestBuyerWrapper {
+  TestBuyer buyer = 1;
+}
 
+message TestBuyer {
+  string name = 1;
+  TestCart cart = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message TestCart {
+  string cart_id = 1;
+  repeated TestItem items = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Duration cart_age = 4;
+}
+
+message TestItem {
+  string id = 1;
+  int32 quantity = 2;
+}
 enum TestEnum {
   TEST_1 = 0;
   TEST_2 = 1;
