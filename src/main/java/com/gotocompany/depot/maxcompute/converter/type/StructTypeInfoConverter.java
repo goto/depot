@@ -7,8 +7,8 @@ import com.google.protobuf.Descriptors;
 public class StructTypeInfoConverter implements TypeInfoConverter {
 
     @Override
-    public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return wrap(fieldDescriptor, TypeInfoFactory.STRING);
+    public TypeInfo convertSingular(Descriptors.FieldDescriptor fieldDescriptor) {
+        return TypeInfoFactory.STRING;
     }
 
     @Override

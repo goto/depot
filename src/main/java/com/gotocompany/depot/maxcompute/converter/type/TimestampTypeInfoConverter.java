@@ -7,8 +7,8 @@ import com.google.protobuf.Descriptors;
 public class TimestampTypeInfoConverter implements TypeInfoConverter {
 
     @Override
-    public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return wrap(fieldDescriptor, TypeInfoFactory.TIMESTAMP_NTZ);
+    public TypeInfo convertSingular(Descriptors.FieldDescriptor fieldDescriptor) {
+        return TypeInfoFactory.TIMESTAMP_NTZ;
     }
 
     @Override

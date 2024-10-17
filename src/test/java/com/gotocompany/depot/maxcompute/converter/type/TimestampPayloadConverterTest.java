@@ -7,7 +7,7 @@ import com.gotocompany.depot.TestMaxComputeTypeInfo;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
-public class TimestampTypeInfoConverterTest {
+public class TimestampPayloadConverterTest {
 
     private static final int TIMESTAMP_INDEX = 3;
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();

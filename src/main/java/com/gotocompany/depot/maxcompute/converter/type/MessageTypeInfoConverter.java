@@ -17,10 +17,6 @@ public class MessageTypeInfoConverter implements TypeInfoConverter {
     }
 
     @Override
-    public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return wrap(fieldDescriptor, convertSingular(fieldDescriptor));
-    }
-
     public StructTypeInfo convertSingular(Descriptors.FieldDescriptor fieldDescriptor) {
         List<String> fieldNames = fieldDescriptor.getMessageType().getFields().stream()
                 .map(Descriptors.FieldDescriptor::getName)
