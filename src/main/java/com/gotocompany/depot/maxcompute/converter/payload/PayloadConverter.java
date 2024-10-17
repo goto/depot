@@ -19,8 +19,4 @@ public interface PayloadConverter {
     Object convertSingular(Descriptors.FieldDescriptor fieldDescriptor, Object object);
 
     boolean canConvert(Descriptors.FieldDescriptor fieldDescriptor);
-
-    default int getPriority() {
-        return 0;
-    }
 }
