@@ -7,7 +7,7 @@ import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.converter.type.BaseTypeInfoConverter;
+import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -19,10 +19,16 @@ import java.util.stream.Collectors;
 
 public class TableUtil {
 
-    private static final Map<String, TypeInfo> TYPE_INFO_MAP;
-    private static final BaseTypeInfoConverter PRIMITIVE_TYPE_INFO_CONVERTER = new BaseTypeInfoConverter();
+    private final Map<String, TypeInfo> TYPE_INFO_MAP;
+    private final ConverterOrchestrator converterOrchestrator;
 
-    static {
+    public TableUtil(ConverterOrchestrator converterOrchestrator) {
+        this.converterOrchestrator = converterOrchestrator;
+        this.TYPE_INFO_MAP = initializeMetadataTypeMapper();
+    }
+
+    private Map<String, TypeInfo> initializeMetadataTypeMapper() {
+        final Map<String, TypeInfo> TYPE_INFO_MAP;
         TYPE_INFO_MAP = new HashMap<>();
         TYPE_INFO_MAP.put("integer", TypeInfoFactory.INT);
         TYPE_INFO_MAP.put("long", TypeInfoFactory.BIGINT);
@@ -31,9 +37,10 @@ public class TableUtil {
         TYPE_INFO_MAP.put("string", TypeInfoFactory.STRING);
         TYPE_INFO_MAP.put("boolean", TypeInfoFactory.BOOLEAN);
         TYPE_INFO_MAP.put("timestamp", TypeInfoFactory.TIMESTAMP_NTZ);
+        return TYPE_INFO_MAP;
     }
 
-    public static TableSchema buildTableSchema(Descriptors.Descriptor descriptor,
+    public TableSchema buildTableSchema(Descriptors.Descriptor descriptor,
                                                MaxComputeSinkConfig maxComputeSinkConfig) {
         String partitionKey = maxComputeSinkConfig.getTablePartitionKey();
         List<Column> inferredFields = buildInferredFields(descriptor, partitionKey);
@@ -48,27 +55,27 @@ public class TableUtil {
         return tableSchemaBuilder.build();
     }
 
-    private static List<Column> buildInferredFields(Descriptors.Descriptor descriptor,
+    private List<Column> buildInferredFields(Descriptors.Descriptor descriptor,
                                                     String partitionKey) {
         return descriptor.getFields()
                 .stream()
                 .filter(fieldDescriptor -> !fieldDescriptor.getName().equals(partitionKey))
                 .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(),
-                        PRIMITIVE_TYPE_INFO_CONVERTER.convert(fieldDescriptor)).build())
+                        converterOrchestrator.convert(fieldDescriptor)).build())
                 .collect(Collectors.toList());
     }
 
-    private static Column buildPartitionColumn(Descriptors.Descriptor descriptor, String partitionKey) {
+    private Column buildPartitionColumn(Descriptors.Descriptor descriptor, String partitionKey) {
         return descriptor.getFields()
                 .stream()
                 .filter(fieldDescriptor -> fieldDescriptor.getName().equals(partitionKey))
                 .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(),
-                        PRIMITIVE_TYPE_INFO_CONVERTER.convert(fieldDescriptor)).build())
+                        converterOrchestrator.convert(fieldDescriptor)).build())
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Partition key not found in descriptor"));
     }
 
-    private static List<Column> buildDefaultFields(MaxComputeSinkConfig maxComputeSinkConfig) {
+    private List<Column> buildDefaultFields(MaxComputeSinkConfig maxComputeSinkConfig) {
         if (!maxComputeSinkConfig.shouldAddMetadata()) {
             return new ArrayList<>();
         }

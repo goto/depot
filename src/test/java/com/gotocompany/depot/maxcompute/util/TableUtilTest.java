@@ -6,6 +6,7 @@ import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TextMaxComputeTable;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.sun.tools.javac.util.List;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.groups.Tuple;
@@ -16,6 +17,7 @@ import org.mockito.Mockito;
 public class TableUtilTest {
 
     private final Descriptors.Descriptor descriptor = TextMaxComputeTable.Table.getDescriptor();
+    private final TableUtil tableUtil = new TableUtil(new ConverterOrchestrator());
 
     @Test
     public void shouldBuildPartitionedTableSchemaWithRootLevelMetadata() {
@@ -32,7 +34,7 @@ public class TableUtilTest {
         int expectedNonPartitionColumnCount = 6;
         int expectedPartitionColumnCount = 1;
 
-        TableSchema tableSchema = TableUtil.buildTableSchema(
+        TableSchema tableSchema = tableUtil.buildTableSchema(
                 descriptor,
                 maxComputeSinkConfig
         );
@@ -79,7 +81,7 @@ public class TableUtilTest {
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 1;
 
-        TableSchema tableSchema = TableUtil.buildTableSchema(
+        TableSchema tableSchema = tableUtil.buildTableSchema(
                 descriptor,
                 maxComputeSinkConfig
         );
@@ -119,7 +121,7 @@ public class TableUtilTest {
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 0;
 
-        TableSchema tableSchema = TableUtil.buildTableSchema(
+        TableSchema tableSchema = tableUtil.buildTableSchema(
                 descriptor,
                 maxComputeSinkConfig
         );
@@ -158,7 +160,7 @@ public class TableUtilTest {
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("non_existent_partition_key");
 
-        TableUtil.buildTableSchema(descriptor, maxComputeSinkConfig);
+        tableUtil.buildTableSchema(descriptor, maxComputeSinkConfig);
     }
 
 }
