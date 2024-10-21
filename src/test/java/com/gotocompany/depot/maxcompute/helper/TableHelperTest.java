@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.util;
+package com.gotocompany.depot.maxcompute.helper;
 
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 
-public class TableUtilTest {
+public class TableHelperTest {
 
     private final Descriptors.Descriptor descriptor = TextMaxComputeTable.Table.getDescriptor();
 
@@ -30,11 +30,11 @@ public class TableUtilTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
-        TableUtil tableUtil = new TableUtil(new ConverterOrchestrator(), maxComputeSinkConfig);
+        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
         int expectedNonPartitionColumnCount = 6;
         int expectedPartitionColumnCount = 1;
 
-        TableSchema tableSchema = tableUtil.buildTableSchema(descriptor);
+        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
 
         Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
         Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
@@ -77,9 +77,9 @@ public class TableUtilTest {
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 1;
-        TableUtil tableUtil = new TableUtil(new ConverterOrchestrator(), maxComputeSinkConfig);
+        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableUtil.buildTableSchema(descriptor);
+        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
 
         Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
         Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
@@ -115,9 +115,9 @@ public class TableUtilTest {
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.FALSE);
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 0;
-        TableUtil tableUtil = new TableUtil(new ConverterOrchestrator(), maxComputeSinkConfig);
+        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableUtil.buildTableSchema(descriptor);
+        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
 
         Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
         Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
@@ -152,11 +152,11 @@ public class TableUtilTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("non_existent_partition_key");
-        TableUtil tableUtil = new TableUtil(new ConverterOrchestrator(), maxComputeSinkConfig);
+        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableUtil.buildTableSchema(descriptor);
+        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
 
-        tableUtil.buildTableSchema(descriptor);
+        tableHelper.buildTableSchema(descriptor);
     }
 
 }

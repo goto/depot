@@ -1,10 +1,11 @@
-package com.gotocompany.depot.maxcompute.util;
+package com.gotocompany.depot.maxcompute.helper;
 
 import com.aliyun.odps.Column;
 import com.aliyun.odps.TableSchema;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class TableUtil {
+public class TableHelper {
 
     private final ConverterOrchestrator converterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
