@@ -25,6 +25,10 @@ public class MetadataUtil {
         METADATA_TYPE_MAP.put("timestamp", TypeInfoFactory.TIMESTAMP_NTZ);
     }
 
+    public static TypeInfo getMetadataTypeInfo(String type) {
+        return METADATA_TYPE_MAP.get(type.toLowerCase());
+    }
+
     public static StructTypeInfo getMetadataTypeInfo(MaxComputeSinkConfig maxComputeSinkConfig) {
         return TypeInfoFactory.getStructTypeInfo(maxComputeSinkConfig.getMetadataColumnsTypes()
                         .stream()
