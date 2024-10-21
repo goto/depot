@@ -15,7 +15,9 @@ public abstract class RecordDecorator {
 
     public void decorate(Record record, Message message) throws IOException {
         append(record, message);
-        decorator.decorate(record, message);
+        if (decorator != null) {
+            decorator.decorate(record, message);
+        }
     }
 
     public abstract void append(Record record, Message message) throws IOException;

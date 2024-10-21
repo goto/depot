@@ -4,6 +4,8 @@ import com.aliyun.odps.Column;
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 
 @Data
+@AllArgsConstructor
 @RequiredArgsConstructor
+@Builder
 public class MaxComputeSchema {
     private final Descriptors.Descriptor descriptor;
     private final TableSchema tableSchema;

@@ -1,12 +1,12 @@
 package com.gotocompany.depot.maxcompute.helper;
 
-import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TextMaxComputeTable;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.sun.tools.javac.util.List;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.groups.Tuple;
@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 
-public class TableHelperTest {
+public class MaxComputeSchemaHelperTest {
 
     private final Descriptors.Descriptor descriptor = TextMaxComputeTable.Table.getDescriptor();
 
@@ -30,15 +30,15 @@ public class TableHelperTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
-        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
         int expectedNonPartitionColumnCount = 6;
         int expectedPartitionColumnCount = 1;
 
-        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
+        MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
 
-        Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getColumns())
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns())
                 .extracting("name", "typeInfo")
                 .containsExactlyInAnyOrder(
                         Tuple.tuple("id", TypeInfoFactory.STRING),
@@ -57,7 +57,7 @@ public class TableHelperTest {
                         Tuple.tuple("__kafka_topic", TypeInfoFactory.STRING),
                         Tuple.tuple("__kafka_offset", TypeInfoFactory.BIGINT)
                 );
-        Assertions.assertThat(tableSchema.getPartitionColumns())
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
                 .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
     }
@@ -77,13 +77,13 @@ public class TableHelperTest {
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 1;
-        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
+        MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
 
-        Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getColumns())
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns())
                 .extracting("name", "typeInfo")
                 .containsExactlyInAnyOrder(
                         Tuple.tuple("id", TypeInfoFactory.STRING),
@@ -103,7 +103,7 @@ public class TableHelperTest {
                                 List.of(TypeInfoFactory.TIMESTAMP_NTZ, TypeInfoFactory.STRING, TypeInfoFactory.BIGINT)
                         ))
                 );
-        Assertions.assertThat(tableSchema.getPartitionColumns())
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
                 .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
     }
@@ -115,13 +115,13 @@ public class TableHelperTest {
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.FALSE);
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 0;
-        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
+        MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
 
-        Assertions.assertThat(tableSchema.getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
-        Assertions.assertThat(tableSchema.getColumns())
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns().size()).isEqualTo(expectedNonPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns().size()).isEqualTo(expectedPartitionColumnCount);
+        Assertions.assertThat(maxComputeSchema.getTableSchema().getColumns())
                 .extracting("name", "typeInfo")
                 .containsExactlyInAnyOrder(
                         Tuple.tuple("id", TypeInfoFactory.STRING),
@@ -152,11 +152,9 @@ public class TableHelperTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("non_existent_partition_key");
-        TableHelper tableHelper = new TableHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
 
-        TableSchema tableSchema = tableHelper.buildTableSchema(descriptor);
-
-        tableHelper.buildTableSchema(descriptor);
+        maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
     }
 
 }

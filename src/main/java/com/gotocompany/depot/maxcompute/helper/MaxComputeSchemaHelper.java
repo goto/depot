@@ -5,6 +5,7 @@ import com.aliyun.odps.TableSchema;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -12,26 +13,36 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class TableHelper {
+public class MaxComputeSchemaHelper {
 
     private final ConverterOrchestrator converterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
 
-    public TableSchema buildTableSchema(Descriptors.Descriptor descriptor) {
-        String partitionKey = maxComputeSinkConfig.getTablePartitionKey();
-        List<Column> inferredFields = buildInferredFields(descriptor, partitionKey);
-        List<Column> defaultFields = buildDefaultColumns();
+    public MaxComputeSchema buildMaxComputeSchema(Descriptors.Descriptor descriptor) {
+        List<Column> dataColumn = buildInferredFields(descriptor, maxComputeSinkConfig.getTablePartitionKey());
+        List<Column> defaultColumns = buildDefaultColumns();
+        Column partitionColumn = maxComputeSinkConfig.isTablePartitioningEnabled() ?
+                buildPartitionColumn(descriptor, maxComputeSinkConfig.getTablePartitionKey()) : null;
         TableSchema.Builder tableSchemaBuilder = com.aliyun.odps.TableSchema.builder();
-        tableSchemaBuilder.withColumns(inferredFields);
-        tableSchemaBuilder.withColumns(defaultFields);
-        if (maxComputeSinkConfig.isTablePartitioningEnabled()) {
-            Column partitionColumn = buildPartitionColumn(descriptor, partitionKey);
+        tableSchemaBuilder.withColumns(dataColumn);
+        tableSchemaBuilder.withColumns(defaultColumns);
+        if (Objects.nonNull(partitionColumn)) {
             tableSchemaBuilder.withPartitionColumn(partitionColumn);
         }
-        return tableSchemaBuilder.build();
+
+        return MaxComputeSchema.builder()
+                .descriptor(descriptor)
+                .tableSchema(tableSchemaBuilder.build())
+                .dataColumns(dataColumn.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo)))
+                .defaultColumns(defaultColumns.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo)))
+                .partitionColumns(Objects.nonNull(partitionColumn) ?
+                        Collections.singletonMap(partitionColumn.getName(), partitionColumn.getTypeInfo()) : Collections.emptyMap())
+                .build();
+
     }
 
     private List<Column> buildInferredFields(Descriptors.Descriptor descriptor,
