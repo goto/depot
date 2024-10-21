@@ -1,0 +1,30 @@
+package com.gotocompany.depot.maxcompute.model;
+
+import com.aliyun.odps.Column;
+import com.aliyun.odps.TableSchema;
+import com.aliyun.odps.type.TypeInfo;
+import com.google.protobuf.Descriptors;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
+import java.util.Objects;
+
+@Data
+@RequiredArgsConstructor
+public class MaxComputeSchema {
+    private final Descriptors.Descriptor descriptor;
+    private final TableSchema tableSchema;
+    private final Map<String, TypeInfo> dataColumns;
+    private final Map<String, TypeInfo> defaultColumns;
+    private final Map<String, TypeInfo> partitionColumns;
+    private Column[] columns;
+
+    public Column[] getColumns() {
+        if (Objects.isNull(columns)) {
+            columns = tableSchema.getColumns().toArray(new Column[]{});
+        }
+        return columns;
+    }
+
+}

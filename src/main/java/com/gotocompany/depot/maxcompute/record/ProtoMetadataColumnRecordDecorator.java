@@ -1,0 +1,75 @@
+package com.gotocompany.depot.maxcompute.record;
+
+import com.aliyun.odps.OdpsType;
+import com.aliyun.odps.data.Record;
+import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.type.StructTypeInfo;
+import com.aliyun.odps.type.TypeInfo;
+import com.aliyun.odps.utils.StringUtils;
+import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.util.MetadataUtil;
+import com.gotocompany.depot.message.Message;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
+
+    private final MaxComputeSinkConfig maxComputeSinkConfig;
+    private final MaxComputeSchemaCache maxComputeSchemaCache;
+
+    public ProtoMetadataColumnRecordDecorator(RecordDecorator recordDecorator,
+                                              MaxComputeSinkConfig maxComputeSinkConfig,
+                                              MaxComputeSchemaCache maxComputeSchemaCache) {
+        super(recordDecorator);
+        this.maxComputeSinkConfig = maxComputeSinkConfig;
+        this.maxComputeSchemaCache = maxComputeSchemaCache;
+    }
+
+    @Override
+    public void append(Record record, Message message) throws IOException {
+        if (StringUtils.isNotBlank(maxComputeSinkConfig.getMaxcomputeMetadataNamespace())) {
+            appendNamespacedMetadata(record, message);
+            return;
+        }
+        appendMetadata(record, message);
+    }
+
+    private void appendNamespacedMetadata(Record record, Message message) {
+        Map<String, Object> metadata = message.getMetadata(maxComputeSinkConfig.getMetadataColumnsTypes());
+        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
+        StructTypeInfo typeInfo = MetadataUtil.getMetadataTypeInfo(maxComputeSinkConfig);
+        List<Object> values = maxComputeSchema.getDefaultColumns()
+                .entrySet()
+                .stream()
+                .map(metadataEntry -> {
+                    Object metadataValue = metadata.get(metadataEntry.getKey());
+                    if (metadataEntry.getValue().getOdpsType() == OdpsType.TIMESTAMP_NTZ) {
+                        return new Timestamp((long) metadataValue);
+                    }
+                    return metadataValue;
+                }).collect(Collectors.toList());
+        record.set(maxComputeSinkConfig.getMaxcomputeMetadataNamespace(), new SimpleStruct(typeInfo, values));
+    }
+
+    private void appendMetadata(Record record, Message message) {
+        Map<String, Object> metadata = message.getMetadata(maxComputeSinkConfig.getMetadataColumnsTypes());
+
+        for (Map.Entry<String, TypeInfo> entry : maxComputeSchemaCache.getMaxComputeSchema()
+                .getDefaultColumns()
+                .entrySet()) {
+            Object value = metadata.get(entry.getKey());
+            if (entry.getValue().getOdpsType() == OdpsType.TIMESTAMP_NTZ) {
+                record.set(entry.getKey(), new Timestamp((long) value));
+            } else {
+                record.set(entry.getKey(), value);
+            }
+        }
+    }
+
+}
