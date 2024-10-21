@@ -16,25 +16,29 @@ import com.gotocompany.depot.maxcompute.converter.type.TimestampTypeInfoConverte
 import com.gotocompany.depot.maxcompute.converter.type.TypeInfoConverter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConverterOrchestrator {
 
     private final List<TypeInfoConverter> typeInfoConverters;
     private final List<PayloadConverter> payloadConverters;
+    private final Map<String, TypeInfo> typeInfoCache;
 
     public ConverterOrchestrator() {
         typeInfoConverters = new ArrayList<>();
         payloadConverters = new ArrayList<>();
+        typeInfoCache = new HashMap<>();
         initializeConverters();
     }
 
     public TypeInfo convert(Descriptors.FieldDescriptor fieldDescriptor) {
-        return typeInfoConverters.stream()
+        return typeInfoCache.computeIfAbsent(fieldDescriptor.getFullName(), key -> typeInfoConverters.stream()
                 .filter(converter -> converter.canConvert(fieldDescriptor))
                 .findFirst()
                 .map(converter -> converter.convert(fieldDescriptor))
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fieldDescriptor.getType()));
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fieldDescriptor.getType())));
     }
 
     public Object convert(Descriptors.FieldDescriptor fieldDescriptor, Object object) {
