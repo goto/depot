@@ -22,7 +22,7 @@ public class MetadataUtil {
         METADATA_TYPE_MAP.put("double", TypeInfoFactory.DOUBLE);
         METADATA_TYPE_MAP.put("string", TypeInfoFactory.STRING);
         METADATA_TYPE_MAP.put("boolean", TypeInfoFactory.BOOLEAN);
-        METADATA_TYPE_MAP.put("timestamp", TypeInfoFactory.TIMESTAMP_NTZ);
+        METADATA_TYPE_MAP.put("timestamp", TypeInfoFactory.TIMESTAMP);
     }
 
     public static TypeInfo getMetadataTypeInfo(String type) {

@@ -53,13 +53,13 @@ public class MaxComputeSchemaHelperTest {
                                 List.of("id", "name"),
                                 List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
                         ))),
-                        Tuple.tuple("__message_timestamp", TypeInfoFactory.TIMESTAMP_NTZ),
+                        Tuple.tuple("__message_timestamp", TypeInfoFactory.TIMESTAMP),
                         Tuple.tuple("__kafka_topic", TypeInfoFactory.STRING),
                         Tuple.tuple("__kafka_offset", TypeInfoFactory.BIGINT)
                 );
         Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
-                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
+                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP));
     }
 
     @Test
@@ -100,12 +100,12 @@ public class MaxComputeSchemaHelperTest {
                         ))),
                         Tuple.tuple("meta", TypeInfoFactory.getStructTypeInfo(
                                 List.of("__message_timestamp", "__kafka_topic", "__kafka_offset"),
-                                List.of(TypeInfoFactory.TIMESTAMP_NTZ, TypeInfoFactory.STRING, TypeInfoFactory.BIGINT)
+                                List.of(TypeInfoFactory.TIMESTAMP, TypeInfoFactory.STRING, TypeInfoFactory.BIGINT)
                         ))
                 );
         Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
-                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ));
+                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class MaxComputeSchemaHelperTest {
                                 List.of("id", "name"),
                                 List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
                         ))),
-                        Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP_NTZ)
+                        Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP)
                 );
     }
 

@@ -29,7 +29,7 @@ public class ConverterOrchestratorTest {
         String expectedStringTypeInfoRepresentation = "STRING";
         String expectedMessageTypeRepresentation = "STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>";
         String expectedRepeatedMessageTypeRepresentation = String.format("ARRAY<%s>", expectedMessageTypeRepresentation);
-        String expectedTimestampTypeInfoRepresentation = "TIMESTAMP_NTZ";
+        String expectedTimestampTypeInfoRepresentation = "TIMESTAMP";
         String expectedDurationTypeInfoRepresentation = "STRUCT<seconds:BIGINT,nanos:INT>";
         String expectedStructTypeInfoRepresentation = "STRING";
 

@@ -49,7 +49,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
                 .stream()
                 .map(metadataEntry -> {
                     Object metadataValue = metadata.get(metadataEntry.getKey());
-                    if (metadataEntry.getValue().getOdpsType() == OdpsType.TIMESTAMP_NTZ) {
+                    if (metadataEntry.getValue().getOdpsType() == OdpsType.TIMESTAMP) {
                         return new Timestamp((long) metadataValue);
                     }
                     return metadataValue;
@@ -64,7 +64,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
                 .getDefaultColumns()
                 .entrySet()) {
             Object value = metadata.get(entry.getKey());
-            if (entry.getValue().getOdpsType() == OdpsType.TIMESTAMP_NTZ) {
+            if (entry.getValue().getOdpsType() == OdpsType.TIMESTAMP) {
                 record.set(entry.getKey(), new Timestamp((long) value));
             } else {
                 record.set(entry.getKey(), value);
