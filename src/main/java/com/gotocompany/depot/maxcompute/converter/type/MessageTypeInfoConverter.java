@@ -36,8 +36,4 @@ public class MessageTypeInfoConverter implements TypeInfoConverter {
         return Descriptors.FieldDescriptor.Type.MESSAGE.equals(fieldDescriptor.getType());
     }
 
-    @Override
-    public int getPriority() {
-        return Integer.MIN_VALUE;
-    }
 }
