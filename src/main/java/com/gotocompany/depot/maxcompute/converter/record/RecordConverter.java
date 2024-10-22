@@ -23,7 +23,6 @@ public class RecordConverter implements MessageRecordConverter {
     private final RecordDecorator recordDecorator;
     private final MaxComputeSchemaCache maxComputeSchemaCache;
 
-
     @Override
     public List<RecordWrapper> convert(List<Message> messages) {
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
@@ -34,9 +33,9 @@ public class RecordConverter implements MessageRecordConverter {
                         recordDecorator.decorate(record, messages.get(index));
                         return new RecordWrapper(record, index, null);
                     } catch (IOException e) {
-                        return new RecordWrapper(record, index, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR));
+                        return new RecordWrapper(null, index, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR));
                     } catch (UnknownFieldsException e) {
-                        return new RecordWrapper(record, index, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR));
+                        return new RecordWrapper(null, index, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR));
                     }
                 }).collect(Collectors.toList());
     }
