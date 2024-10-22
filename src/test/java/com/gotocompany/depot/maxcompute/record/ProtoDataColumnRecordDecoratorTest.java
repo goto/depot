@@ -43,6 +43,31 @@ public class ProtoDataColumnRecordDecoratorTest {
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         Mockito.when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
 
+        instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig);
+    }
+
+    @Test
+    public void decorateShouldAppendDataColumnToRecord() throws IOException {
+        MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(DESCRIPTOR);
+        Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
+        TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
+        Message message = new Message(null, maxComputeRecord.toByteArray());
+        java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L * 1000);
+        expectedTimestamp.setNanos(1000);
+        StructTypeInfo expectedArrayStructElementTypeInfo = (StructTypeInfo) ((ArrayTypeInfo) maxComputeSchema.getDataColumns().get("inner_record")).getElementTypeInfo();
+        protoDataColumnRecordDecorator.decorate(record, message);
+
+        Assertions.assertThat(record)
+                .extracting("values")
+                .isEqualTo(new Object[]{"id",
+                        Arrays.asList(
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                        ),
+                        expectedTimestamp});
+    }
+
+    private void instantiateProtoDataColumnRecordDecorator(SinkConfig sinkConfig, MaxComputeSinkConfig maxComputeSinkConfig) throws IOException {
         ConverterOrchestrator converterOrchestrator = new ConverterOrchestrator();
         maxComputeSchemaHelper = new MaxComputeSchemaHelper(
                 converterOrchestrator,
@@ -66,27 +91,6 @@ public class ProtoDataColumnRecordDecoratorTest {
                 protoMessageParser,
                 sinkConfig
         );
-    }
-
-    @Test
-    public void decorateShouldAppendDataColumnToRecord() throws IOException {
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(DESCRIPTOR);
-        Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
-        TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
-        Message message = new Message(null, maxComputeRecord.toByteArray());
-        java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L * 1000);
-        expectedTimestamp.setNanos(1000);
-        StructTypeInfo expectedArrayStructElementTypeInfo = (StructTypeInfo) ((ArrayTypeInfo) maxComputeSchema.getDataColumns().get("inner_record")).getElementTypeInfo();
-        protoDataColumnRecordDecorator.decorate(record, message);
-
-        Assertions.assertThat(record)
-                .extracting("values")
-                .isEqualTo(new Object[]{"id",
-                        Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
-                        ),
-                        expectedTimestamp});
     }
 
     private static TestMaxComputeRecord.MaxComputeRecord getMockedMessage() {

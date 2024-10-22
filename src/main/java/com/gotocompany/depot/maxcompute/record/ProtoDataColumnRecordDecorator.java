@@ -38,6 +38,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
     public void append(Record record, Message message) throws IOException {
         String schemaClass = getSchemaClass();
         ParsedMessage parsedMessage = protoMessageParser.parse(message, sinkConfig.getSinkConnectorSchemaMessageMode(), schemaClass);
+        parsedMessage.validate(sinkConfig);
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
         for (Map.Entry<String, TypeInfo> entry : maxComputeSchema.getDataColumns().entrySet()) {

@@ -4,6 +4,7 @@ import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
@@ -22,6 +23,7 @@ public class RecordConverter implements MessageRecordConverter {
     private final RecordDecorator recordDecorator;
     private final MaxComputeSchemaCache maxComputeSchemaCache;
 
+
     @Override
     public List<RecordWrapper> convert(List<Message> messages) {
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
@@ -33,6 +35,8 @@ public class RecordConverter implements MessageRecordConverter {
                         return new RecordWrapper(record, index, null);
                     } catch (IOException e) {
                         return new RecordWrapper(record, index, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR));
+                    } catch (UnknownFieldsException e) {
+                        return new RecordWrapper(record, index, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR));
                     }
                 }).collect(Collectors.toList());
     }
