@@ -9,7 +9,6 @@ import com.aliyun.odps.utils.StringUtils;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
-import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 
 import java.io.IOException;
@@ -17,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
 
@@ -43,13 +43,11 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
     private void appendNamespacedMetadata(Record record, Message message) {
         Map<String, Object> metadata = message.getMetadata(maxComputeSinkConfig.getMetadataColumnsTypes());
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
-        StructTypeInfo typeInfo = MetadataUtil.getMetadataTypeInfo(maxComputeSinkConfig);
-        List<Object> values = maxComputeSchema.getDefaultColumns()
-                .entrySet()
-                .stream()
-                .map(metadataEntry -> {
-                    Object metadataValue = metadata.get(metadataEntry.getKey());
-                    if (metadataEntry.getValue().getOdpsType() == OdpsType.TIMESTAMP) {
+        StructTypeInfo typeInfo = (StructTypeInfo) maxComputeSchema.getDefaultColumns().get(maxComputeSinkConfig.getMaxcomputeMetadataNamespace());
+        List<Object> values = IntStream.range(0, typeInfo.getFieldCount())
+                .mapToObj(index -> {
+                    Object metadataValue = metadata.get(typeInfo.getFieldNames().get(index));
+                    if (typeInfo.getFieldTypeInfos().get(index).getOdpsType() == OdpsType.TIMESTAMP) {
                         return new Timestamp((long) metadataValue);
                     }
                     return metadataValue;
