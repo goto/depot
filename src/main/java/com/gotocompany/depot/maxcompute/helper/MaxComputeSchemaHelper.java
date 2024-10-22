@@ -23,13 +23,13 @@ public class MaxComputeSchemaHelper {
     private final MaxComputeSinkConfig maxComputeSinkConfig;
 
     public MaxComputeSchema buildMaxComputeSchema(Descriptors.Descriptor descriptor) {
-        List<Column> dataColumn = buildInferredFields(descriptor, maxComputeSinkConfig.getTablePartitionKey());
-        List<Column> defaultColumns = buildDefaultColumns();
+        List<Column> dataColumn = buildDataColumns(descriptor, maxComputeSinkConfig.getTablePartitionKey());
+        List<Column> metadataColumns = buildMetadataColumns();
         Column partitionColumn = maxComputeSinkConfig.isTablePartitioningEnabled() ?
                 buildPartitionColumn(descriptor, maxComputeSinkConfig.getTablePartitionKey()) : null;
         TableSchema.Builder tableSchemaBuilder = com.aliyun.odps.TableSchema.builder();
         tableSchemaBuilder.withColumns(dataColumn);
-        tableSchemaBuilder.withColumns(defaultColumns);
+        tableSchemaBuilder.withColumns(metadataColumns);
         if (Objects.nonNull(partitionColumn)) {
             tableSchemaBuilder.withPartitionColumn(partitionColumn);
         }
@@ -38,15 +38,15 @@ public class MaxComputeSchemaHelper {
                 .descriptor(descriptor)
                 .tableSchema(tableSchemaBuilder.build())
                 .dataColumns(dataColumn.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo)))
-                .defaultColumns(defaultColumns.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo)))
+                .metadataColumns(metadataColumns.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo)))
                 .partitionColumns(Objects.nonNull(partitionColumn) ?
                         Collections.singletonMap(partitionColumn.getName(), partitionColumn.getTypeInfo()) : Collections.emptyMap())
                 .build();
 
     }
 
-    private List<Column> buildInferredFields(Descriptors.Descriptor descriptor,
-                                             String partitionKey) {
+    private List<Column> buildDataColumns(Descriptors.Descriptor descriptor,
+                                          String partitionKey) {
         return descriptor.getFields()
                 .stream()
                 .filter(fieldDescriptor -> !fieldDescriptor.getName().equals(partitionKey))
@@ -65,7 +65,7 @@ public class MaxComputeSchemaHelper {
                 .orElseThrow(() -> new IllegalArgumentException("Partition key not found in descriptor"));
     }
 
-    private List<Column> buildDefaultColumns() {
+    private List<Column> buildMetadataColumns() {
         if (!maxComputeSinkConfig.shouldAddMetadata()) {
             return new ArrayList<>();
         }

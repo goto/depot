@@ -43,7 +43,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
     private void appendNamespacedMetadata(Record record, Message message) {
         Map<String, Object> metadata = message.getMetadata(maxComputeSinkConfig.getMetadataColumnsTypes());
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
-        StructTypeInfo typeInfo = (StructTypeInfo) maxComputeSchema.getDefaultColumns().get(maxComputeSinkConfig.getMaxcomputeMetadataNamespace());
+        StructTypeInfo typeInfo = (StructTypeInfo) maxComputeSchema.getMetadataColumns().get(maxComputeSinkConfig.getMaxcomputeMetadataNamespace());
         List<Object> values = IntStream.range(0, typeInfo.getFieldCount())
                 .mapToObj(index -> {
                     Object metadataValue = metadata.get(typeInfo.getFieldNames().get(index));
@@ -59,7 +59,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
         Map<String, Object> metadata = message.getMetadata(maxComputeSinkConfig.getMetadataColumnsTypes());
 
         for (Map.Entry<String, TypeInfo> entry : maxComputeSchemaCache.getMaxComputeSchema()
-                .getDefaultColumns()
+                .getMetadataColumns()
                 .entrySet()) {
             Object value = metadata.get(entry.getKey());
             if (entry.getValue().getOdpsType() == OdpsType.TIMESTAMP) {

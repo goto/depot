@@ -20,7 +20,7 @@ public class MaxComputeSchema {
     private final Descriptors.Descriptor descriptor;
     private final TableSchema tableSchema;
     private final Map<String, TypeInfo> dataColumns;
-    private final Map<String, TypeInfo> defaultColumns;
+    private final Map<String, TypeInfo> metadataColumns;
     private final Map<String, TypeInfo> partitionColumns;
     private Column[] columns;
 
