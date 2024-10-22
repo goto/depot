@@ -2,6 +2,7 @@ package com.gotocompany.depot.maxcompute.record;
 
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.type.TypeInfo;
+import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
@@ -40,7 +41,8 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
         MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
         for (Map.Entry<String, TypeInfo> entry : maxComputeSchema.getDataColumns().entrySet()) {
-            record.set(entry.getKey(), converterOrchestrator.convert(protoMessage.getDescriptorForType().findFieldByName(entry.getKey()), protoMessage));
+            Descriptors.FieldDescriptor fieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(entry.getKey());
+            record.set(entry.getKey(), converterOrchestrator.convert(fieldDescriptor, protoMessage.getField(fieldDescriptor)));
         }
     }
 
