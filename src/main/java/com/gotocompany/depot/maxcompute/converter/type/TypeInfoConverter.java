@@ -10,9 +10,6 @@ public interface TypeInfoConverter {
     }
     TypeInfo convertSingular(Descriptors.FieldDescriptor fieldDescriptor);
     boolean canConvert(Descriptors.FieldDescriptor fieldDescriptor);
-    default int getPriority() {
-        return 0;
-    };
     default TypeInfo wrap(Descriptors.FieldDescriptor fieldDescriptor, TypeInfo typeInfo) {
         return fieldDescriptor.isRepeated() ? TypeInfoFactory.getArrayTypeInfo(typeInfo) : typeInfo;
     }

@@ -50,11 +50,6 @@ public class MessageTypeInfoConverterTest {
         Assertions.assertFalse(messageTypeInfoConverter.canConvert(descriptor.getFields().get(0)));
     }
 
-    @Test
-    public void shouldReturnMinIntegerAsPriority() {
-        Assertions.assertEquals(Integer.MIN_VALUE, messageTypeInfoConverter.getPriority());
-    }
-
     private void initializeConverters() {
         List<TypeInfoConverter> converters = new ArrayList<>();
         converters.add(new PrimitiveTypeInfoConverter());
