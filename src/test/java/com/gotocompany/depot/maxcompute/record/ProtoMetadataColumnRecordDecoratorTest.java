@@ -49,7 +49,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
     private void initializeDecorator(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxComputeSinkConfig = maxComputeSinkConfig;
         ConverterOrchestrator converterOrchestrator = new ConverterOrchestrator();
-        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(converterOrchestrator, maxComputeSinkConfig);
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(converterOrchestrator, maxComputeSinkConfig, null);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
         maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         Mockito.when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);

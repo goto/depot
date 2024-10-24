@@ -6,6 +6,7 @@ import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -21,12 +22,12 @@ public class MaxComputeSchemaHelper {
 
     private final ConverterOrchestrator converterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
+    private final PartitioningStrategy<?> partitioningStrategy;
 
     public MaxComputeSchema buildMaxComputeSchema(Descriptors.Descriptor descriptor) {
-        List<Column> dataColumn = buildDataColumns(descriptor, maxComputeSinkConfig.getTablePartitionKey());
+        List<Column> dataColumn = buildDataColumns(descriptor, partitioningStrategy);
         List<Column> metadataColumns = buildMetadataColumns();
-        Column partitionColumn = maxComputeSinkConfig.isTablePartitioningEnabled() ?
-                buildPartitionColumn(descriptor, maxComputeSinkConfig.getTablePartitionKey()) : null;
+        Column partitionColumn = maxComputeSinkConfig.isTablePartitioningEnabled() ? buildPartitionColumn(partitioningStrategy) : null;
         TableSchema.Builder tableSchemaBuilder = com.aliyun.odps.TableSchema.builder();
         tableSchemaBuilder.withColumns(dataColumn);
         tableSchemaBuilder.withColumns(metadataColumns);
@@ -46,23 +47,22 @@ public class MaxComputeSchemaHelper {
     }
 
     private List<Column> buildDataColumns(Descriptors.Descriptor descriptor,
-                                          String partitionKey) {
+                                          PartitioningStrategy<?> partitioningStrategy) {
         return descriptor.getFields()
                 .stream()
-                .filter(fieldDescriptor -> !fieldDescriptor.getName().equals(partitionKey))
+                .filter(fieldDescriptor -> {
+                    if (!maxComputeSinkConfig.isTablePartitioningEnabled() || !fieldDescriptor.getName().equals(maxComputeSinkConfig.getTablePartitionKey())) {
+                        return true;
+                    }
+                    return !partitioningStrategy.shouldReplaceOriginalColumn();
+                })
                 .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(),
                         converterOrchestrator.convert(fieldDescriptor)).build())
                 .collect(Collectors.toList());
     }
 
-    private Column buildPartitionColumn(Descriptors.Descriptor descriptor, String partitionKey) {
-        return descriptor.getFields()
-                .stream()
-                .filter(fieldDescriptor -> fieldDescriptor.getName().equals(partitionKey))
-                .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(),
-                        converterOrchestrator.convert(fieldDescriptor)).build())
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Partition key not found in descriptor"));
+    private Column buildPartitionColumn(PartitioningStrategy<?> partitioningStrategy) {
+        return partitioningStrategy.getPartitionColumn();
     }
 
     private List<Column> buildMetadataColumns() {

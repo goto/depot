@@ -71,7 +71,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         ConverterOrchestrator converterOrchestrator = new ConverterOrchestrator();
         maxComputeSchemaHelper = new MaxComputeSchemaHelper(
                 converterOrchestrator,
-                maxComputeSinkConfig
+                maxComputeSinkConfig,
+                null
         );
 
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(DESCRIPTOR);

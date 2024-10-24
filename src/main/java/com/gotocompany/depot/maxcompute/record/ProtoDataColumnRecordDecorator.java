@@ -1,7 +1,6 @@
 package com.gotocompany.depot.maxcompute.record;
 
 import com.aliyun.odps.data.Record;
-import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
@@ -13,7 +12,6 @@ import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class ProtoDataColumnRecordDecorator extends RecordDecorator {
 
@@ -40,10 +38,8 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         ParsedMessage parsedMessage = protoMessageParser.parse(message, sinkConfig.getSinkConnectorSchemaMessageMode(), schemaClass);
         parsedMessage.validate(sinkConfig);
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
-        for (Map.Entry<String, TypeInfo> entry : maxComputeSchema.getDataColumns().entrySet()) {
-            Descriptors.FieldDescriptor fieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(entry.getKey());
-            record.set(entry.getKey(), converterOrchestrator.convert(fieldDescriptor, protoMessage.getField(fieldDescriptor)));
+        for (Descriptors.FieldDescriptor fieldDescriptor : protoMessage.getDescriptorForType().getFields()) {
+            record.set(fieldDescriptor.getName(), converterOrchestrator.convert(fieldDescriptor, protoMessage.getField(fieldDescriptor)));
         }
     }
 

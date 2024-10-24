@@ -7,6 +7,7 @@ import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategyFactory;
 import com.sun.tools.javac.util.List;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.groups.Tuple;
@@ -30,8 +31,13 @@ public class MaxComputeSchemaHelperTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
-        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
-        int expectedNonPartitionColumnCount = 6;
+        Mockito.when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn("__partitioning_column");
+        PartitioningStrategyFactory partitioningStrategyFactory = new PartitioningStrategyFactory(
+                new ConverterOrchestrator(), maxComputeSinkConfig
+        );
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(),
+                maxComputeSinkConfig, partitioningStrategyFactory.createPartitioningStrategy(descriptor));
+        int expectedNonPartitionColumnCount = 7;
         int expectedPartitionColumnCount = 1;
 
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
@@ -53,13 +59,14 @@ public class MaxComputeSchemaHelperTest {
                                 List.of("id", "name"),
                                 List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
                         ))),
+                        Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP),
                         Tuple.tuple("__message_timestamp", TypeInfoFactory.TIMESTAMP),
                         Tuple.tuple("__kafka_topic", TypeInfoFactory.STRING),
                         Tuple.tuple("__kafka_offset", TypeInfoFactory.BIGINT)
                 );
         Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
-                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP));
+                .contains(Tuple.tuple("__partitioning_column", TypeInfoFactory.STRING));
     }
 
     @Test
@@ -75,9 +82,14 @@ public class MaxComputeSchemaHelperTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("event_timestamp");
-        int expectedNonPartitionColumnCount = 4;
+        Mockito.when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn("__partitioning_column");
+        int expectedNonPartitionColumnCount = 5;
         int expectedPartitionColumnCount = 1;
-        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        PartitioningStrategyFactory partitioningStrategyFactory = new PartitioningStrategyFactory(
+                new ConverterOrchestrator(), maxComputeSinkConfig
+        );
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(
+                new ConverterOrchestrator(), maxComputeSinkConfig, partitioningStrategyFactory.createPartitioningStrategy(descriptor));
 
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
 
@@ -98,6 +110,7 @@ public class MaxComputeSchemaHelperTest {
                                 List.of("id", "name"),
                                 List.of(TypeInfoFactory.STRING, TypeInfoFactory.STRING)
                         ))),
+                        Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP),
                         Tuple.tuple("meta", TypeInfoFactory.getStructTypeInfo(
                                 List.of("__message_timestamp", "__kafka_topic", "__kafka_offset"),
                                 List.of(TypeInfoFactory.TIMESTAMP, TypeInfoFactory.STRING, TypeInfoFactory.BIGINT)
@@ -105,7 +118,7 @@ public class MaxComputeSchemaHelperTest {
                 );
         Assertions.assertThat(maxComputeSchema.getTableSchema().getPartitionColumns())
                 .extracting("name", "typeInfo")
-                .contains(Tuple.tuple("event_timestamp", TypeInfoFactory.TIMESTAMP));
+                .contains(Tuple.tuple("__partitioning_column", TypeInfoFactory.STRING));
     }
 
     @Test
@@ -115,7 +128,11 @@ public class MaxComputeSchemaHelperTest {
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.FALSE);
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 0;
-        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        PartitioningStrategyFactory partitioningStrategyFactory = new PartitioningStrategyFactory(
+                new ConverterOrchestrator(), maxComputeSinkConfig
+        );
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(),
+                maxComputeSinkConfig, partitioningStrategyFactory.createPartitioningStrategy(descriptor));
 
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
 
@@ -152,7 +169,11 @@ public class MaxComputeSchemaHelperTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("non_existent_partition_key");
-        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(), maxComputeSinkConfig);
+        PartitioningStrategyFactory partitioningStrategyFactory = new PartitioningStrategyFactory(
+                new ConverterOrchestrator(), maxComputeSinkConfig
+        );
+        MaxComputeSchemaHelper maxComputeSchemaHelper = new MaxComputeSchemaHelper(new ConverterOrchestrator(),
+                maxComputeSinkConfig, partitioningStrategyFactory.createPartitioningStrategy(descriptor));
 
         maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
     }

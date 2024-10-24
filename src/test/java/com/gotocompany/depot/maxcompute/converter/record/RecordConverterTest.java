@@ -20,6 +20,7 @@ import com.gotocompany.depot.maxcompute.record.ProtoDataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.ProtoMetadataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategyFactory;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
@@ -59,6 +60,7 @@ public class RecordConverterTest {
         );
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.TRUE);
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp");
+        Mockito.when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn("__partition_column");
         converterOrchestrator = new ConverterOrchestrator();
         protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         ParsedMessage parsedMessage = Mockito.mock(ParsedMessage.class);
@@ -68,7 +70,10 @@ public class RecordConverterTest {
         sinkConfig = Mockito.mock(SinkConfig.class);
         Mockito.when(sinkConfig.getSinkConnectorSchemaMessageMode())
                 .thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
-        maxComputeSchemaHelper = new MaxComputeSchemaHelper(converterOrchestrator, maxComputeSinkConfig);
+        PartitioningStrategyFactory partitioningStrategyFactory = new PartitioningStrategyFactory(converterOrchestrator, maxComputeSinkConfig);
+        maxComputeSchemaHelper = new MaxComputeSchemaHelper(converterOrchestrator, maxComputeSinkConfig, partitioningStrategyFactory.createPartitioningStrategy(
+                descriptor
+        ));
         maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(descriptor);
         Mockito.when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
@@ -88,7 +93,8 @@ public class RecordConverterTest {
                 new Tuple<>("__kafka_topic", "topic"),
                 new Tuple<>("__kafka_offset", 100L)
         );
-
+        java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L * 1000);
+        expectedTimestamp.setNanos(1000);
         List<RecordWrapper> recordWrappers = recordConverter.convert(Collections.singletonList(message));
 
         Assertions.assertThat(recordWrappers).size().isEqualTo(1);
@@ -114,6 +120,7 @@ public class RecordConverterTest {
                                         Arrays.asList("name_2", 50f)
                                 )
                         )),
+                        expectedTimestamp,
                         new java.sql.Timestamp(123012311L),
                         "topic",
                         100L
