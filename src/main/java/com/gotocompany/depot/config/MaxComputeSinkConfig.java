@@ -36,6 +36,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Separator(ConfToListConverter.ELEMENT_SEPARATOR)
     List<TupleString> getMetadataColumnsTypes();
 
+    @Key("SINK_MAXCOMPUTE_SCHEMA")
+    @DefaultValue("default")
+    String getMaxComputeSchema();
+
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE")
     @DefaultValue("false")
     Boolean isTablePartitioningEnabled();
@@ -49,4 +53,11 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_BY_TIMESTAMP_TIMEZONE")
     @DefaultValue("UTC+7")
     String getTablePartitionByTimestampTimezone();
+
+    @Key("SINK_MAXCOMPUTE_TABLE_NAME")
+    String getMaxComputeTableName();
+
+    @Key("SINK_MAXCOMPUTE_TABLE_LIFECYCLE_DAYS")
+    Long getMaxComputeTableLifecycleDays();
+
 }
