@@ -43,4 +43,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_KEY")
     String getTablePartitionKey();
 
+    @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_COLUMN_NAME")
+    String getTablePartitionColumnName();
+
+    @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_BY_TIMESTAMP_TIMEZONE")
+    @DefaultValue("UTC+7")
+    String getTablePartitionByTimestampTimezone();
 }
