@@ -5,19 +5,33 @@ import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
+import com.aliyun.odps.tunnel.TableTunnel;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.client.insert.InsertManager;
+import com.gotocompany.depot.maxcompute.client.insert.NonPartitionedInsertManager;
+import com.gotocompany.depot.maxcompute.client.insert.PartitionedInsertManager;
+import com.gotocompany.depot.maxcompute.model.RecordWrapper;
+import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MaxComputeClient {
 
     private final Odps odps;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
+    private final TableTunnel tableTunnel;
+    private final PartitioningStrategy partitioningStrategy;
+    private final InsertManager insertManager;
 
-    public MaxComputeClient(MaxComputeSinkConfig maxComputeSinkConfig) {
+    public MaxComputeClient(MaxComputeSinkConfig maxComputeSinkConfig,
+                            PartitioningStrategy partitioningStrategy) {
         this.maxComputeSinkConfig = maxComputeSinkConfig;
+        this.partitioningStrategy = partitioningStrategy;
         this.odps = initializeOdps();
+        this.tableTunnel = new TableTunnel(odps);
+        this.insertManager = initializeInsertManager();
     }
 
     public void upsertTable(TableSchema tableSchema) throws OdpsException {
@@ -26,7 +40,14 @@ public class MaxComputeClient {
             this.odps.tables().create(odps.getDefaultProject(), tableName, tableSchema, "",
                     false, maxComputeSinkConfig.getMaxComputeTableLifecycleDays(),
                     null, null);
-            return;
+        }
+    }
+
+    public void insert(List<RecordWrapper> recordWrappers) {
+        try {
+            insertManager.insert(recordWrappers);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to insert records into MaxCompute", e);
         }
     }
 
@@ -38,6 +59,13 @@ public class MaxComputeClient {
         odpsClient.setCurrentSchema(maxComputeSinkConfig.getMaxComputeSchema());
         odpsClient.setGlobalSettings(getGlobalSettings());
         return odpsClient;
+    }
+
+    private InsertManager initializeInsertManager() {
+        if (maxComputeSinkConfig.isTablePartitioningEnabled()) {
+            return new PartitionedInsertManager(partitioningStrategy, tableTunnel, maxComputeSinkConfig);
+        }
+        return new NonPartitionedInsertManager(tableTunnel, maxComputeSinkConfig);
     }
 
     private Map<String, String> getGlobalSettings() {
