@@ -24,7 +24,9 @@ public class NonPartitionedInsertManager implements InsertManager {
         for (RecordWrapper recordWrapper : recordWrappers) {
             recordPack.append(recordWrapper.getRecord());
         }
-        TableTunnel.FlushResult flushResult = recordPack.flush(new TableTunnel.FlushOption().timeout(-1));
+        TableTunnel.FlushResult flushResult = recordPack.flush(
+                new TableTunnel.FlushOption()
+                        .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeout()));
         log.info("Flushed {} records", flushResult.getRecordCount());
     }
 

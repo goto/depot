@@ -32,7 +32,9 @@ public class PartitionedInsertManager implements InsertManager {
             for (RecordWrapper recordWrapper : entry.getValue()) {
                 recordPack.append(recordWrapper.getRecord());
             }
-            TableTunnel.FlushResult flushResult = recordPack.flush(new TableTunnel.FlushOption().timeout(-1));
+            TableTunnel.FlushResult flushResult = recordPack.flush(
+                    new TableTunnel.FlushOption()
+                            .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeout()));
             log.info("Flushed {} records to partition {}", flushResult.getRecordCount(), entry.getKey());
         }
     }

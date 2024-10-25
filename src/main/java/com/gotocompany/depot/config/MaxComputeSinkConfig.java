@@ -64,4 +64,8 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_TABLE_LIFECYCLE_DAYS")
     Long getMaxComputeTableLifecycleDays();
 
+    @Key("SINK_MAXCOMPUTE_RECORD_PACK_FLUSH_TIMEOUT")
+    @DefaultValue("-1")
+    Long getMaxComputeRecordPackFlushTimeout();
+
 }
