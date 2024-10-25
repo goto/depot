@@ -1,7 +1,7 @@
 package com.gotocompany.depot.maxcompute.record;
 
 
-import com.aliyun.odps.data.Record;
+import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.message.Message;
 
 import java.io.IOException;
@@ -13,12 +13,12 @@ public abstract class RecordDecorator {
         this.decorator = decorator;
     }
 
-    public void decorate(Record record, Message message) throws IOException {
-        append(record, message);
+    public void decorate(RecordWrapper recordWrapper, Message message) throws IOException {
+        append(recordWrapper, message);
         if (decorator != null) {
-            decorator.decorate(record, message);
+            decorator.decorate(recordWrapper, message);
         }
     }
 
-    public abstract void append(Record record, Message message) throws IOException;
+    public abstract void append(RecordWrapper recordWrapper, Message message) throws IOException;
 }

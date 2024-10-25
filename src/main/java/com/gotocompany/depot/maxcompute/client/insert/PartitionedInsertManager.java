@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PartitionedInsertManager implements InsertManager {
 
-    private final PartitioningStrategy<?> partitioningStrategy;
+    private final PartitioningStrategy partitioningStrategy;
     private final TableTunnel tableTunnel;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
 

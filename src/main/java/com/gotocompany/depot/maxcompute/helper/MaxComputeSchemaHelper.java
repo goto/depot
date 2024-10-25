@@ -22,7 +22,7 @@ public class MaxComputeSchemaHelper {
 
     private final ConverterOrchestrator converterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
-    private final PartitioningStrategy<?> partitioningStrategy;
+    private final PartitioningStrategy partitioningStrategy;
 
     public MaxComputeSchema buildMaxComputeSchema(Descriptors.Descriptor descriptor) {
         List<Column> dataColumn = buildDataColumns(descriptor, partitioningStrategy);
@@ -47,7 +47,7 @@ public class MaxComputeSchemaHelper {
     }
 
     private List<Column> buildDataColumns(Descriptors.Descriptor descriptor,
-                                          PartitioningStrategy<?> partitioningStrategy) {
+                                          PartitioningStrategy partitioningStrategy) {
         return descriptor.getFields()
                 .stream()
                 .filter(fieldDescriptor -> {
@@ -61,7 +61,7 @@ public class MaxComputeSchemaHelper {
                 .collect(Collectors.toList());
     }
 
-    private Column buildPartitionColumn(PartitioningStrategy<?> partitioningStrategy) {
+    private Column buildPartitionColumn(PartitioningStrategy partitioningStrategy) {
         return partitioningStrategy.getPartitionColumn();
     }
 

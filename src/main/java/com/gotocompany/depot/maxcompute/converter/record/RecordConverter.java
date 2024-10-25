@@ -29,14 +29,17 @@ public class RecordConverter implements MessageRecordConverter {
         return IntStream.range(0, messages.size())
                 .mapToObj(index -> {
                     Record record = new ArrayRecord(maxComputeSchema.getColumns());
+                    RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
-                        recordDecorator.decorate(record, messages.get(index));
-                        return new RecordWrapper(record, index, null);
+                        recordDecorator.decorate(recordWrapper, messages.get(index));
                     } catch (IOException e) {
-                        return new RecordWrapper(null, index, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR));
+                        recordWrapper.setRecord(null);
+                        recordWrapper.setErrorInfo(new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR));
                     } catch (UnknownFieldsException e) {
-                        return new RecordWrapper(null, index, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR));
+                        recordWrapper.setRecord(null);
+                        recordWrapper.setErrorInfo(new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR));
                     }
+                    return recordWrapper;
                 }).collect(Collectors.toList());
     }
 }

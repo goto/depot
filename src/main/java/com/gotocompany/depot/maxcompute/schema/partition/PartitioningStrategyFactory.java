@@ -13,7 +13,7 @@ public class PartitioningStrategyFactory {
     private final ConverterOrchestrator converterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
 
-    public PartitioningStrategy<?> createPartitioningStrategy(Descriptors.Descriptor descriptor) {
+    public PartitioningStrategy createPartitioningStrategy(Descriptors.Descriptor descriptor) {
         if (!maxComputeSinkConfig.isTablePartitioningEnabled()) {
             return null;
         }

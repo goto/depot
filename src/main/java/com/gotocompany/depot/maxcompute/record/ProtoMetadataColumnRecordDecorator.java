@@ -8,6 +8,7 @@ import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.utils.StringUtils;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.message.Message;
 
@@ -32,12 +33,12 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
     }
 
     @Override
-    public void append(Record record, Message message) throws IOException {
+    public void append(RecordWrapper recordWrapper, Message message) throws IOException {
         if (StringUtils.isNotBlank(maxComputeSinkConfig.getMaxcomputeMetadataNamespace())) {
-            appendNamespacedMetadata(record, message);
+            appendNamespacedMetadata(recordWrapper.getRecord(), message);
             return;
         }
-        appendMetadata(record, message);
+        appendMetadata(recordWrapper.getRecord(), message);
     }
 
     private void appendNamespacedMetadata(Record record, Message message) {

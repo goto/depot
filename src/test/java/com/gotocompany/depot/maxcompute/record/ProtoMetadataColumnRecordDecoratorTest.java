@@ -13,6 +13,7 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.helper.MaxComputeSchemaHelper;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.proto.ProtoParsedMessage;
@@ -66,9 +67,10 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new Tuple<>("__kafka_offset", 100L)
         );
         Record record = new ArrayRecord(maxComputeSchemaCache.getMaxComputeSchema().getColumns());
+        RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L);
 
-        protoMetadataColumnRecordDecorator.decorate(record, message);
+        protoMetadataColumnRecordDecorator.decorate(recordWrapper, message);
 
         Assertions.assertThat(record.get(maxComputeSinkConfig.getMaxcomputeMetadataNamespace()))
                 .isEqualTo(new SimpleStruct(
@@ -97,9 +99,10 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new Tuple<>("__kafka_offset", 100L)
         );
         Record record = new ArrayRecord(maxComputeSchemaCache.getMaxComputeSchema().getColumns());
+        RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L);
 
-        protoMetadataColumnRecordDecorator.decorate(record, message);
+        protoMetadataColumnRecordDecorator.decorate(recordWrapper, message);
 
         Assertions.assertThat(record)
                 .satisfies(r -> {

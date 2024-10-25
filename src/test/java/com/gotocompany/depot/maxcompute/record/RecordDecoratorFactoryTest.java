@@ -12,9 +12,7 @@ public class RecordDecoratorFactoryTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.FALSE);
         RecordDecoratorFactory recordDecoratorFactory = new RecordDecoratorFactory(maxComputeSinkConfig, null,
-                null,
-                null,
-                null);
+                null, null, null, null);
 
         RecordDecorator recordDecorator = recordDecoratorFactory.createRecordDecorator();
 
@@ -29,9 +27,7 @@ public class RecordDecoratorFactoryTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         Mockito.when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.TRUE);
         RecordDecoratorFactory recordDecoratorFactory = new RecordDecoratorFactory(maxComputeSinkConfig, null,
-                null,
-                null,
-                null);
+                null, null, null, null);
 
         RecordDecorator recordDecorator = recordDecoratorFactory.createRecordDecorator();
 

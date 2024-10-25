@@ -13,6 +13,7 @@ import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.helper.MaxComputeSchemaHelper;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.ParsedMessage;
@@ -50,12 +51,13 @@ public class ProtoDataColumnRecordDecoratorTest {
     public void decorateShouldAppendDataColumnToRecord() throws IOException {
         MaxComputeSchema maxComputeSchema = maxComputeSchemaHelper.buildMaxComputeSchema(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
+        RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
         Message message = new Message(null, maxComputeRecord.toByteArray());
         java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L * 1000);
         expectedTimestamp.setNanos(1000);
         StructTypeInfo expectedArrayStructElementTypeInfo = (StructTypeInfo) ((ArrayTypeInfo) maxComputeSchema.getDataColumns().get("inner_record")).getElementTypeInfo();
-        protoDataColumnRecordDecorator.decorate(record, message);
+        protoDataColumnRecordDecorator.decorate(recordWrapper, message);
 
         Assertions.assertThat(record)
                 .extracting("values")
@@ -90,7 +92,8 @@ public class ProtoDataColumnRecordDecoratorTest {
                 converterOrchestrator,
                 maxComputeSchemaCache,
                 protoMessageParser,
-                sinkConfig
+                sinkConfig,
+                null
         );
     }
 
