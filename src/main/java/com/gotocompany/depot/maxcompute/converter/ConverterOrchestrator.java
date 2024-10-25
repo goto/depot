@@ -16,9 +16,9 @@ import com.gotocompany.depot.maxcompute.converter.type.TimestampTypeInfoConverte
 import com.gotocompany.depot.maxcompute.converter.type.TypeInfoConverter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConverterOrchestrator {
 
@@ -29,7 +29,7 @@ public class ConverterOrchestrator {
     public ConverterOrchestrator() {
         typeInfoConverters = new ArrayList<>();
         payloadConverters = new ArrayList<>();
-        typeInfoCache = new HashMap<>();
+        typeInfoCache = new ConcurrentHashMap<>();
         initializeConverters();
     }
 

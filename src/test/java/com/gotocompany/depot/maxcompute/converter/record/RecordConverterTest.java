@@ -16,6 +16,7 @@ import com.gotocompany.depot.maxcompute.converter.ConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.helper.MaxComputeSchemaHelper;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
+import com.gotocompany.depot.maxcompute.model.RecordWrappers;
 import com.gotocompany.depot.maxcompute.record.ProtoDataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.ProtoMetadataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
@@ -36,7 +37,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 public class RecordConverterTest {
 
@@ -101,10 +101,10 @@ public class RecordConverterTest {
         );
         java.sql.Timestamp expectedTimestamp = new java.sql.Timestamp(10002010L * 1000);
         expectedTimestamp.setNanos(1000);
-        List<RecordWrapper> recordWrappers = recordConverter.convert(Collections.singletonList(message));
+        RecordWrappers recordWrappers = recordConverter.convert(Collections.singletonList(message));
 
-        Assertions.assertThat(recordWrappers).size().isEqualTo(1);
-        RecordWrapper recordWrapper = recordWrappers.get(0);
+        Assertions.assertThat(recordWrappers.getValidRecords()).size().isEqualTo(1);
+        RecordWrapper recordWrapper = recordWrappers.getValidRecords().get(0);
         Assertions.assertThat(recordWrapper.getIndex()).isEqualTo(0);
         Assertions.assertThat(recordWrapper.getRecord())
                 .extracting("values")
@@ -148,10 +148,10 @@ public class RecordConverterTest {
                 new Tuple<>("__kafka_offset", 100L)
         );
 
-        List<RecordWrapper> recordWrappers = recordConverter.convert(Collections.singletonList(message));
+        RecordWrappers recordWrappers = recordConverter.convert(Collections.singletonList(message));
 
-        Assertions.assertThat(recordWrappers).size().isEqualTo(1);
-        RecordWrapper recordWrapper = recordWrappers.get(0);
+        Assertions.assertThat(recordWrappers.getInvalidRecords()).size().isEqualTo(1);
+        RecordWrapper recordWrapper = recordWrappers.getInvalidRecords().get(0);
         Assertions.assertThat(recordWrapper.getIndex()).isEqualTo(0);
         Assertions.assertThat(recordWrapper.getRecord())
                 .isNull();
@@ -174,10 +174,10 @@ public class RecordConverterTest {
                 new Tuple<>("__kafka_offset", 100L)
         );
 
-        List<RecordWrapper> recordWrappers = recordConverter.convert(Collections.singletonList(message));
+        RecordWrappers recordWrappers = recordConverter.convert(Collections.singletonList(message));
 
-        Assertions.assertThat(recordWrappers).size().isEqualTo(1);
-        RecordWrapper recordWrapper = recordWrappers.get(0);
+        Assertions.assertThat(recordWrappers.getInvalidRecords()).size().isEqualTo(1);
+        RecordWrapper recordWrapper = recordWrappers.getInvalidRecords().get(0);
         Assertions.assertThat(recordWrapper.getIndex()).isEqualTo(0);
         Assertions.assertThat(recordWrapper.getRecord())
                 .isNull();
