@@ -12,6 +12,7 @@ public class LabelMapConverter implements Converter<Map<String, String>> {
 
     public Map<String, String> convert(Method method, String input) {
         List<Tuple<String, String>> listResult = ConverterUtils.convertToList(input);
+
         return listResult.stream().collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
     }
 }
