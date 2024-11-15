@@ -6,21 +6,18 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Slf4j
-public class NonPartitionedInsertManager implements InsertManager {
+public class NonPartitionedInsertManager extends InsertManager {
 
-    private final TableTunnel tableTunnel;
-    private final MaxComputeSinkConfig maxComputeSinkConfig;
-    private final Instrumentation instrumentation;
-    private final MaxComputeMetrics maxComputeMetrics;
+    public NonPartitionedInsertManager(TableTunnel tableTunnel, MaxComputeSinkConfig maxComputeSinkConfig, Instrumentation instrumentation, MaxComputeMetrics maxComputeMetrics) {
+        super(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
+    }
 
     @Override
     public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
@@ -33,14 +30,7 @@ public class NonPartitionedInsertManager implements InsertManager {
         TableTunnel.FlushResult flushResult = recordPack.flush(
                 new TableTunnel.FlushOption()
                         .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeoutMs()));
-        instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
-                String.format(MaxComputeMetrics.MAXCOMPUTE_API_TAG, MaxComputeMetrics.MaxComputeAPIType.TABLE_INSERT));
-        instrumentation.captureDurationSince(maxComputeMetrics.getMaxComputeOperationLatencyMetric(), start,
-                String.format(MaxComputeMetrics.MAXCOMPUTE_API_TAG, MaxComputeMetrics.MaxComputeAPIType.TABLE_INSERT));
-        instrumentation.captureCount(maxComputeMetrics.getMaxComputeFlushRecordMetric(), flushResult.getRecordCount(),
-                String.format(MaxComputeMetrics.MAXCOMPUTE_COMPRESSION_TAG, maxComputeSinkConfig.isStreamingInsertCompressEnabled()));
-        instrumentation.captureCount(maxComputeMetrics.getMaxComputeFlushSizeMetric(), flushResult.getFlushSize(),
-                String.format(MaxComputeMetrics.MAXCOMPUTE_COMPRESSION_TAG, maxComputeSinkConfig.isStreamingInsertCompressEnabled()));
+        instrument(start, flushResult);
     }
 
     private TableTunnel.StreamUploadSession getStreamUploadSession() throws TunnelException {
@@ -49,4 +39,5 @@ public class NonPartitionedInsertManager implements InsertManager {
                 .allowSchemaMismatch(false)
                 .build();
     }
+
 }

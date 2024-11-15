@@ -37,10 +37,12 @@ public class MaxComputeSink implements Sink {
         try {
             maxComputeClient.insert(recordWrappers.getValidRecords());
         } catch (IOException | TunnelException e) {
+            log.error("Error while inserting records to MaxCompute: ", e);
             mapInsertionError(recordWrappers.getValidRecords(), sinkResponse, new ErrorInfo(e, ErrorType.SINK_RETRYABLE_ERROR));
             instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                     String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, e.getClass().getSimpleName()));
         } catch (Exception e) {
+            log.error("Error while inserting records to MaxCompute: ", e);
             mapInsertionError(recordWrappers.getValidRecords(), sinkResponse, new ErrorInfo(e, ErrorType.DEFAULT_ERROR));
             instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                     String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, e.getClass().getSimpleName()));
