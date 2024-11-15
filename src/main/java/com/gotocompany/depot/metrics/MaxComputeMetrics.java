@@ -9,7 +9,7 @@ public class MaxComputeMetrics extends SinkMetrics {
     public static final String MAXCOMPUTE_PROJECT_TAG = "project=%s";
     public static final String MAXCOMPUTE_API_TAG = "api=%s";
     public static final String MAXCOMPUTE_ERROR_TAG = "error=%s";
-    public static final String MAXCOMPUTE_COMPRESSION_TAG = "compression=%s";
+    public static final String MAXCOMPUTE_COMPRESSION_TAG = "compression=%s-%s";
 
     public MaxComputeMetrics(SinkConfig config) {
         super(config);

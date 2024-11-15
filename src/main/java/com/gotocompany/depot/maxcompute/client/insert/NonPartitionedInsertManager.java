@@ -22,20 +22,21 @@ public class NonPartitionedInsertManager extends InsertManager {
     @Override
     public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
         TableTunnel.StreamUploadSession streamUploadSession = getStreamUploadSession();
-        TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession, maxComputeSinkConfig);
+        TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
         for (RecordWrapper recordWrapper : recordWrappers) {
             recordPack.append(recordWrapper.getRecord());
         }
         Instant start = Instant.now();
         TableTunnel.FlushResult flushResult = recordPack.flush(
                 new TableTunnel.FlushOption()
-                        .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeoutMs()));
+                        .timeout(super.getMaxComputeSinkConfig().getMaxComputeRecordPackFlushTimeoutMs()));
         instrument(start, flushResult);
     }
 
     private TableTunnel.StreamUploadSession getStreamUploadSession() throws TunnelException {
-        return tableTunnel.buildStreamUploadSession(maxComputeSinkConfig.getMaxComputeProjectId(),
-                        maxComputeSinkConfig.getMaxComputeTableName())
+        return super.getTableTunnel().buildStreamUploadSession(
+                        super.getMaxComputeSinkConfig().getMaxComputeProjectId(),
+                        super.getMaxComputeSinkConfig().getMaxComputeTableName())
                 .allowSchemaMismatch(false)
                 .build();
     }

@@ -28,21 +28,21 @@ public class PartitionedInsertManager extends InsertManager {
                 .collect(Collectors.groupingBy(record -> record.getPartitionSpec().toString()));
         for (Map.Entry<String, List<RecordWrapper>> entry : partitionSpecRecordWrapperMap.entrySet()) {
             TableTunnel.StreamUploadSession streamUploadSession = getStreamUploadSession(entry.getValue().get(0).getPartitionSpec());
-            TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession, maxComputeSinkConfig);
+            TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
             for (RecordWrapper recordWrapper : entry.getValue()) {
                 recordPack.append(recordWrapper.getRecord());
             }
             Instant start = Instant.now();
             TableTunnel.FlushResult flushResult = recordPack.flush(
                     new TableTunnel.FlushOption()
-                            .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeoutMs()));
+                            .timeout(super.getMaxComputeSinkConfig().getMaxComputeRecordPackFlushTimeoutMs()));
             instrument(start, flushResult);
         }
     }
 
     private TableTunnel.StreamUploadSession getStreamUploadSession(PartitionSpec partitionSpec) throws TunnelException {
-        return tableTunnel.buildStreamUploadSession(maxComputeSinkConfig.getMaxComputeProjectId(),
-                        maxComputeSinkConfig.getMaxComputeTableName())
+        return super.getTableTunnel().buildStreamUploadSession(super.getMaxComputeSinkConfig().getMaxComputeProjectId(),
+                        super.getMaxComputeSinkConfig().getMaxComputeTableName())
                 .setCreatePartition(true)
                 .setPartitionSpec(partitionSpec)
                 .allowSchemaMismatch(false)
