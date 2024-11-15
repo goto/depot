@@ -5,15 +5,25 @@ import com.aliyun.odps.PartitionSpec;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
-@RequiredArgsConstructor
 public class TimestampPartitioningStrategy implements PartitioningStrategy {
 
+    private static final String SECONDS_FIELD = "seconds";
+    private static final String NANOS_FIELD = "nanos";
+    private static final String PARTITION_SPEC_FORMAT = "%s=%s";
+    private static final String DEFAULT_PARTITION = "DEFAULT";
+
     private final MaxComputeSinkConfig maxComputeSinkConfig;
+    private final DateTimeFormatter dateTimeFormatter;
+
+    public TimestampPartitioningStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
+        this.maxComputeSinkConfig = maxComputeSinkConfig;
+        this.dateTimeFormatter = DateTimeFormatter.ofPattern(maxComputeSinkConfig.getTablePartitionByTimestampKeyFormat());
+    }
 
     @Override
     public String getOriginalPartitionColumnName() {
@@ -33,17 +43,22 @@ public class TimestampPartitioningStrategy implements PartitioningStrategy {
 
     @Override
     public PartitionSpec getPartitionSpec(Object object) {
+        if (object == null) {
+            return new PartitionSpec(String.format(PARTITION_SPEC_FORMAT,
+                    maxComputeSinkConfig.getTablePartitionColumnName(), DEFAULT_PARTITION));
+        }
         Message message = (Message) object;
-        long seconds = (long) message.getField(message.getDescriptorForType().findFieldByName("seconds"));
-        int nanos = (int) message.getField(message.getDescriptorForType().findFieldByName("nanos"));
-        return new PartitionSpec(String.format("%s=%s", maxComputeSinkConfig.getTablePartitionColumnName(), getStartOfDayEpoch(seconds, nanos)));
+        long seconds = (long) message.getField(message.getDescriptorForType().findFieldByName(SECONDS_FIELD));
+        int nanos = (int) message.getField(message.getDescriptorForType().findFieldByName(NANOS_FIELD));
+        return new PartitionSpec(String.format(PARTITION_SPEC_FORMAT,
+                maxComputeSinkConfig.getTablePartitionColumnName(), getStartOfDayEpoch(seconds, nanos)));
     }
 
     private String getStartOfDayEpoch(long seconds, int nanos) {
         return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC)
                 .toLocalDate()
                 .atStartOfDay()
-                .toString();
+                .format(dateTimeFormatter);
     }
 
 }

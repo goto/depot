@@ -56,6 +56,16 @@ public class TimestampPartitioningStrategyTest {
                 timestampPartitioningStrategy.getPartitionSpec(timestamp).toString());
     }
 
+    @Test
+    public void shouldReturnDefaultPartitionSpec() {
+        String expectedPartitionSpecStringRepresentation = "tablePartitionColumnName='DEFAULT'";
+        TimestampPartitioningStrategy timestampPartitioningStrategy = new TimestampPartitioningStrategy(getMaxComputeSinkConfig());
+
+        Assertions.assertEquals(expectedPartitionSpecStringRepresentation,
+                timestampPartitioningStrategy.getPartitionSpec(null)
+                        .toString());
+    }
+
     private MaxComputeSinkConfig getMaxComputeSinkConfig() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         Mockito.when(maxComputeSinkConfig.isTablePartitioningEnabled())
@@ -64,6 +74,8 @@ public class TimestampPartitioningStrategyTest {
                 .thenReturn("tablePartitionColumnName");
         Mockito.when(maxComputeSinkConfig.getTablePartitionKey())
                 .thenReturn("tablePartitionKey");
+        Mockito.when(maxComputeSinkConfig.getTablePartitionByTimestampKeyFormat()).thenReturn("YYYY-MM-dd'T'HH:mm");
         return maxComputeSinkConfig;
     }
+
 }
