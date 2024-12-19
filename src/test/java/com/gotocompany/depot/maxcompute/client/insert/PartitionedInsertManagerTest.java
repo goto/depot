@@ -9,19 +9,34 @@ import com.gotocompany.depot.maxcompute.client.insert.session.StreamingSessionMa
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class PartitionedInsertManagerTest {
+
+    @Mock
+    private Instrumentation instrumentation;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        doNothing()
+                .when(instrumentation)
+                .captureCount(Mockito.any(), Mockito.any(), Mockito.any());
+    }
 
     @Test
     public void shouldGroupRecordsBasedOnPartitionSpecAndFlushAll() throws IOException, TunnelException {
@@ -73,12 +88,11 @@ public class PartitionedInsertManagerTest {
                 firstPartitionRecordWrapper,
                 secondPartitionRecordWrapper
         );
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        Mockito.doNothing()
+        doNothing()
                 .when(instrumentation)
                 .captureCount(Mockito.anyString(), Mockito.anyLong());
         StreamingSessionManager streamingSessionManager = StreamingSessionManager.createPartitioned(
-                tableTunnel, maxComputeSinkConfig
+                tableTunnel, maxComputeSinkConfig, instrumentation, Mockito.mock(MaxComputeMetrics.class)
         );
         PartitionedInsertManager partitionedInsertManager = new PartitionedInsertManager(maxComputeSinkConfig, instrumentation, Mockito.mock(MaxComputeMetrics.class), streamingSessionManager);
         int expectedPartitionFlushInvocation = 2;
@@ -146,12 +160,11 @@ public class PartitionedInsertManagerTest {
                 firstPartitionRecordWrapper,
                 secondPartitionRecordWrapper
         );
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        Mockito.doNothing()
+        doNothing()
                 .when(instrumentation)
                 .captureCount(Mockito.anyString(), Mockito.anyLong());
         StreamingSessionManager streamingSessionManager = StreamingSessionManager.createPartitioned(
-                tableTunnel, maxComputeSinkConfig
+                tableTunnel, maxComputeSinkConfig, instrumentation, Mockito.mock(MaxComputeMetrics.class)
         );
         PartitionedInsertManager partitionedInsertManager = new PartitionedInsertManager(maxComputeSinkConfig,
                 instrumentation, Mockito.mock(MaxComputeMetrics.class), streamingSessionManager);
@@ -226,12 +239,11 @@ public class PartitionedInsertManagerTest {
                 firstPartitionRecordWrapper,
                 secondPartitionRecordWrapper
         );
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
-        Mockito.doNothing()
+        doNothing()
                 .when(instrumentation)
                 .captureCount(Mockito.anyString(), Mockito.anyLong());
         StreamingSessionManager streamingSessionManager = Mockito.spy(StreamingSessionManager.createPartitioned(
-                tableTunnel, maxComputeSinkConfig
+                tableTunnel, maxComputeSinkConfig, instrumentation, Mockito.mock(MaxComputeMetrics.class)
         ));
         PartitionedInsertManager partitionedInsertManager = new PartitionedInsertManager(maxComputeSinkConfig,
                 instrumentation, Mockito.mock(MaxComputeMetrics.class), streamingSessionManager);
@@ -239,7 +251,7 @@ public class PartitionedInsertManagerTest {
         partitionedInsertManager.insert(recordWrappers);
 
         verify(streamingSessionManager, Mockito.times(1))
-                .refreshSession(Mockito.anyString());
+                .refreshSession(Mockito.any());
     }
 
 }
