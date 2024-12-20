@@ -14,7 +14,6 @@ import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,19 +29,20 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
     private final Map<String, String> metadataTypePairs;
     private final String maxcomputeMetadataNamespace;
     private final List<TupleString> metadataColumnsTypes;
-    private final ZoneId zoneId;
+    private final MetadataUtil metadataUtil;
 
     public ProtoMetadataColumnRecordDecorator(RecordDecorator recordDecorator,
                                               MaxComputeSinkConfig maxComputeSinkConfig,
-                                              MaxComputeSchemaCache maxComputeSchemaCache) {
+                                              MaxComputeSchemaCache maxComputeSchemaCache,
+                                              MetadataUtil metadataUtil) {
         super(recordDecorator);
         this.maxComputeSchemaCache = maxComputeSchemaCache;
+        this.metadataUtil = metadataUtil;
         this.metadataTypePairs = maxComputeSinkConfig.getMetadataColumnsTypes()
                 .stream()
                 .collect(Collectors.toMap(TupleString::getFirst, TupleString::getSecond));
         this.maxcomputeMetadataNamespace = maxComputeSinkConfig.getMaxcomputeMetadataNamespace();
         this.metadataColumnsTypes = maxComputeSinkConfig.getMetadataColumnsTypes();
-        this.zoneId = maxComputeSinkConfig.getZoneId();
     }
 
     /**
@@ -73,7 +73,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
         List<Object> values = IntStream.range(0, typeInfo.getFieldCount())
                 .mapToObj(index -> {
                     Object metadataValue = metadata.get(typeInfo.getFieldNames().get(index));
-                    return MetadataUtil.getValidMetadataValue(metadataTypePairs.get(typeInfo.getFieldNames().get(index)), metadataValue, zoneId);
+                    return metadataUtil.getValidMetadataValue(metadataTypePairs.get(typeInfo.getFieldNames().get(index)), metadataValue);
                 }).collect(Collectors.toList());
         record.set(maxcomputeMetadataNamespace, new SimpleStruct(typeInfo, values));
     }
@@ -84,7 +84,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
                 .getMetadataColumns()
                 .entrySet()) {
             Object value = metadata.get(entry.getKey());
-            record.set(entry.getKey(), MetadataUtil.getValidMetadataValue(metadataTypePairs.get(entry.getKey()), value, zoneId));
+            record.set(entry.getKey(), metadataUtil.getValidMetadataValue(metadataTypePairs.get(entry.getKey()), value));
         }
     }
 

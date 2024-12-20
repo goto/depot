@@ -6,6 +6,7 @@ import com.gotocompany.depot.config.converter.ConfToListConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
 import com.gotocompany.depot.config.converter.ZoneIdConverter;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
 import org.aeonbits.owner.Config;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_SCHEMA")
     @DefaultValue("default")
     String getMaxComputeSchema();
+
+    @Key("SINK_MAXCOMPUTE_TIME_UNIT_TYPE")
+    @DefaultValue("TIMESTAMP")
+    MaxComputeTimeUnitType getMaxComputeTimeUnitType();
 
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE")
     @DefaultValue("false")
