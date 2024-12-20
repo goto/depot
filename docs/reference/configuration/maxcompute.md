@@ -55,6 +55,15 @@ Contains the schema of the MaxCompute table. Schema is a dataset grouping of tab
 * Type: `required`
 * Default value: `default`
 
+## SINK_MAXCOMPUTE_TIME_UNIT_TYPE
+
+Contains the time unit type for the timestamp field. This config will be used for setting the time unit type for the timestamp field.
+Supported values are TIMESTAMP and TIMESTAMP_NTZ.
+
+* Example value: `TIMESTAMP_NTZ`
+* Type: `required`
+* Default value: `TIMESTAMP`
+
 ## SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE
 
 Configuration for enabling partitioning in the MaxCompute table. This config will be used for enabling partitioning in the MaxCompute table.
