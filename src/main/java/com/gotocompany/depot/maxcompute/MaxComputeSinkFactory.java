@@ -64,15 +64,8 @@ public class MaxComputeSinkFactory {
 
     public Sink create() {
         RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
-                protobufConverterOrchestrator,
-                maxComputeSchemaCache,
-                messageParser,
-                partitioningStrategy,
-                maxComputeSinkConfig,
-                sinkConfig,
-                statsDReporter,
-                maxComputeMetrics,
-                metadataUtil
+                new RecordDecoratorFactory.RecordDecoratorConfig(protobufConverterOrchestrator, maxComputeSchemaCache, messageParser,
+                        partitioningStrategy, maxComputeSinkConfig, sinkConfig, statsDReporter, maxComputeMetrics, metadataUtil)
         );
         ProtoMessageRecordConverter protoMessageRecordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
         return new MaxComputeSink(maxComputeClient.createInsertManager(), protoMessageRecordConverter, statsDReporter, maxComputeMetrics);

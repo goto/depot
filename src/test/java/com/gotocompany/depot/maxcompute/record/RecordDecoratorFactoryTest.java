@@ -28,10 +28,12 @@ public class RecordDecoratorFactoryTest {
         when(sinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.message.Message");
 
         RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
-                null, null, null, null,
-                maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
-                Mockito.mock(MaxComputeMetrics.class),
-                new MetadataUtil(maxComputeSinkConfig)
+                new RecordDecoratorFactory.RecordDecoratorConfig(
+                        null, null, null, null,
+                        maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
+                        Mockito.mock(MaxComputeMetrics.class),
+                        new MetadataUtil(maxComputeSinkConfig)
+                )
         );
 
         assertThat(recordDecorator)
@@ -51,9 +53,11 @@ public class RecordDecoratorFactoryTest {
         when(sinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.message.Message");
 
         RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
-                null, null, null,
-                null, maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
-                Mockito.mock(MaxComputeMetrics.class), new MetadataUtil(maxComputeSinkConfig)
+                new RecordDecoratorFactory.RecordDecoratorConfig(
+                        null, null, null,
+                        null, maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
+                        Mockito.mock(MaxComputeMetrics.class), new MetadataUtil(maxComputeSinkConfig)
+                )
         );
 
         assertThat(recordDecorator)

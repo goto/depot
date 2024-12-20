@@ -6,12 +6,13 @@ import lombok.Getter;
 
 @Getter
 public enum MaxComputeTimeUnitType {
+
     TIMESTAMP(TypeInfoFactory.TIMESTAMP),
     TIMESTAMP_NTZ(TypeInfoFactory.TIMESTAMP_NTZ);
 
     private final TypeInfo typeInfo;
 
-    MaxComputeTimeUnitType(TypeInfo typeInfo){
+    MaxComputeTimeUnitType(TypeInfo typeInfo) {
         this.typeInfo = typeInfo;
     }
 

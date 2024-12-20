@@ -228,8 +228,6 @@ public class TimestampProtobufMaxComputeConverterTest {
         java.sql.Timestamp result = (java.sql.Timestamp) timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3),
                 message.getField(descriptor.getFields().get(3)), false));
 
-        assertThat(result)
-                .isEqualTo(expectedTimestamp);
+        assertThat(result).isEqualTo(expectedTimestamp);
     }
-    
 }
