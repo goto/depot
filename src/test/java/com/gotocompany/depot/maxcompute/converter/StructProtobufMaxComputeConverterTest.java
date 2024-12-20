@@ -1,24 +1,26 @@
-package com.gotocompany.depot.maxcompute.converter.payload;
+package com.gotocompany.depot.maxcompute.converter;
 
+import com.aliyun.odps.type.TypeInfo;
+import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
-import com.gotocompany.depot.maxcompute.converter.type.StructProtobufTypeInfoConverter;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class StructProtobufPayloadConverterTest {
+public class StructProtobufMaxComputeConverterTest {
 
-    private final StructProtobufTypeInfoConverter structTypeInfoConverter = new StructProtobufTypeInfoConverter();
-    private final StructProtobufPayloadConverter structPayloadConverter = new StructProtobufPayloadConverter(structTypeInfoConverter);
+    private static final int STRUCT_INDEX = 4;
+
+    private final StructProtobufMaxComputeConverter structProtobufMaxComputeConverter = new StructProtobufMaxComputeConverter();
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private final Descriptors.Descriptor repeatedDescriptor = TestMaxComputeTypeInfo.TestRootRepeated.getDescriptor();
 
@@ -32,7 +34,7 @@ public class StructProtobufPayloadConverterTest {
                 .build();
         String expected = "{\"intField\":1.0,\"stringField\":\"String\"}";
 
-        Object result = structPayloadConverter.convert(new ProtoPayload(descriptor.getFields().get(4), message.getField(descriptor.getFields().get(4)), true));
+        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(4), message.getField(descriptor.getFields().get(4)), true));
 
         assertTrue(result instanceof String);
         assertEquals(expected, result);
@@ -51,11 +53,18 @@ public class StructProtobufPayloadConverterTest {
                 .build();
         String expected = "[{\"intField\":1.0,\"stringField\":\"String\"}, {\"intField\":1.0,\"stringField\":\"String\"}]";
 
-        Object result = structPayloadConverter.convert(new ProtoPayload(repeatedDescriptor.getFields().get(4), message.getField(repeatedDescriptor.getFields().get(4)), true));
+        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(4), message.getField(repeatedDescriptor.getFields().get(4)), true));
 
         assertTrue(result instanceof List);
         assertTrue(((List<?>) result).stream().allMatch(e -> e instanceof String));
         assertEquals(expected, result.toString());
+    }
+
+    @Test
+    public void shouldConvertToStringTypeInfo() {
+        TypeInfo typeInfo = structProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(STRUCT_INDEX));
+
+        assertEquals(TypeInfoFactory.STRING, typeInfo);
     }
 
 }

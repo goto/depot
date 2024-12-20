@@ -15,11 +15,11 @@ import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageParser;
 import com.gotocompany.depot.message.ParsedMessage;
+import com.gotocompany.depot.message.ProtoUnknownFieldValidationType;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.schema.LogicalType;
 import com.gotocompany.depot.schema.SchemaField;
 import com.gotocompany.depot.schema.SchemaFieldType;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 
@@ -30,12 +30,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Slf4j
 public class MessageRecordConverter {
+
     private final MessageParser parser;
     private final BigQuerySinkConfig config;
+    private final ProtoUnknownFieldValidationType unknownFieldValidationType;
+    private final boolean sinkConnectorSchemaProtoAllowUnknownFieldsEnable;
 
+    public MessageRecordConverter(MessageParser parser, BigQuerySinkConfig config) {
+        this.parser = parser;
+        this.config = config;
+        this.unknownFieldValidationType = config.getSinkConnectorSchemaProtoUnknownFieldsValidation();
+        this.sinkConnectorSchemaProtoAllowUnknownFieldsEnable = config.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable();
+    }
 
     public Records convert(List<Message> messages) {
         ArrayList<Record> validRecords = new ArrayList<>();
@@ -65,7 +73,9 @@ public class MessageRecordConverter {
             String schemaClass = mode == SinkConnectorSchemaMessageMode.LOG_MESSAGE
                     ? config.getSinkConnectorSchemaProtoMessageClass() : config.getSinkConnectorSchemaProtoKeyClass();
             ParsedMessage parsedMessage = parser.parse(message, mode, schemaClass);
-            parsedMessage.validate(config);
+            if (!sinkConnectorSchemaProtoAllowUnknownFieldsEnable) {
+                parsedMessage.validate(unknownFieldValidationType);
+            }
             Map<String, Object> columns = getMapping(parsedMessage);
             MessageRecordConverterUtils.addMetadata(columns, message, config);
             MessageRecordConverterUtils.addTimeStampColumnForJson(columns, config);

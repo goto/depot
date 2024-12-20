@@ -1,6 +1,5 @@
 package com.gotocompany.depot.message;
 
-import com.gotocompany.depot.config.SinkConfig;
 import org.json.JSONObject;
 import com.gotocompany.depot.schema.Schema;
 import com.gotocompany.depot.schema.SchemaField;
@@ -12,7 +11,7 @@ public interface ParsedMessage {
 
     JSONObject toJson();
 
-    void validate(SinkConfig config);
+    void validate(ProtoUnknownFieldValidationType validationType);
 
     Map<SchemaField, Object> getFields();
 

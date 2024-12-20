@@ -11,40 +11,89 @@ import com.gotocompany.depot.maxcompute.schema.partition.TimestampPartitioningSt
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.MessageParser;
 import com.gotocompany.depot.message.ParsedMessage;
+import com.gotocompany.depot.message.ProtoUnknownFieldValidationType;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
+import com.gotocompany.depot.metrics.Instrumentation;
+import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import com.gotocompany.depot.metrics.StatsDReporter;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Decorator to convert protobuf message to maxcompute record.
+ * Populates the data column and partition column.
+ */
 public class ProtoDataColumnRecordDecorator extends RecordDecorator {
 
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private final MessageParser protoMessageParser;
     private final PartitioningStrategy partitioningStrategy;
     private final SinkConfig sinkConfig;
+    private final String partitionFieldName;
+    private final boolean shouldReplaceOriginalColumn;
+    private final String schemaClass;
+    private final ProtoUnknownFieldValidationType protoUnknownFieldValidationType;
+    private final Instrumentation instrumentation;
+    private final MaxComputeMetrics maxComputeMetrics;
+    private final boolean sinkConnectorSchemaProtoAllowUnknownFieldsEnable;
+    private final boolean sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable;
 
     public ProtoDataColumnRecordDecorator(RecordDecorator decorator,
                                           ProtobufConverterOrchestrator protobufConverterOrchestrator,
                                           MessageParser messageParser,
                                           SinkConfig sinkConfig,
-                                          PartitioningStrategy partitioningStrategy) {
+                                          PartitioningStrategy partitioningStrategy,
+                                          StatsDReporter statsDReporter,
+                                          MaxComputeMetrics maxComputeMetrics) {
         super(decorator);
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
         this.protoMessageParser = messageParser;
         this.partitioningStrategy = partitioningStrategy;
         this.sinkConfig = sinkConfig;
+        this.partitionFieldName = Optional.ofNullable(partitioningStrategy)
+                .map(PartitioningStrategy::getOriginalPartitionColumnName)
+                .orElse(null);
+        this.shouldReplaceOriginalColumn = Optional.ofNullable(partitioningStrategy)
+                .map(PartitioningStrategy::shouldReplaceOriginalColumn)
+                .orElse(false);
+        this.schemaClass = sinkConfig.getSinkConnectorSchemaMessageMode() == SinkConnectorSchemaMessageMode.LOG_MESSAGE
+                ? sinkConfig.getSinkConnectorSchemaProtoMessageClass() : sinkConfig.getSinkConnectorSchemaProtoKeyClass();
+        this.protoUnknownFieldValidationType = sinkConfig.getSinkConnectorSchemaProtoUnknownFieldsValidation();
+        this.instrumentation = new Instrumentation(statsDReporter, this.getClass());
+        this.maxComputeMetrics = maxComputeMetrics;
+        this.sinkConnectorSchemaProtoAllowUnknownFieldsEnable = sinkConfig.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable();
+        this.sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable = sinkConfig.getSinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable();
     }
 
+    /**
+     * Converts protobuf message to maxcompute record, populating the data column and partition column.
+     *
+     * @param recordWrapper record template to be populated
+     * @param message protobuf raw message
+     * @return populated record
+     * @throws IOException if an error occurs while processing the message
+     */
     @Override
     public RecordWrapper process(RecordWrapper recordWrapper, Message message) throws IOException {
-        String schemaClass = getSchemaClass();
         ParsedMessage parsedMessage = protoMessageParser.parse(message, sinkConfig.getSinkConnectorSchemaMessageMode(), schemaClass);
-        parsedMessage.validate(sinkConfig);
+        if (!sinkConnectorSchemaProtoAllowUnknownFieldsEnable) {
+            Instant unknownFieldValidationStart = Instant.now();
+            parsedMessage.validate(protoUnknownFieldValidationType);
+            if (sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable) {
+                instrumentation.captureDurationSince(
+                        maxComputeMetrics.getMaxComputeUnknownFieldValidationLatencyMetric(),
+                        unknownFieldValidationStart,
+                        String.format(MaxComputeMetrics.MAXCOMPUTE_UNKNOWN_FIELD_VALIDATION_TYPE_TAG, protoUnknownFieldValidationType)
+                );
+            }
+        }
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
         Map<Descriptors.FieldDescriptor, Object> fields = protoMessage.getAllFields();
         for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : fields.entrySet()) {
-            if (entry.getKey().getName().equals(getPartitionFieldName()) && shouldReplaceOriginalColumn()) {
+            if (entry.getKey().getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
                 continue;
             }
             recordWrapper.getRecord()
@@ -60,23 +109,6 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
-    }
-
-    private String getPartitionFieldName() {
-        return Optional.ofNullable(partitioningStrategy)
-                .map(PartitioningStrategy::getOriginalPartitionColumnName)
-                .orElse(null);
-    }
-
-    private boolean shouldReplaceOriginalColumn() {
-        return Optional.ofNullable(partitioningStrategy)
-                .map(PartitioningStrategy::shouldReplaceOriginalColumn)
-                .orElse(false);
-    }
-
-    private String getSchemaClass() {
-        return sinkConfig.getSinkConnectorSchemaMessageMode() == SinkConnectorSchemaMessageMode.LOG_MESSAGE
-                ? sinkConfig.getSinkConnectorSchemaProtoMessageClass() : sinkConfig.getSinkConnectorSchemaProtoKeyClass();
     }
 
 }

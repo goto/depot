@@ -3,76 +3,47 @@ package com.gotocompany.depot.maxcompute.converter;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.converter.payload.DurationProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.payload.MessageProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.payload.ProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.payload.PrimitiveProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.payload.StructProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.payload.TimestampProtobufPayloadConverter;
-import com.gotocompany.depot.maxcompute.converter.type.DurationProtobufTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.MessageProtobufTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.PrimitiveProtobufTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.StructProtobufTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.TimestampProtobufTypeInfoConverter;
-import com.gotocompany.depot.maxcompute.converter.type.ProtobufTypeInfoConverter;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+/**
+ * Orchestrates the conversion of Protobuf fields to MaxCompute record fields.
+ * It uses a cache to store the converters for each field descriptor.
+ */
 public class ProtobufConverterOrchestrator {
 
-    private final List<ProtobufTypeInfoConverter> protobufTypeInfoConverters;
-    private final List<ProtobufPayloadConverter> protobufPayloadConverters;
-    private final Map<String, TypeInfo> typeInfoCache;
+    private final MaxComputeProtobufConverterCache maxComputeProtobufConverterCache;
 
     public ProtobufConverterOrchestrator(MaxComputeSinkConfig maxComputeSinkConfig) {
-        protobufTypeInfoConverters = new ArrayList<>();
-        protobufPayloadConverters = new ArrayList<>();
-        typeInfoCache = new ConcurrentHashMap<>();
-        initializeConverters(maxComputeSinkConfig);
+        maxComputeProtobufConverterCache = new MaxComputeProtobufConverterCache(maxComputeSinkConfig);
     }
 
+    /**
+     * Converts a Protobuf field to a MaxCompute TypeInfo.
+     *
+     * @param fieldDescriptor the Protobuf field descriptor
+     * @return the MaxCompute TypeInfo
+     */
     public TypeInfo toMaxComputeTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return typeInfoCache.computeIfAbsent(fieldDescriptor.getFullName(), key -> protobufTypeInfoConverters.stream()
-                .filter(converter -> converter.canConvert(fieldDescriptor))
-                .findFirst()
-                .map(converter -> converter.convert(fieldDescriptor))
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fieldDescriptor.getType())));
+        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(fieldDescriptor);
     }
 
-    public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object object) {
-        return protobufPayloadConverters.stream()
-                .filter(converter -> converter.canConvert(fieldDescriptor))
-                .findFirst()
-                .map(converter -> converter.convert(new ProtoPayload(fieldDescriptor, object, true)))
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported type: " + fieldDescriptor.getType()));
+    /**
+     * Converts a Protobuf field to a MaxCompute record field.
+     *
+     * @param fieldDescriptor the Protobuf field descriptor
+     * @param parsedObject parsed Protobuf field
+     * @return the MaxCompute record field
+     */
+    public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object parsedObject) {
+        ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
+        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, true));
     }
 
+    /**
+     * Clears the cache. This method should be called when the schema changes.
+     */
     public void clearCache() {
-        typeInfoCache.clear();
-    }
-
-    private void initializeConverters(MaxComputeSinkConfig maxComputeSinkConfig) {
-        PrimitiveProtobufTypeInfoConverter primitiveTypeInfoConverter = new PrimitiveProtobufTypeInfoConverter();
-        DurationProtobufTypeInfoConverter durationTypeInfoConverter = new DurationProtobufTypeInfoConverter();
-        StructProtobufTypeInfoConverter structTypeInfoConverter = new StructProtobufTypeInfoConverter();
-        TimestampProtobufTypeInfoConverter timestampTypeInfoConverter = new TimestampProtobufTypeInfoConverter();
-        MessageProtobufTypeInfoConverter messageTypeInfoConverter = new MessageProtobufTypeInfoConverter(protobufTypeInfoConverters);
-
-        protobufTypeInfoConverters.add(primitiveTypeInfoConverter);
-        protobufTypeInfoConverters.add(durationTypeInfoConverter);
-        protobufTypeInfoConverters.add(structTypeInfoConverter);
-        protobufTypeInfoConverters.add(timestampTypeInfoConverter);
-        protobufTypeInfoConverters.add(messageTypeInfoConverter);
-
-        protobufPayloadConverters.add(new PrimitiveProtobufPayloadConverter(primitiveTypeInfoConverter));
-        protobufPayloadConverters.add(new DurationProtobufPayloadConverter(durationTypeInfoConverter));
-        protobufPayloadConverters.add(new StructProtobufPayloadConverter(structTypeInfoConverter));
-        protobufPayloadConverters.add(new TimestampProtobufPayloadConverter(timestampTypeInfoConverter, maxComputeSinkConfig));
-        protobufPayloadConverters.add(new MessageProtobufPayloadConverter(messageTypeInfoConverter, protobufPayloadConverters));
+        maxComputeProtobufConverterCache.clearCache();
     }
 
 }

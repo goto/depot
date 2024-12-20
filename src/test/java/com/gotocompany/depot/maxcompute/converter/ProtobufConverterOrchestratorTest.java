@@ -27,7 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 
 public class ProtobufConverterOrchestratorTest {
@@ -129,12 +130,16 @@ public class ProtobufConverterOrchestratorTest {
     public void shouldClearTheTypeInfoCache() throws NoSuchFieldException, IllegalAccessException {
         protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("inner_list_field"));
         Field field = protobufConverterOrchestrator.getClass()
-                .getDeclaredField("typeInfoCache");
+                .getDeclaredField("maxComputeProtobufConverterCache");
         field.setAccessible(true);
-        assertEquals(1, ((Map<String, TypeInfo>) field.get(protobufConverterOrchestrator)).size());
+        MaxComputeProtobufConverterCache maxComputeProtobufConverterCache = (MaxComputeProtobufConverterCache) field.get(protobufConverterOrchestrator);
+        Field field1 = maxComputeProtobufConverterCache.getClass().getDeclaredField("typeInfoCache");
+        field1.setAccessible(true);
+        Map<String, TypeInfo> typeInfoCache = (Map<String, TypeInfo>) field1.get(maxComputeProtobufConverterCache);
+        assertFalse((typeInfoCache).isEmpty());
 
         protobufConverterOrchestrator.clearCache();
 
-        assertEquals(0, ((Map<String, TypeInfo>) field.get(protobufConverterOrchestrator)).size());
+        assertEquals(0, typeInfoCache.size());
     }
 }

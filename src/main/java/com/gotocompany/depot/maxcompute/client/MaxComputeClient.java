@@ -6,21 +6,21 @@ import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.tunnel.TableTunnel;
-import com.aliyun.odps.tunnel.TunnelException;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.client.ddl.DdlManager;
 import com.gotocompany.depot.maxcompute.client.insert.InsertManager;
 import com.gotocompany.depot.maxcompute.client.insert.InsertManagerFactory;
-import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import com.gotocompany.depot.metrics.StatsDReporter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.util.List;
-
+/**
+ * MaxComputeClient is a client to interact with MaxCompute.
+ * It provides methods to execute table creation and update and inserting records into MaxCompute.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Slf4j
@@ -29,23 +29,27 @@ public class MaxComputeClient {
     private Odps odps;
     private MaxComputeSinkConfig maxComputeSinkConfig;
     private TableTunnel tableTunnel;
-    private InsertManager insertManager;
     private DdlManager ddlManager;
     private MaxComputeMetrics maxComputeMetrics;
     private Instrumentation instrumentation;
 
     public MaxComputeClient(MaxComputeSinkConfig maxComputeSinkConfig,
-                            Instrumentation instrumentation, MaxComputeMetrics maxComputeMetrics) {
+                            StatsDReporter statsDReporter,
+                            MaxComputeMetrics maxComputeMetrics) {
         this.maxComputeSinkConfig = maxComputeSinkConfig;
-        this.instrumentation = instrumentation;
+        this.instrumentation = new Instrumentation(statsDReporter, this.getClass());
         this.odps = initializeOdps();
         this.tableTunnel = new TableTunnel(odps);
         this.tableTunnel.setEndpoint(maxComputeSinkConfig.getMaxComputeTunnelUrl());
         this.maxComputeMetrics = maxComputeMetrics;
-        this.insertManager = initializeInsertManager();
         this.ddlManager = initializeDdlManager();
     }
 
+    /**
+     * Retrieves the latest table schema definition from Alibaba MaxCompute backend.
+     *
+     * @return the latest table schema
+     */
     public TableSchema getLatestTableSchema() {
         return odps.tables()
                 .get(maxComputeSinkConfig.getMaxComputeProjectId(),
@@ -54,12 +58,24 @@ public class MaxComputeClient {
                 .getSchema();
     }
 
+    /**
+     * Creates or updates the table schema in Alibaba MaxCompute.
+     * Creates the table if it does not exist, updates the table if it exists.
+     *
+     * @param tableSchema the table schema to be created or updated
+     * @throws OdpsException if the table creation or update fails
+     */
     public void createOrUpdateTable(TableSchema tableSchema) throws OdpsException {
         ddlManager.createOrUpdateTable(tableSchema);
     }
 
-    public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
-        insertManager.insert(recordWrappers);
+    /**
+     * Create new InsertManager instance.
+     *
+     * @return InsertManager instance
+     */
+    public InsertManager createInsertManager() {
+        return InsertManagerFactory.createInsertManager(maxComputeSinkConfig, tableTunnel, instrumentation, maxComputeMetrics);
     }
 
     private Odps initializeOdps() {
@@ -70,10 +86,6 @@ public class MaxComputeClient {
         odpsClient.setCurrentSchema(maxComputeSinkConfig.getMaxComputeSchema());
         odpsClient.setGlobalSettings(maxComputeSinkConfig.getOdpsGlobalSettings());
         return odpsClient;
-    }
-
-    private InsertManager initializeInsertManager() {
-        return InsertManagerFactory.createInsertManager(maxComputeSinkConfig, tableTunnel, instrumentation, maxComputeMetrics);
     }
 
     private DdlManager initializeDdlManager() {
