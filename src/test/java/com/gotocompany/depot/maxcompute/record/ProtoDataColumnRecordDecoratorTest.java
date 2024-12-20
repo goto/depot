@@ -14,6 +14,7 @@ import com.gotocompany.depot.TestMaxComputeRecord;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -21,11 +22,11 @@ import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.DefaultPartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.TimestampPartitioningStrategy;
+import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.message.proto.ProtoMessageParser;
-import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import com.gotocompany.depot.metrics.StatsDReporter;
 import org.junit.Before;
@@ -60,6 +61,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, null, getMockedMessage());
@@ -102,6 +104,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new DefaultPartitioningStrategy(TypeInfoFactory.STRING,
@@ -145,6 +148,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new TimestampPartitioningStrategy(maxComputeSinkConfig);
@@ -186,6 +190,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new TimestampPartitioningStrategy(maxComputeSinkConfig);
@@ -264,6 +269,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, recordDecorator, null, getMockedMessage());
@@ -300,7 +306,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(
                 protobufConverterOrchestrator,
                 maxComputeSinkConfig,
-                partitioningStrategy
+                partitioningStrategy,
+                new MetadataUtil(maxComputeSinkConfig)
         );
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
         MaxComputeSchemaCache maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
@@ -310,7 +317,6 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(parsedMessage.getRaw()).thenReturn(mockedMessage);
         when(protoMessageParser.parse(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(parsedMessage);
-        Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
         MaxComputeMetrics maxComputeMetrics = new MaxComputeMetrics(sinkConfig);
         protoDataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(
                 recordDecorator,

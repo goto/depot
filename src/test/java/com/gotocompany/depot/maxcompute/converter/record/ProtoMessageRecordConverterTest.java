@@ -14,6 +14,7 @@ import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.InvalidMessageException;
 import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -24,6 +25,7 @@ import com.gotocompany.depot.maxcompute.record.RecordDecorator;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategyFactory;
+import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.ParsedMessage;
 import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
@@ -79,6 +81,7 @@ public class ProtoMessageRecordConverterTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
         protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         ParsedMessage parsedMessage = Mockito.mock(ParsedMessage.class);
@@ -93,7 +96,8 @@ public class ProtoMessageRecordConverterTest {
                 maxComputeSinkConfig,
                 descriptor
         );
-        maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy);
+        MetadataUtil metadataUtil = new MetadataUtil(maxComputeSinkConfig);
+        maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil);
         maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
         when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
@@ -104,8 +108,7 @@ public class ProtoMessageRecordConverterTest {
         RecordDecorator protoDataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(null,
                 protobufConverterOrchestrator,
                 protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics);
-        RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(
-                protoDataColumnRecordDecorator, maxComputeSinkConfig, maxComputeSchemaCache);
+        RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(protoDataColumnRecordDecorator, maxComputeSinkConfig, maxComputeSchemaCache, metadataUtil);
         protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, maxComputeSchemaCache);
     }
 

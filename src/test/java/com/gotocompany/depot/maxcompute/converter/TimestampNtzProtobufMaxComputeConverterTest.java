@@ -7,7 +7,6 @@ import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.exception.InvalidMessageException;
-import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,13 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class TimestampProtobufMaxComputeConverterTest {
+public class TimestampNtzProtobufMaxComputeConverterTest {
 
     private static final int TIMESTAMP_INDEX = 3;
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
     private final Descriptors.Descriptor repeatedDescriptor = TestMaxComputeTypeInfo.TestRootRepeated.getDescriptor();
 
-    private TimestampProtobufMaxComputeConverter timestampProtobufMaxComputeConverter;
+    private TimestampNtzProtobufMaxComputeConverter timestampNtzProtobufMaxComputeConverter;
 
     @Before
     public void setUp() {
@@ -42,15 +41,14 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
-        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP);
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
     }
 
     @Test
     public void shouldConvertToTimestampNtz() {
-        TypeInfo typeInfo = timestampProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(TIMESTAMP_INDEX));
+        TypeInfo typeInfo = timestampNtzProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(TIMESTAMP_INDEX));
 
-        assertEquals(TypeInfoFactory.TIMESTAMP, typeInfo);
+        assertEquals(TypeInfoFactory.TIMESTAMP_NTZ, typeInfo);
     }
 
     @Test
@@ -62,13 +60,13 @@ public class TimestampProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
                 .build();
-        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
+        LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
 
         assertThat(result)
-                .isEqualTo(expectedTimestamp);
+                .isEqualTo(expectedLocalDateTime);
     }
 
     @Test
@@ -84,16 +82,16 @@ public class TimestampProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRootRepeated message = TestMaxComputeTypeInfo.TestRootRepeated.newBuilder()
                 .addAllTimestampFields(Arrays.asList(timestamp1, timestamp2))
                 .build();
-        java.sql.Timestamp expectedLocalDateTime1 = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp1.getSeconds(), timestamp1.getNanos(), java.time.ZoneOffset.UTC));
-        java.sql.Timestamp expectedLocalDateTime2 = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp2.getSeconds(), timestamp2.getNanos(), java.time.ZoneOffset.UTC));
+        LocalDateTime expectedLocalDateTime1 = LocalDateTime.ofEpochSecond(
+                timestamp1.getSeconds(), timestamp1.getNanos(), java.time.ZoneOffset.UTC);
+        LocalDateTime expectedLocalDateTime2 = LocalDateTime.ofEpochSecond(
+                timestamp2.getSeconds(), timestamp2.getNanos(), java.time.ZoneOffset.UTC);
 
-        Object result = timestampProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(3), message.getField(repeatedDescriptor.getFields().get(3)), true));
+        Object result = timestampNtzProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(3), message.getField(repeatedDescriptor.getFields().get(3)), true));
 
         assertThat(result)
                 .isInstanceOf(List.class);
-        assertThat(((List<?>) result).stream().map(java.sql.Timestamp.class::cast))
+        assertThat(((List<?>) result).stream().map(LocalDateTime.class::cast))
                 .hasSize(2)
                 .containsExactly(expectedLocalDateTime1, expectedLocalDateTime2);
     }
@@ -110,7 +108,10 @@ public class TimestampProtobufMaxComputeConverterTest {
         LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+
+        assertThat(result)
+                .isEqualTo(expectedLocalDateTime);
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -119,7 +120,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
 
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(3600 * 48)
@@ -128,8 +129,12 @@ public class TimestampProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
                 .build();
+        LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+
+        assertThat(result).isEqualTo(expectedLocalDateTime);
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -142,7 +147,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(5);
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(5);
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(3600)
                 .setNanos(0)
@@ -151,7 +156,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -164,7 +169,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(5);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(1);
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(System.currentTimeMillis() / 1000 + Duration.ofDays(365 * 6).toMinutes() * 60)
                 .setNanos(0)
@@ -173,7 +178,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
     }
 
     @Test
@@ -186,7 +191,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(5);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(1);
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(System.currentTimeMillis() / 1000 + Duration.ofDays(365 * 6).toMinutes() * 60)
                 .setNanos(0)
@@ -194,14 +199,14 @@ public class TimestampProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
                 .build();
-        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
+        LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        java.sql.Timestamp result = (java.sql.Timestamp) timestampProtobufMaxComputeConverter.convertSingularPayload(
+        LocalDateTime result = (LocalDateTime) timestampNtzProtobufMaxComputeConverter.convertSingularPayload(
                 new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
 
         assertThat(result)
-                .isEqualTo(expectedTimestamp);
+                .isEqualTo(expectedLocalDateTime);
     }
 
     @Test
@@ -214,7 +219,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(5);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(1);
-        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(System.currentTimeMillis() / 1000 + Duration.ofDays(365 * 6).toMinutes() * 60)
                 .setNanos(0)
@@ -222,14 +227,14 @@ public class TimestampProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
                 .build();
-        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
+        LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        java.sql.Timestamp result = (java.sql.Timestamp) timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3),
+        LocalDateTime result = (LocalDateTime) timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3),
                 message.getField(descriptor.getFields().get(3)), false));
 
         assertThat(result)
-                .isEqualTo(expectedTimestamp);
+                .isEqualTo(expectedLocalDateTime);
     }
-    
+
 }

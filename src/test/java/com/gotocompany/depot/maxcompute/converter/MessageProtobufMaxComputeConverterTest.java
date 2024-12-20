@@ -9,6 +9,7 @@ import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +37,7 @@ public class MessageProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         messageProtobufMaxComputeConverter = new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig));
     }
 

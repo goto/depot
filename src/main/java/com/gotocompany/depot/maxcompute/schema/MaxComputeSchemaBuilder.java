@@ -23,6 +23,7 @@ public class MaxComputeSchemaBuilder {
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;
     private final PartitioningStrategy partitioningStrategy;
+    private final MetadataUtil metadataUtil;
 
     /**
      * Build MaxCompute schema from protobuf descriptor.
@@ -71,11 +72,11 @@ public class MaxComputeSchemaBuilder {
         if (StringUtils.isBlank(maxComputeSinkConfig.getMaxcomputeMetadataNamespace())) {
             return maxComputeSinkConfig.getMetadataColumnsTypes()
                     .stream()
-                    .map(tuple -> Column.newBuilder(tuple.getFirst(), MetadataUtil.getMetadataTypeInfo(tuple.getSecond())).build())
+                    .map(tuple -> Column.newBuilder(tuple.getFirst(), metadataUtil.getMetadataTypeInfo(tuple.getSecond())).build())
                     .collect(Collectors.toList());
         }
         return Collections.singletonList(Column.newBuilder(maxComputeSinkConfig.getMaxcomputeMetadataNamespace(),
-                MetadataUtil.getMetadataTypeInfo(maxComputeSinkConfig.getMetadataColumnsTypes())).build());
+                metadataUtil.getMetadataTypeInfo(maxComputeSinkConfig.getMetadataColumnsTypes())).build());
     }
 
 }
