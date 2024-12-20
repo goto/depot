@@ -14,4 +14,5 @@ public enum MaxComputeTimeUnitType {
     MaxComputeTimeUnitType(TypeInfo typeInfo){
         this.typeInfo = typeInfo;
     }
+
 }
