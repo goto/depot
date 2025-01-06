@@ -35,7 +35,7 @@ public class MaxComputeProtobufConverterCache {
         this.typeInfoCache = new ConcurrentHashMap<>();
         PrimitiveProtobufMaxComputeConverter primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter();
         SUPPORTED_PRIMITIVE_PROTO_TYPES.forEach(type -> protobufMaxComputeConverterMap.put(type.toString(), primitiveProtobufMaxComputeConverter));
-        protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, MaxComputeTimeUnitType.TIMESTAMP_NTZ == maxComputeSinkConfig.getMaxComputeTimeUnitType()
+        protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, MaxComputeTimeUnitType.TIMESTAMP_NTZ == maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()
                 ? new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig) : new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig));
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_DURATION, new DurationProtobufMaxComputeConverter());
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_STRUCT, new StructProtobufMaxComputeConverter());

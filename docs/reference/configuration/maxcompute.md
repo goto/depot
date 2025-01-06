@@ -55,9 +55,10 @@ Contains the schema of the MaxCompute table. Schema is a dataset grouping of tab
 * Type: `required`
 * Default value: `default`
 
-## SINK_MAXCOMPUTE_TIME_UNIT_TYPE
+## SINK_MAXCOMPUTE_PROTO_TIMESTAMP_TO_MAXCOMPUTE_TYPE
 
-Contains the time unit type for the timestamp field. This config will be used for setting the time unit type for the timestamp field.
+Contains the time unit type for the timestamp field. This config will be used for setting the time unit maxcompute type for the proto timestamp field.
+Once table is created with certain timestamp type, it cannot be changed. Changing the timestamp type will result in error. Table needs to be recreated if timestamp type is changed.
 Supported values are TIMESTAMP and TIMESTAMP_NTZ.
 
 * Example value: `TIMESTAMP_NTZ`

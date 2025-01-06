@@ -36,7 +36,7 @@ public class MaxComputeProtobufConverterCacheTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.MAX);
         when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("partition_key");
-        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         maxComputeProtobufConverterCache = new MaxComputeProtobufConverterCache(maxComputeSinkConfig);
     }
 

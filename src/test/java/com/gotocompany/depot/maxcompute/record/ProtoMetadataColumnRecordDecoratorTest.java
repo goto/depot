@@ -52,7 +52,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(config.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        when(config.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(config.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         initializeDecorator(config);
     }
 
@@ -92,7 +92,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(mcSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        when(mcSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(mcSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         initializeDecorator(mcSinkConfig);
         Message message = new Message(
                 null,

@@ -21,7 +21,7 @@ public class RecordDecoratorFactoryTest {
     public void shouldCreateDataRecordDecorator() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.FALSE);
-        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
@@ -46,7 +46,7 @@ public class RecordDecoratorFactoryTest {
     public void shouldCreateDataRecordDecoratorWithNamespaceDecorator() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.shouldAddMetadata()).thenReturn(Boolean.TRUE);
-        when(maxComputeSinkConfig.getMaxComputeTimeUnitType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);

@@ -49,9 +49,9 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("default")
     String getMaxComputeSchema();
 
-    @Key("SINK_MAXCOMPUTE_TIME_UNIT_TYPE")
+    @Key("SINK_MAXCOMPUTE_PROTO_TIMESTAMP_TO_MAXCOMPUTE_TYPE")
     @DefaultValue("TIMESTAMP")
-    MaxComputeTimeUnitType getMaxComputeTimeUnitType();
+    MaxComputeTimeUnitType getMaxComputeProtoTimestampToMaxcomputeType();
 
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE")
     @DefaultValue("false")

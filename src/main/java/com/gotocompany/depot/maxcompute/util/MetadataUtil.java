@@ -33,7 +33,7 @@ public class MetadataUtil {
     private final ZoneId zoneId;
 
     public MetadataUtil(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.maxComputeTimeUnitType = maxComputeSinkConfig.getMaxComputeTimeUnitType();
+        this.maxComputeTimeUnitType = maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType();
         this.zoneId = maxComputeSinkConfig.getZoneId();
         metadataTypeMap = ImmutableMap.<String, TypeInfo>builder()
                 .put(INTEGER, TypeInfoFactory.INT)
