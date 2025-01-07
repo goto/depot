@@ -49,6 +49,7 @@ dependencies {
     implementation (group: 'com.aliyun.odps', name: 'odps-sdk-core', version: '0.51.3-public') {
         exclude group: "com.google"
         exclude group: "io.grpc"
+        exclude group: "org.slf4j"
     }
     implementation 'io.grpc:grpc-all:1.55.1'
     implementation group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.35'
