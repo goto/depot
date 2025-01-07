@@ -473,7 +473,7 @@ public class PartitionedInsertManagerTest {
         partitionedInsertManager.insert(recordWrappers);
 
         verify(streamingSessionManager, Mockito.times(1))
-                .refreshSession(Mockito.any());
+                .invalidateAllSessionCache();
     }
 
 }

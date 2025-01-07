@@ -358,7 +358,7 @@ public class NonPartitionedInsertManagerTest {
         nonPartitionedInsertManager.insert(recordWrappers);
 
         verify(streamingSessionManager, Mockito.times(1))
-                .refreshSession(Mockito.any());
+                .invalidateAllSessionCache();
     }
 
     @Test(expected = NonRetryableException.class)
