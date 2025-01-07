@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 
 public class TimestampProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
-    private final TimestampNtzProtobufMaxComputeConverter timestampNtzProtobufMaxComputeConverter;
+    private final TimestampNTZProtobufMaxComputeConverter timestampNtzProtobufMaxComputeConverter;
 
     public TimestampProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.timestampNtzProtobufMaxComputeConverter = new TimestampNtzProtobufMaxComputeConverter(maxComputeSinkConfig);
+        this.timestampNtzProtobufMaxComputeConverter = new TimestampNTZProtobufMaxComputeConverter(maxComputeSinkConfig);
     }
 
     @Override

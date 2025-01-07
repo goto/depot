@@ -118,7 +118,7 @@ public class MaxComputeProtobufConverterCacheTest {
 
         ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
 
-        assertEquals(TimestampNtzProtobufMaxComputeConverter.class, converter.getClass());
+        assertEquals(TimestampNTZProtobufMaxComputeConverter.class, converter.getClass());
     }
 
     @Test

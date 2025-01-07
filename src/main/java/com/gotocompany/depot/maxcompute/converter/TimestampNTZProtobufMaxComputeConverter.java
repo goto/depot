@@ -20,7 +20,7 @@ import java.time.temporal.TemporalAmount;
  * LocalDateTime is the java compatible type for TIMESTAMP_NTZ type used in MaxCompute.
  * It uses the configurable timezone to convert the epoch parsed from protobuf timestamp type.
  */
-public class TimestampNtzProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
+public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
     private static final String SECONDS = "seconds";
     private static final String NANOS = "nanos";
@@ -36,7 +36,7 @@ public class TimestampNtzProtobufMaxComputeConverter implements ProtobufMaxCompu
     private final int maxPastYearEventTimeDifference;
     private final int maxFutureYearEventTimeDifference;
 
-    public TimestampNtzProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
+    public TimestampNTZProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * DAYS_IN_YEAR);
         this.maxFutureEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference() * DAYS_IN_YEAR);
         this.zoneId = maxComputeSinkConfig.getZoneId();
