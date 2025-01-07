@@ -10,7 +10,6 @@ import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 
 /**
@@ -20,17 +19,12 @@ import java.util.List;
 public class NonPartitionedInsertManager extends InsertManager {
 
     private static final String NON_PARTITIONED = "non-partitioned";
-    private final StreamingSessionManager streamingSessionManager;
-    private final TableTunnel.FlushOption flushOption;
 
     public NonPartitionedInsertManager(MaxComputeSinkConfig maxComputeSinkConfig,
                                        Instrumentation instrumentation,
                                        MaxComputeMetrics maxComputeMetrics,
                                        StreamingSessionManager streamingSessionManager) {
-        super(maxComputeSinkConfig, instrumentation, maxComputeMetrics);
-        this.streamingSessionManager = streamingSessionManager;
-        this.flushOption = new TableTunnel.FlushOption()
-                .timeout(super.getMaxComputeSinkConfig().getMaxComputeRecordPackFlushTimeoutMs());
+        super(maxComputeSinkConfig, instrumentation, maxComputeMetrics, streamingSessionManager);
     }
 
     /**
@@ -43,20 +37,12 @@ public class NonPartitionedInsertManager extends InsertManager {
      */
     @Override
     public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
-        TableTunnel.StreamUploadSession streamUploadSession = streamingSessionManager.getSession(NON_PARTITIONED);
+        TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(NON_PARTITIONED);
         TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
         for (RecordWrapper recordWrapper : recordWrappers) {
-            try {
-                recordPack.append(recordWrapper.getRecord());
-            } catch (IOException e) {
-                log.error("Schema Mismatch, rebuilding the session", e);
-                streamingSessionManager.refreshSession(NON_PARTITIONED);
-                throw e;
-            }
+            super.appendRecord(recordPack, recordWrapper, NON_PARTITIONED);
         }
-        Instant start = Instant.now();
-        TableTunnel.FlushResult flushResult = recordPack.flush(flushOption);
-        instrument(start, flushResult);
+        super.flushRecordPack(recordPack);
     }
 
 }

@@ -5,6 +5,7 @@ import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.NonRetryableException;
 import com.gotocompany.depot.exception.SinkException;
 import com.gotocompany.depot.maxcompute.client.insert.InsertManager;
 import com.gotocompany.depot.maxcompute.converter.record.MessageRecordConverter;
@@ -50,6 +51,11 @@ public class MaxComputeSink implements Sink {
                 .forEach(invalidRecord -> sinkResponse.getErrors().put(invalidRecord.getIndex(), invalidRecord.getErrorInfo()));
         try {
             insertManager.insert(recordWrappers.getValidRecords());
+        } catch (NonRetryableException e) {
+            log.error("Error while inserting records to MaxCompute: ", e);
+            sinkResponse.addErrors(recordWrappers.getValidRecords().stream().map(RecordWrapper::getIndex).collect(Collectors.toList()), new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR));
+            instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
+                    String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, e.getClass().getSimpleName()));
         } catch (IOException | TunnelException e) {
             log.error("Error while inserting records to MaxCompute: ", e);
             sinkResponse.addErrors(recordWrappers.getValidRecords().stream().map(RecordWrapper::getIndex).collect(Collectors.toList()), new ErrorInfo(e, ErrorType.SINK_RETRYABLE_ERROR));
