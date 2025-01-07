@@ -48,10 +48,10 @@ public class ProtobufConverterOrchestratorTest {
     @Test
     public void shouldConvertPayloadToTypeInfo() {
         String expectedStringTypeInfoRepresentation = "STRING";
-        String expectedMessageTypeRepresentation = "STRUCT<`string_field`:STRING,`another_inner_field`:STRUCT<`string_field`:STRING>,`another_inner_list_field`:ARRAY<STRUCT<`string_field`:STRING>>>";
+        String expectedMessageTypeRepresentation = "STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>";
         String expectedRepeatedMessageTypeRepresentation = String.format("ARRAY<%s>", expectedMessageTypeRepresentation);
         String expectedTimestampTypeInfoRepresentation = "TIMESTAMP_NTZ";
-        String expectedDurationTypeInfoRepresentation = "STRUCT<`seconds`:BIGINT,`nanos`:INT>";
+        String expectedDurationTypeInfoRepresentation = "STRUCT<seconds:BIGINT,nanos:INT>";
         String expectedStructTypeInfoRepresentation = "STRING";
 
         TypeInfo stringTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("string_field"));
