@@ -105,8 +105,10 @@ public final class StreamingSessionManager {
     /**
      * Invalidate all the sessions in the cache.
      */
-    public void invalidateAllSessionCache() {
-        sessionCache.invalidateAll();
+    public void refreshAllSessions() {
+        sessionCache.asMap()
+                .keySet()
+                .forEach(sessionCache::refresh);
     }
 
     private static TableTunnel.StreamUploadSession buildStreamSession(TableTunnel.StreamUploadSession.Builder streamUploadSessionBuilder,

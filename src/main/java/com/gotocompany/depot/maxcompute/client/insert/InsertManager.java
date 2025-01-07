@@ -102,7 +102,7 @@ public abstract class InsertManager {
             throw new NonRetryableException("Record pack schema Mismatch", e);
         } catch (IOException e) {
             log.info("IOException occurs, refreshing the schema", e);
-            streamingSessionManager.invalidateAllSessionCache();
+            streamingSessionManager.refreshAllSessions();
             throw e;
         }
     }
@@ -125,7 +125,7 @@ public abstract class InsertManager {
             throw new NonRetryableException("Record pack schema Mismatch", e);
         } catch (IOException e) {
             log.info("TunnelException occurs, refreshing the schema", e);
-            streamingSessionManager.invalidateAllSessionCache();
+            streamingSessionManager.refreshAllSessions();
             throw e;
         }
     }

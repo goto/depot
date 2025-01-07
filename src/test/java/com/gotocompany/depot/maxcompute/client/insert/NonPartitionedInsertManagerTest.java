@@ -229,7 +229,7 @@ public class NonPartitionedInsertManagerTest {
             nonPartitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .invalidateAllSessionCache();
+                    .refreshAllSessions();
             throw e;
         }
     }
@@ -362,7 +362,7 @@ public class NonPartitionedInsertManagerTest {
             nonPartitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .invalidateAllSessionCache();
+                    .refreshAllSessions();
             throw e;
         }
     }

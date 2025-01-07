@@ -183,7 +183,7 @@ public class PartitionedInsertManagerTest {
     }
 
     @Test(expected = IOException.class)
-    public void shouldInvalidateAllSessionSessionWhenIOExceptionOccurredDuringRecordAppend() throws IOException, TunnelException {
+    public void shouldRefrehAllSessionSessionWhenIOExceptionOccurredDuringRecordAppend() throws IOException, TunnelException {
         TableTunnel.FlushResult flushResult = Mockito.mock(TableTunnel.FlushResult.class);
         when(flushResult.getRecordCount())
                 .thenReturn(2L);
@@ -255,7 +255,7 @@ public class PartitionedInsertManagerTest {
             partitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .invalidateAllSessionCache();
+                    .refreshAllSessions();
             throw e;
         }
     }
@@ -406,7 +406,7 @@ public class PartitionedInsertManagerTest {
     }
 
     @Test(expected = IOException.class)
-    public void shouldInvalidateAllSessionSessionWhenIOExceptionOccurredDuringRecordFlush() throws IOException, TunnelException {
+    public void shouldRefrehAllSessionSessionWhenIOExceptionOccurredDuringRecordFlush() throws IOException, TunnelException {
         TableTunnel.FlushResult flushResult = Mockito.mock(TableTunnel.FlushResult.class);
         when(flushResult.getRecordCount())
                 .thenReturn(2L);
@@ -477,7 +477,7 @@ public class PartitionedInsertManagerTest {
             partitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .invalidateAllSessionCache();
+                    .refreshAllSessions();
             throw e;
         }
     }
