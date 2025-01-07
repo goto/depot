@@ -183,7 +183,7 @@ public class PartitionedInsertManagerTest {
     }
 
     @Test(expected = IOException.class)
-    public void shouldRefreshSessionWhenIOExceptionOccurredDuringRecordAppend() throws IOException, TunnelException {
+    public void shouldInvalidateAllSessionSessionWhenIOExceptionOccurredDuringRecordAppend() throws IOException, TunnelException {
         TableTunnel.FlushResult flushResult = Mockito.mock(TableTunnel.FlushResult.class);
         when(flushResult.getRecordCount())
                 .thenReturn(2L);
@@ -251,10 +251,13 @@ public class PartitionedInsertManagerTest {
         PartitionedInsertManager partitionedInsertManager = new PartitionedInsertManager(maxComputeSinkConfig,
                 instrumentation, Mockito.mock(MaxComputeMetrics.class), streamingSessionManager);
 
-        partitionedInsertManager.insert(recordWrappers);
-
-        verify(streamingSessionManager, Mockito.times(1))
-                .refreshSession(Mockito.any());
+        try {
+            partitionedInsertManager.insert(recordWrappers);
+        } catch (IOException e) {
+            verify(streamingSessionManager, Mockito.times(1))
+                    .invalidateAllSessionCache();
+            throw e;
+        }
     }
 
     @Test(expected = NonRetryableException.class)
@@ -403,7 +406,7 @@ public class PartitionedInsertManagerTest {
     }
 
     @Test(expected = IOException.class)
-    public void shouldRefreshSessionWhenIOExceptionOccurredDuringRecordFlush() throws IOException, TunnelException {
+    public void shouldInvalidateAllSessionSessionWhenIOExceptionOccurredDuringRecordFlush() throws IOException, TunnelException {
         TableTunnel.FlushResult flushResult = Mockito.mock(TableTunnel.FlushResult.class);
         when(flushResult.getRecordCount())
                 .thenReturn(2L);
@@ -470,10 +473,13 @@ public class PartitionedInsertManagerTest {
         PartitionedInsertManager partitionedInsertManager = new PartitionedInsertManager(maxComputeSinkConfig,
                 instrumentation, Mockito.mock(MaxComputeMetrics.class), streamingSessionManager);
 
-        partitionedInsertManager.insert(recordWrappers);
-
-        verify(streamingSessionManager, Mockito.times(1))
-                .invalidateAllSessionCache();
+        try {
+            partitionedInsertManager.insert(recordWrappers);
+        } catch (IOException e) {
+            verify(streamingSessionManager, Mockito.times(1))
+                    .invalidateAllSessionCache();
+            throw e;
+        }
     }
 
 }

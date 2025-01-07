@@ -225,10 +225,13 @@ public class NonPartitionedInsertManagerTest {
                 Mockito.mock(RecordWrapper.class)
         );
 
-        nonPartitionedInsertManager.insert(recordWrappers);
-
-        verify(streamingSessionManager, Mockito.times(1))
-                .refreshSession(Mockito.any());
+        try {
+            nonPartitionedInsertManager.insert(recordWrappers);
+        } catch (IOException e) {
+            verify(streamingSessionManager, Mockito.times(1))
+                    .invalidateAllSessionCache();
+            throw e;
+        }
     }
 
     @Test(expected = NonRetryableException.class)
@@ -355,10 +358,13 @@ public class NonPartitionedInsertManagerTest {
                 Mockito.mock(RecordWrapper.class)
         );
 
-        nonPartitionedInsertManager.insert(recordWrappers);
-
-        verify(streamingSessionManager, Mockito.times(1))
-                .invalidateAllSessionCache();
+        try {
+            nonPartitionedInsertManager.insert(recordWrappers);
+        } catch (IOException e) {
+            verify(streamingSessionManager, Mockito.times(1))
+                    .invalidateAllSessionCache();
+            throw e;
+        }
     }
 
     @Test(expected = NonRetryableException.class)
