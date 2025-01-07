@@ -6,7 +6,7 @@ import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.common.collect.ImmutableMap;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -29,11 +29,11 @@ public class MetadataUtil {
 
     private final Map<String, TypeInfo> metadataTypeMap;
     private final Map<String, Function<Object, Object>> metadataMapperMap;
-    private final MaxComputeTimeUnitType maxComputeTimeUnitType;
+    private final MaxComputeTimestampDataType maxComputeTimestampDataType;
     private final ZoneId zoneId;
 
     public MetadataUtil(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.maxComputeTimeUnitType = maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType();
+        this.maxComputeTimestampDataType = maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType();
         this.zoneId = maxComputeSinkConfig.getZoneId();
         metadataTypeMap = ImmutableMap.<String, TypeInfo>builder()
                 .put(INTEGER, TypeInfoFactory.INT)
@@ -42,7 +42,7 @@ public class MetadataUtil {
                 .put(DOUBLE, TypeInfoFactory.DOUBLE)
                 .put(STRING, TypeInfoFactory.STRING)
                 .put(BOOLEAN, TypeInfoFactory.BOOLEAN)
-                .put(TIMESTAMP, maxComputeTimeUnitType.getTypeInfo())
+                .put(TIMESTAMP, maxComputeTimestampDataType.getTypeInfo())
                 .build();
         metadataMapperMap = ImmutableMap.<String, Function<Object, Object>>builder()
                 .put(INTEGER, obj -> ((Number) obj).intValue())
@@ -80,7 +80,7 @@ public class MetadataUtil {
         LocalDateTime localDateTime = Instant.ofEpochMilli(value)
                 .atZone(zoneId)
                 .toLocalDateTime();
-        if (MaxComputeTimeUnitType.TIMESTAMP_NTZ == maxComputeTimeUnitType) {
+        if (MaxComputeTimestampDataType.TIMESTAMP_NTZ == maxComputeTimestampDataType) {
             return localDateTime;
         }
         return Timestamp.valueOf(localDateTime);

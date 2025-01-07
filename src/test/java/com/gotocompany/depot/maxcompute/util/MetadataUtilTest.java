@@ -4,7 +4,7 @@ import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -24,7 +24,7 @@ public class MetadataUtilTest {
     @Before
     public void setup() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         Mockito.when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         this.metadataUtil = new MetadataUtil(maxComputeSinkConfig);
     }
@@ -58,7 +58,7 @@ public class MetadataUtilTest {
     @Test
     public void shouldReturnTimestampWhenConfigured() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP);
+        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP);
         Mockito.when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         this.metadataUtil = new MetadataUtil(maxComputeSinkConfig);
 
@@ -68,7 +68,7 @@ public class MetadataUtilTest {
     @Test
     public void shouldReturnAppropriateStructTypeInfoWithTimestampForNamespacedMetadataWhenConfigured() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP);
+        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP);
         Mockito.when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         this.metadataUtil = new MetadataUtil(maxComputeSinkConfig);
         List<TupleString> metadataColumnTypes = Arrays.asList(new TupleString("__message_timestamp", "timestamp"),
@@ -117,7 +117,7 @@ public class MetadataUtilTest {
     @Test
     public void shouldReturnTimestampNtzValue() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         Mockito.when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         long epoch = 1734656400000L; // December 20th, 2024 01:00:00
         LocalDateTime expectedValue = LocalDateTime.of(2024, 12, 20, 1, 0, 0);
@@ -128,7 +128,7 @@ public class MetadataUtilTest {
     @Test
     public void shouldReturnTimestampValue() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP);
+        Mockito.when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP);
         Mockito.when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         this.metadataUtil = new MetadataUtil(maxComputeSinkConfig);
         long epoch = 1734656400000L; // December 20th, 2024 01:00:00

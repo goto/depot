@@ -11,7 +11,7 @@ import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
-import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimeUnitType;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -52,7 +52,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(config.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        when(config.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(config.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         initializeDecorator(config);
     }
 
@@ -92,7 +92,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(mcSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        when(mcSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimeUnitType.TIMESTAMP_NTZ);
+        when(mcSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         initializeDecorator(mcSinkConfig);
         Message message = new Message(
                 null,

@@ -5,14 +5,14 @@ import com.aliyun.odps.type.TypeInfoFactory;
 import lombok.Getter;
 
 @Getter
-public enum MaxComputeTimeUnitType {
+public enum MaxComputeTimestampDataType {
 
     TIMESTAMP(TypeInfoFactory.TIMESTAMP),
     TIMESTAMP_NTZ(TypeInfoFactory.TIMESTAMP_NTZ);
 
     private final TypeInfo typeInfo;
 
-    MaxComputeTimeUnitType(TypeInfo typeInfo) {
+    MaxComputeTimestampDataType(TypeInfo typeInfo) {
         this.typeInfo = typeInfo;
     }
 
