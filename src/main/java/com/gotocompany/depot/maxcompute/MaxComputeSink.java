@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute;
 
+import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.aliyun.odps.tunnel.TunnelException;
 import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.SinkResponse;
@@ -56,6 +57,10 @@ public class MaxComputeSink implements Sink {
             sinkResponse.addErrors(recordWrappers.getValidRecords().stream().map(RecordWrapper::getIndex).collect(Collectors.toList()), new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR));
             instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                     String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, e.getClass().getSimpleName()));
+            if (e.getCause() instanceof SchemaMismatchException) {
+                instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
+                        String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, SchemaMismatchException.class.getSimpleName()));
+            }
         } catch (IOException | TunnelException e) {
             log.error("Error while inserting records to MaxCompute: ", e);
             sinkResponse.addErrors(recordWrappers.getValidRecords().stream().map(RecordWrapper::getIndex).collect(Collectors.toList()), new ErrorInfo(e, ErrorType.SINK_RETRYABLE_ERROR));
