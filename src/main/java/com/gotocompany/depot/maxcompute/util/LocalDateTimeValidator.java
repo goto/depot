@@ -26,7 +26,7 @@ public class LocalDateTimeValidator {
 
     public LocalDateTimeValidator(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * DAYS_IN_YEAR);
-        this.maxFutureEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference() * 365L);
+        this.maxFutureEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference() * DAYS_IN_YEAR);
         this.zoneId = maxComputeSinkConfig.getZoneId();
         this.validMinTimestamp = maxComputeSinkConfig.getValidMinTimestamp();
         this.validMaxTimestamp = maxComputeSinkConfig.getValidMaxTimestamp();
