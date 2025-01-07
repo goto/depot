@@ -31,7 +31,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private final MessageParser protoMessageParser;
     private final PartitioningStrategy partitioningStrategy;
-    private final SinkConfig sinkConfig;
+    private final SinkConnectorSchemaMessageMode sinkConnectorSchemaMessageMode;
     private final String partitionFieldName;
     private final boolean shouldReplaceOriginalColumn;
     private final String schemaClass;
@@ -52,7 +52,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
         this.protoMessageParser = messageParser;
         this.partitioningStrategy = partitioningStrategy;
-        this.sinkConfig = sinkConfig;
+        this.sinkConnectorSchemaMessageMode = sinkConfig.getSinkConnectorSchemaMessageMode();
         this.partitionFieldName = Optional.ofNullable(partitioningStrategy)
                 .map(PartitioningStrategy::getOriginalPartitionColumnName)
                 .orElse(null);
@@ -78,7 +78,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
      */
     @Override
     public RecordWrapper process(RecordWrapper recordWrapper, Message message) throws IOException {
-        ParsedMessage parsedMessage = protoMessageParser.parse(message, sinkConfig.getSinkConnectorSchemaMessageMode(), schemaClass);
+        ParsedMessage parsedMessage = protoMessageParser.parse(message, sinkConnectorSchemaMessageMode, schemaClass);
         if (!sinkConnectorSchemaProtoAllowUnknownFieldsEnable) {
             Instant unknownFieldValidationStart = Instant.now();
             parsedMessage.validate(protoUnknownFieldValidationType);
