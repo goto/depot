@@ -12,6 +12,8 @@ import java.time.temporal.TemporalAmount;
 
 public class LocalDateTimeValidator {
 
+    private static final long DAYS_IN_YEAR = 365L;
+
     private final TemporalAmount maxPastEventTimeDifference;
     private final TemporalAmount maxFutureEventTimeDifference;
     private final ZoneId zoneId;
@@ -23,7 +25,7 @@ public class LocalDateTimeValidator {
     private final int maxFutureYearEventTimeDifference;
 
     public LocalDateTimeValidator(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * 365L);
+        this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * DAYS_IN_YEAR);
         this.maxFutureEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference() * 365L);
         this.zoneId = maxComputeSinkConfig.getZoneId();
         this.validMinTimestamp = maxComputeSinkConfig.getValidMinTimestamp();
