@@ -10,7 +10,6 @@ import com.gotocompany.depot.maxcompute.client.insert.session.StreamingSessionMa
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -20,15 +19,14 @@ import java.util.List;
 /**
  * InsertManager is responsible for inserting records into MaxCompute.
  */
-@Getter
 @Slf4j
 public abstract class InsertManager {
 
     private final MaxComputeSinkConfig maxComputeSinkConfig;
     private final Instrumentation instrumentation;
     private final MaxComputeMetrics maxComputeMetrics;
-    private final StreamingSessionManager streamingSessionManager;
     private final TableTunnel.FlushOption flushOption;
+    protected final StreamingSessionManager streamingSessionManager;
 
     protected InsertManager(MaxComputeSinkConfig maxComputeSinkConfig, Instrumentation instrumentation,
                             MaxComputeMetrics maxComputeMetrics,
