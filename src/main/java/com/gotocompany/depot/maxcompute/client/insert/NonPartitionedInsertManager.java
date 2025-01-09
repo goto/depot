@@ -37,12 +37,12 @@ public class NonPartitionedInsertManager extends InsertManager {
      */
     @Override
     public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
-        TableTunnel.StreamUploadSession streamUploadSession = streamingSessionManager.getSession(NON_PARTITIONED);
+        TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(NON_PARTITIONED);
         TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
         for (RecordWrapper recordWrapper : recordWrappers) {
-            appendRecord(recordPack, recordWrapper, NON_PARTITIONED);
+            super.appendRecord(recordPack, recordWrapper, NON_PARTITIONED);
         }
-        flushRecordPack(recordPack);
+        super.flushRecordPack(recordPack);
     }
 
 }
