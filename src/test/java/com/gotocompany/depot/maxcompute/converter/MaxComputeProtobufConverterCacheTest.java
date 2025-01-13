@@ -5,6 +5,7 @@ import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeProtobufConverterCacheOuterClass;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -35,6 +36,7 @@ public class MaxComputeProtobufConverterCacheTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.MAX);
         when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("partition_key");
+        when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         maxComputeProtobufConverterCache = new MaxComputeProtobufConverterCache(maxComputeSinkConfig);
     }
 
@@ -116,7 +118,7 @@ public class MaxComputeProtobufConverterCacheTest {
 
         ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
 
-        assertEquals(TimestampProtobufMaxComputeConverter.class, converter.getClass());
+        assertEquals(TimestampNTZProtobufMaxComputeConverter.class, converter.getClass());
     }
 
     @Test

@@ -5,8 +5,12 @@ import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.common.collect.ImmutableMap;
 import com.gotocompany.depot.common.TupleString;
+import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +18,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MetadataUtil {
-
-    private static final Map<String, TypeInfo> METADATA_TYPE_MAP;
-    private static final Map<String, Function<Object, Object>> METADATA_MAPPER_MAP;
 
     private static final String TIMESTAMP = "timestamp";
     private static final String INTEGER = "integer";
@@ -26,18 +27,24 @@ public class MetadataUtil {
     private static final String STRING = "string";
     private static final String BOOLEAN = "boolean";
 
-    static {
-        METADATA_TYPE_MAP = ImmutableMap.<String, TypeInfo>builder()
+    private final Map<String, TypeInfo> metadataTypeMap;
+    private final Map<String, Function<Object, Object>> metadataMapperMap;
+    private final MaxComputeTimestampDataType maxComputeTimestampDataType;
+    private final ZoneId zoneId;
+
+    public MetadataUtil(MaxComputeSinkConfig maxComputeSinkConfig) {
+        this.maxComputeTimestampDataType = maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType();
+        this.zoneId = maxComputeSinkConfig.getZoneId();
+        metadataTypeMap = ImmutableMap.<String, TypeInfo>builder()
                 .put(INTEGER, TypeInfoFactory.INT)
                 .put(LONG, TypeInfoFactory.BIGINT)
                 .put(FLOAT, TypeInfoFactory.FLOAT)
                 .put(DOUBLE, TypeInfoFactory.DOUBLE)
                 .put(STRING, TypeInfoFactory.STRING)
                 .put(BOOLEAN, TypeInfoFactory.BOOLEAN)
-                .put(TIMESTAMP, TypeInfoFactory.TIMESTAMP_NTZ)
+                .put(TIMESTAMP, maxComputeTimestampDataType.getTypeInfo())
                 .build();
-
-        METADATA_MAPPER_MAP = ImmutableMap.<String, Function<Object, Object>>builder()
+        metadataMapperMap = ImmutableMap.<String, Function<Object, Object>>builder()
                 .put(INTEGER, obj -> ((Number) obj).intValue())
                 .put(LONG, obj -> ((Number) obj).longValue())
                 .put(FLOAT, obj -> ((Number) obj).floatValue())
@@ -47,28 +54,35 @@ public class MetadataUtil {
                 .build();
     }
 
-    public static TypeInfo getMetadataTypeInfo(String type) {
-        return METADATA_TYPE_MAP.get(type.toLowerCase());
+    public TypeInfo getMetadataTypeInfo(String type) {
+        return metadataTypeMap.get(type.toLowerCase());
     }
 
-    public static Object getValidMetadataValue(String type, Object value, ZoneId zoneId) {
+    public Object getValidMetadataValue(String type, Object value) {
         if (TIMESTAMP.equalsIgnoreCase(type) && value instanceof Long) {
-            return Instant.ofEpochMilli((Long) value)
-                    .atZone(zoneId)
-                    .toLocalDateTime();
+            return getTimestampValue((long) value);
         }
-        return METADATA_MAPPER_MAP.get(type.toLowerCase()).apply(value);
+        return metadataMapperMap.get(type.toLowerCase()).apply(value);
     }
 
-    public static StructTypeInfo getMetadataTypeInfo(List<TupleString> metadataColumnsTypes) {
+    public StructTypeInfo getMetadataTypeInfo(List<TupleString> metadataColumnsTypes) {
         return TypeInfoFactory.getStructTypeInfo(metadataColumnsTypes
                         .stream()
                         .map(TupleString::getFirst)
                         .collect(Collectors.toList()),
                 metadataColumnsTypes
                         .stream()
-                        .map(tuple -> METADATA_TYPE_MAP.get(tuple.getSecond().toLowerCase()))
+                        .map(tuple -> metadataTypeMap.get(tuple.getSecond().toLowerCase()))
                         .collect(Collectors.toList()));
     }
 
+    private Object getTimestampValue(long value) {
+        LocalDateTime localDateTime = Instant.ofEpochMilli(value)
+                .atZone(zoneId)
+                .toLocalDateTime();
+        if (MaxComputeTimestampDataType.TIMESTAMP_NTZ == maxComputeTimestampDataType) {
+            return localDateTime;
+        }
+        return Timestamp.valueOf(localDateTime);
+    }
 }

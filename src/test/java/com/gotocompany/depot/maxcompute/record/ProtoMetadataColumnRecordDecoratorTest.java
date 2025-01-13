@@ -11,10 +11,12 @@ import com.gotocompany.depot.common.Tuple;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.proto.ProtoParsedMessage;
 import org.junit.Before;
@@ -50,6 +52,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(config.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(config.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         initializeDecorator(config);
     }
 
@@ -89,6 +92,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new TupleString("__kafka_offset", "long")
         ));
         when(mcSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(mcSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         initializeDecorator(mcSinkConfig);
         Message message = new Message(
                 null,
@@ -140,10 +144,11 @@ public class ProtoMetadataColumnRecordDecoratorTest {
     private void initializeDecorator(MaxComputeSinkConfig sinkConfig) {
         this.maxComputeSinkConfig = sinkConfig;
         ProtobufConverterOrchestrator protobufConverterOrchestrator = new ProtobufConverterOrchestrator(sinkConfig);
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, sinkConfig, null);
+        MetadataUtil metadataUtil = new MetadataUtil(maxComputeSinkConfig);
+        MaxComputeSchemaBuilder maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, sinkConfig, null, metadataUtil);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
         maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
-        protoMetadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(null, sinkConfig, maxComputeSchemaCache);
+        protoMetadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(null, sinkConfig, maxComputeSchemaCache, metadataUtil);
     }
 }

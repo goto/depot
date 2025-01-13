@@ -15,6 +15,7 @@ public class PartitioningStrategyFactory {
 
     private static final Set<TypeInfo> ALLOWED_PARTITION_KEY_TYPE_INFO = Sets.newHashSet(
             TypeInfoFactory.TIMESTAMP_NTZ,
+            TypeInfoFactory.TIMESTAMP,
             TypeInfoFactory.STRING,
             TypeInfoFactory.TINYINT,
             TypeInfoFactory.SMALLINT,
@@ -48,7 +49,7 @@ public class PartitioningStrategyFactory {
         }
         TypeInfo partitionKeyTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(fieldDescriptor);
         checkPartitionTypePrecondition(partitionKeyTypeInfo);
-        if (TypeInfoFactory.TIMESTAMP_NTZ.equals(partitionKeyTypeInfo)) {
+        if (TypeInfoFactory.TIMESTAMP_NTZ.equals(partitionKeyTypeInfo) || TypeInfoFactory.TIMESTAMP.equals(partitionKeyTypeInfo)) {
             return new TimestampPartitioningStrategy(maxComputeSinkConfig);
         } else {
             return new DefaultPartitioningStrategy(partitionKeyTypeInfo, maxComputeSinkConfig);

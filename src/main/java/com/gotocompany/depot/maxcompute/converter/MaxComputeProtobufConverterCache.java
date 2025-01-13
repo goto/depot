@@ -4,6 +4,7 @@ import com.aliyun.odps.type.TypeInfo;
 import com.google.common.collect.Sets;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
+import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +35,13 @@ public class MaxComputeProtobufConverterCache {
         this.typeInfoCache = new ConcurrentHashMap<>();
         PrimitiveProtobufMaxComputeConverter primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter();
         SUPPORTED_PRIMITIVE_PROTO_TYPES.forEach(type -> protobufMaxComputeConverterMap.put(type.toString(), primitiveProtobufMaxComputeConverter));
-        protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig));
+        if (maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType() == MaxComputeTimestampDataType.TIMESTAMP_NTZ) {
+            protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, new TimestampNTZProtobufMaxComputeConverter(maxComputeSinkConfig));
+        } else {
+            protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig));
+        }
+        protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_TIMESTAMP, MaxComputeTimestampDataType.TIMESTAMP_NTZ == maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()
+                ? new TimestampNTZProtobufMaxComputeConverter(maxComputeSinkConfig) : new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig));
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_DURATION, new DurationProtobufMaxComputeConverter());
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_STRUCT, new StructProtobufMaxComputeConverter());
         protobufMaxComputeConverterMap.put(MESSAGE.toString(), new MessageProtobufMaxComputeConverter(this));
