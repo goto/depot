@@ -102,6 +102,15 @@ public final class StreamingSessionManager {
         sessionCache.refresh(partitionSpec);
     }
 
+    /**
+     * Invalidate all the sessions in the cache.
+     */
+    public void refreshAllSessions() {
+        sessionCache.asMap()
+                .keySet()
+                .forEach(sessionCache::refresh);
+    }
+
     private static TableTunnel.StreamUploadSession buildStreamSession(TableTunnel.StreamUploadSession.Builder streamUploadSessionBuilder,
                                                                       Instrumentation instrumentation,
                                                                       MaxComputeMetrics maxComputeMetrics) throws TunnelException {

@@ -10,7 +10,6 @@ import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,17 +20,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PartitionedInsertManager extends InsertManager {
 
-    private final StreamingSessionManager streamingSessionManager;
-    private final TableTunnel.FlushOption flushOption;
-
     public PartitionedInsertManager(MaxComputeSinkConfig maxComputeSinkConfig,
                                     Instrumentation instrumentation,
                                     MaxComputeMetrics maxComputeMetrics,
                                     StreamingSessionManager streamingSessionManager) {
-        super(maxComputeSinkConfig, instrumentation, maxComputeMetrics);
-        this.streamingSessionManager = streamingSessionManager;
-        this.flushOption = new TableTunnel.FlushOption()
-                .timeout(super.getMaxComputeSinkConfig().getMaxComputeRecordPackFlushTimeoutMs());
+        super(maxComputeSinkConfig, instrumentation, maxComputeMetrics, streamingSessionManager);
     }
 
     /**
@@ -40,27 +33,19 @@ public class PartitionedInsertManager extends InsertManager {
      *
      * @param recordWrappers list of records to insert
      * @throws TunnelException if there is an error with the tunnel service, typically due to network issues
-     * @throws IOException typically thrown when issues such as schema mismatch occur
+     * @throws IOException     typically thrown when issues such as schema mismatch occur
      */
     @Override
     public void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException {
         Map<String, List<RecordWrapper>> partitionSpecRecordWrapperMap = recordWrappers.stream()
                 .collect(Collectors.groupingBy(record -> record.getPartitionSpec().toString()));
         for (Map.Entry<String, List<RecordWrapper>> entry : partitionSpecRecordWrapperMap.entrySet()) {
-            TableTunnel.StreamUploadSession streamUploadSession = streamingSessionManager.getSession(entry.getKey());
+            TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(entry.getKey());
             TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
             for (RecordWrapper recordWrapper : entry.getValue()) {
-                try {
-                    recordPack.append(recordWrapper.getRecord());
-                } catch (IOException e) {
-                    log.error("Schema Mismatch, clearing the session", e);
-                    streamingSessionManager.refreshSession(recordWrapper.getPartitionSpec().toString());
-                    throw e;
-                }
+                super.appendRecord(recordPack, recordWrapper, recordWrapper.getPartitionSpec().toString());
             }
-            Instant start = Instant.now();
-            TableTunnel.FlushResult flushResult = recordPack.flush(flushOption);
-            instrument(start, flushResult);
+            super.flushRecordPack(recordPack);
         }
     }
 

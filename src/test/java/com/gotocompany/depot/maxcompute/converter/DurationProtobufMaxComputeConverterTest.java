@@ -28,7 +28,7 @@ public class DurationProtobufMaxComputeConverterTest {
 
         TypeInfo typeInfo = durationProtobufMaxComputeConverter.convertTypeInfo(fieldDescriptor);
 
-        assertEquals("STRUCT<`seconds`:BIGINT,`nanos`:INT>", typeInfo.getTypeName());
+        assertEquals("STRUCT<seconds:BIGINT,nanos:INT>", typeInfo.getTypeName());
     }
 
     @Test
