@@ -6,6 +6,7 @@ import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.NonRetryableException;
 import com.gotocompany.depot.maxcompute.client.insert.InsertManager;
 import com.gotocompany.depot.maxcompute.converter.record.MessageRecordConverter;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -164,6 +165,52 @@ public class MaxComputeSinkTest {
                 .values()
                 .stream()
                 .allMatch(s -> ErrorType.SINK_RETRYABLE_ERROR.equals(s.getErrorType())));
+    }
+
+    @Test
+    public void shouldMarkAllMessageAsFailedWithNonRetryableErrorWhenInsertThrowNonRetryableException() throws IOException, TunnelException {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getMaxComputeAccessId())
+                .thenReturn("accessId");
+        when(maxComputeSinkConfig.getMaxComputeAccessKey())
+                .thenReturn("accessKey");
+        when(maxComputeSinkConfig.getMaxComputeOdpsUrl())
+                .thenReturn("odpsUrl");
+        when(maxComputeSinkConfig.getMaxComputeProjectId())
+                .thenReturn("projectId");
+        when(maxComputeSinkConfig.getMaxComputeSchema())
+                .thenReturn("schema");
+        when(maxComputeSinkConfig.getMaxComputeTunnelUrl())
+                .thenReturn("tunnelUrl");
+        when(maxComputeSinkConfig.getTableValidatorNameRegex())
+                .thenReturn("^[A-Za-z][A-Za-z0-9_]{0,127}$");
+        when(maxComputeSinkConfig.getTableValidatorMaxColumnsPerTable())
+                .thenReturn(1200);
+        when(maxComputeSinkConfig.getTableValidatorMaxPartitionKeysPerTable())
+                .thenReturn(1);
+        MessageRecordConverter messageRecordConverter = Mockito.mock(MessageRecordConverter.class);
+        InsertManager insertManager = Mockito.mock(InsertManager.class);
+        Mockito.doThrow(NonRetryableException.class)
+                .when(insertManager)
+                .insert(Mockito.anyList());
+        MaxComputeSink maxComputeSink = new MaxComputeSink(insertManager, messageRecordConverter, Mockito.mock(StatsDReporter.class), Mockito.mock(MaxComputeMetrics.class));
+        List<Message> messages = Arrays.asList(
+                new Message("key1".getBytes(StandardCharsets.UTF_8), "message1".getBytes(StandardCharsets.UTF_8)),
+                new Message("key2".getBytes(StandardCharsets.UTF_8), "invalidMessage2".getBytes(StandardCharsets.UTF_8))
+        );
+        List<RecordWrapper> validRecords = Arrays.asList(
+                new RecordWrapper(Mockito.mock(Record.class), 0, null, null),
+                new RecordWrapper(Mockito.mock(Record.class), 1, null, null)
+        );
+        when(messageRecordConverter.convert(messages)).thenReturn(new RecordWrappers(validRecords, new ArrayList<>()));
+
+        SinkResponse sinkResponse = maxComputeSink.pushToSink(messages);
+
+        Assertions.assertEquals(2, sinkResponse.getErrors().size());
+        Assert.assertTrue(sinkResponse.getErrors()
+                .values()
+                .stream()
+                .allMatch(s -> ErrorType.SINK_NON_RETRYABLE_ERROR.equals(s.getErrorType())));
     }
 
     @Test
