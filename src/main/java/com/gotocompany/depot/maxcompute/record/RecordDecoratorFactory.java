@@ -20,7 +20,7 @@ public class RecordDecoratorFactory {
      * @param recordDecoratorConfig record decorator configuration
      * @return record decorator
      */
-    public static RecordDecorator createRecordDecorator(RecordDecoratorConfig recordDecoratorConfig) {
+    public static RecordDecorator createProtobufRecordDecorator(RecordDecoratorConfig recordDecoratorConfig) {
         RecordDecorator dataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(null,
                 recordDecoratorConfig.protobufConverterOrchestrator,
                 recordDecoratorConfig.messageParser,
