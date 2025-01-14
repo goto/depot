@@ -63,7 +63,7 @@ public class MaxComputeSinkFactory {
     }
 
     public Sink create() {
-        RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
+        RecordDecorator recordDecorator = RecordDecoratorFactory.createProtobufRecordDecorator(
                 new RecordDecoratorFactory.RecordDecoratorConfig(protobufConverterOrchestrator, protobufMaxComputeSchemaCache, messageParser,
                         partitioningStrategy, maxComputeSinkConfig, sinkConfig, statsDReporter, maxComputeMetrics, metadataUtil)
         );

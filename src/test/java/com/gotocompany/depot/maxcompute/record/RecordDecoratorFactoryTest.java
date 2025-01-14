@@ -27,7 +27,7 @@ public class RecordDecoratorFactoryTest {
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         when(sinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.message.Message");
 
-        RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
+        RecordDecorator recordDecorator = RecordDecoratorFactory.createProtobufRecordDecorator(
                 new RecordDecoratorFactory.RecordDecoratorConfig(
                         null, null, null, null,
                         maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
@@ -52,7 +52,7 @@ public class RecordDecoratorFactoryTest {
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         when(sinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.message.Message");
 
-        RecordDecorator recordDecorator = RecordDecoratorFactory.createRecordDecorator(
+        RecordDecorator recordDecorator = RecordDecoratorFactory.createProtobufRecordDecorator(
                 new RecordDecoratorFactory.RecordDecoratorConfig(
                         null, null, null,
                         null, maxComputeSinkConfig, sinkConfig, Mockito.mock(StatsDReporter.class),
