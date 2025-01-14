@@ -3,7 +3,7 @@ package com.gotocompany.depot.maxcompute.record;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.MessageParser;
@@ -32,13 +32,13 @@ public class RecordDecoratorFactory {
             return dataColumnRecordDecorator;
         }
         return new ProtoMetadataColumnRecordDecorator(dataColumnRecordDecorator, recordDecoratorConfig.maxComputeSinkConfig,
-                recordDecoratorConfig.maxComputeSchemaCache, recordDecoratorConfig.metadataUtil);
+                recordDecoratorConfig.protobufMaxComputeSchemaCache, recordDecoratorConfig.metadataUtil);
     }
 
     @RequiredArgsConstructor
     public static class RecordDecoratorConfig {
         private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
-        private final MaxComputeSchemaCache maxComputeSchemaCache;
+        private final ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
         private final MessageParser messageParser;
         private final PartitioningStrategy partitioningStrategy;
         private final MaxComputeSinkConfig maxComputeSinkConfig;

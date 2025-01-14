@@ -24,7 +24,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class MaxComputeSchemaCacheTest {
+public class ProtobufMaxComputeSchemaCacheTest {
 
     @Test
     public void shouldBuildAndReturnMaxComputeSchema() throws OdpsException {
@@ -46,13 +46,13 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
         );
-        maxComputeSchemaCache.setMessageParser(protoMessageParser);
+        protobufMaxComputeSchemaCache.setMessageParser(protoMessageParser);
         Mockito.doNothing()
                 .when(maxComputeClient)
                 .createOrUpdateTable(Mockito.any());
@@ -61,7 +61,7 @@ public class MaxComputeSchemaCacheTest {
                 .when(maxComputeClient)
                 .getLatestTableSchema();
 
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaCache.getMaxComputeSchema();
 
         verify(maxComputeClient, Mockito.times(1))
                 .createOrUpdateTable(Mockito.any());
@@ -86,17 +86,17 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
         );
-        Field field = MaxComputeSchemaCache.class.getDeclaredField("maxComputeSchema");
+        Field field = ProtobufMaxComputeSchemaCache.class.getDeclaredField("maxComputeSchema");
         field.setAccessible(true);
-        field.set(maxComputeSchemaCache, mockedMaxComputeSchema);
+        field.set(protobufMaxComputeSchemaCache, mockedMaxComputeSchema);
 
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaCache.getMaxComputeSchema();
 
         verify(maxComputeClient, Mockito.times(0))
                 .createOrUpdateTable(Mockito.any());
@@ -120,13 +120,13 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
         );
-        maxComputeSchemaCache.setMessageParser(protoMessageParser);
+        protobufMaxComputeSchemaCache.setMessageParser(protoMessageParser);
         Mockito.doNothing()
                 .when(maxComputeClient)
                 .createOrUpdateTable(Mockito.any());
@@ -134,8 +134,8 @@ public class MaxComputeSchemaCacheTest {
                 .when(maxComputeClient)
                 .getLatestTableSchema();
 
-        maxComputeSchemaCache.getMaxComputeSchema();
-        maxComputeSchemaCache.onSchemaUpdate(newDescriptor);
+        protobufMaxComputeSchemaCache.getMaxComputeSchema();
+        protobufMaxComputeSchemaCache.onSchemaUpdate(newDescriptor);
 
         verify(maxComputeClient, Mockito.times(2))
                 .createOrUpdateTable(Mockito.any());
@@ -158,13 +158,13 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
         );
-        maxComputeSchemaCache.setMessageParser(protoMessageParser);
+        protobufMaxComputeSchemaCache.setMessageParser(protoMessageParser);
         Mockito.doNothing()
                 .when(maxComputeClient)
                 .createOrUpdateTable(Mockito.any());
@@ -172,8 +172,8 @@ public class MaxComputeSchemaCacheTest {
                 .when(maxComputeClient)
                 .getLatestTableSchema();
 
-        maxComputeSchemaCache.getMaxComputeSchema();
-        maxComputeSchemaCache.onSchemaUpdate(newDescriptor);
+        protobufMaxComputeSchemaCache.getMaxComputeSchema();
+        protobufMaxComputeSchemaCache.onSchemaUpdate(newDescriptor);
 
         verify(maxComputeClient, Mockito.times(2))
                 .createOrUpdateTable(Mockito.any());
@@ -196,19 +196,19 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
-        MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
         );
-        maxComputeSchemaCache.setMessageParser(protoMessageParser);
+        protobufMaxComputeSchemaCache.setMessageParser(protoMessageParser);
         doThrow(new OdpsException("Invalid schema"))
                 .when(maxComputeClient)
                 .createOrUpdateTable(Mockito.any());
 
-        maxComputeSchemaCache.getMaxComputeSchema();
-        maxComputeSchemaCache.onSchemaUpdate(newDescriptor);
+        protobufMaxComputeSchemaCache.getMaxComputeSchema();
+        protobufMaxComputeSchemaCache.onSchemaUpdate(newDescriptor);
     }
 
 }

@@ -22,7 +22,7 @@ import com.gotocompany.depot.maxcompute.model.RecordWrappers;
 import com.gotocompany.depot.maxcompute.record.ProtoDataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.ProtoMetadataColumnRecordDecorator;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategyFactory;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
@@ -59,7 +59,7 @@ public class ProtoMessageRecordConverterTest {
     private ProtoMessageParser protoMessageParser;
     private MaxComputeSchemaBuilder maxComputeSchemaBuilder;
     private SinkConfig sinkConfig;
-    private MaxComputeSchemaCache maxComputeSchemaCache;
+    private ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
     private ProtoMessageRecordConverter protoMessageRecordConverter;
 
     @Before
@@ -98,9 +98,9 @@ public class ProtoMessageRecordConverterTest {
         );
         MetadataUtil metadataUtil = new MetadataUtil(maxComputeSinkConfig);
         maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil);
-        maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
+        protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
-        when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
+        when(protobufMaxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
         Mockito.doNothing().when(instrumentation)
                 .captureDurationSince(Mockito.any(), Mockito.any());
@@ -108,8 +108,8 @@ public class ProtoMessageRecordConverterTest {
         RecordDecorator protoDataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(null,
                 protobufConverterOrchestrator,
                 protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics);
-        RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(protoDataColumnRecordDecorator, maxComputeSinkConfig, maxComputeSchemaCache, metadataUtil);
-        protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, maxComputeSchemaCache);
+        RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(protoDataColumnRecordDecorator, maxComputeSinkConfig, protobufMaxComputeSchemaCache, metadataUtil);
+        protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, protobufMaxComputeSchemaCache);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class ProtoMessageRecordConverterTest {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
         Mockito.doThrow(new IOException()).when(recordDecorator)
                 .decorate(Mockito.any(), Mockito.any());
-        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, protobufMaxComputeSchemaCache);
         Message message = new Message(
                 null,
                 getMockedMessage().toByteArray(),
@@ -194,7 +194,7 @@ public class ProtoMessageRecordConverterTest {
         com.google.protobuf.Message mockedMessage = getMockedMessage();
         Mockito.doThrow(new UnknownFieldsException(mockedMessage)).when(recordDecorator)
                 .decorate(Mockito.any(), Mockito.any());
-        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, protobufMaxComputeSchemaCache);
         Message message = new Message(
                 null,
                 getMockedMessage().toByteArray(),
@@ -220,7 +220,7 @@ public class ProtoMessageRecordConverterTest {
         String invalidMessage = "Invalid message";
         Mockito.doThrow(new InvalidMessageException(invalidMessage)).when(recordDecorator)
                 .decorate(Mockito.any(), Mockito.any());
-        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, protobufMaxComputeSchemaCache);
         Message message = new Message(
                 null,
                 getMockedMessage().toByteArray(),

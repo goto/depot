@@ -10,7 +10,7 @@ import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.model.RecordWrappers;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.message.Message;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 public class ProtoMessageRecordConverter implements MessageRecordConverter {
 
     private final RecordDecorator recordDecorator;
-    private final MaxComputeSchemaCache maxComputeSchemaCache;
+    private final ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
 
     /**
      * Converts a list of messages to RecordWrappers.
@@ -36,7 +36,7 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
      */
     @Override
     public RecordWrappers convert(List<Message> messages) {
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaCache.getMaxComputeSchema();
         RecordWrappers recordWrappers = new RecordWrappers();
         IntStream.range(0, messages.size())
                 .forEach(index -> {

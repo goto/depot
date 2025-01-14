@@ -18,7 +18,7 @@ import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.DefaultPartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.TimestampPartitioningStrategy;
@@ -310,8 +310,8 @@ public class ProtoDataColumnRecordDecoratorTest {
                 new MetadataUtil(maxComputeSinkConfig)
         );
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
-        MaxComputeSchemaCache maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
-        when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
+        when(protobufMaxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         ParsedMessage parsedMessage = Mockito.mock(ParsedMessage.class);
         when(parsedMessage.getRaw()).thenReturn(mockedMessage);

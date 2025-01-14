@@ -9,7 +9,7 @@ import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 
@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
  */
 public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
 
-    private final MaxComputeSchemaCache maxComputeSchemaCache;
+    private final ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
     private final Map<String, String> metadataTypePairs;
     private final String maxcomputeMetadataNamespace;
     private final List<TupleString> metadataColumnsTypes;
@@ -33,10 +33,10 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
 
     public ProtoMetadataColumnRecordDecorator(RecordDecorator recordDecorator,
                                               MaxComputeSinkConfig maxComputeSinkConfig,
-                                              MaxComputeSchemaCache maxComputeSchemaCache,
+                                              ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache,
                                               MetadataUtil metadataUtil) {
         super(recordDecorator);
-        this.maxComputeSchemaCache = maxComputeSchemaCache;
+        this.protobufMaxComputeSchemaCache = protobufMaxComputeSchemaCache;
         this.metadataUtil = metadataUtil;
         this.metadataTypePairs = maxComputeSinkConfig.getMetadataColumnsTypes()
                 .stream()
@@ -66,7 +66,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
 
     private void appendNamespacedMetadata(Record record, Message message) {
         Map<String, Object> metadata = message.getMetadata(metadataColumnsTypes);
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaCache.getMaxComputeSchema();
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaCache.getMaxComputeSchema();
         StructTypeInfo typeInfo = (StructTypeInfo) maxComputeSchema.getTableSchema()
                 .getColumn(maxcomputeMetadataNamespace)
                 .getTypeInfo();
@@ -80,7 +80,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
 
     private void appendMetadata(Record record, Message message) {
         Map<String, Object> metadata = message.getMetadata(metadataColumnsTypes);
-        for (Map.Entry<String, TypeInfo> entry : maxComputeSchemaCache.getMaxComputeSchema()
+        for (Map.Entry<String, TypeInfo> entry : protobufMaxComputeSchemaCache.getMaxComputeSchema()
                 .getMetadataColumns()
                 .entrySet()) {
             Object value = metadata.get(entry.getKey());

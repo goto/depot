@@ -8,7 +8,7 @@ import com.aliyun.odps.expression.TruncTime;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -66,10 +66,10 @@ public class TimestampPartitioningStrategyTest {
                         .build())
                 .withPartitionColumn(partitionColumn)
                 .build();
-        MaxComputeSchemaCache maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = Mockito.mock(MaxComputeSchema.class);
         when(maxComputeSchema.getTableSchema()).thenReturn(tableSchema);
-        when(maxComputeSchemaCache.getMaxComputeSchema())
+        when(protobufMaxComputeSchemaCache.getMaxComputeSchema())
                 .thenReturn(maxComputeSchema);
         String expectedStartOfDayEpoch = "2024-10-28";
         Record record = new ArrayRecord(tableSchema);
@@ -94,7 +94,7 @@ public class TimestampPartitioningStrategyTest {
     public void shouldReturnDefaultPartitionSpec() {
         String expectedPartitionSpecStringRepresentation = "tablePartitionColumnName='__NULL__'";
         TimestampPartitioningStrategy timestampPartitioningStrategy = new TimestampPartitioningStrategy(getMaxComputeSinkConfig());
-        MaxComputeSchemaCache maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
+        ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = Mockito.mock(MaxComputeSchema.class);
         Column partitionColumn = Column.newBuilder("tablePartitionColumnName", TypeInfoFactory.STRING)
                 .build();
@@ -105,7 +105,7 @@ public class TimestampPartitioningStrategyTest {
                 .withPartitionColumn(partitionColumn)
                 .build();
         when(maxComputeSchema.getTableSchema()).thenReturn(tableSchema);
-        when(maxComputeSchemaCache.getMaxComputeSchema())
+        when(protobufMaxComputeSchemaCache.getMaxComputeSchema())
                 .thenReturn(maxComputeSchema);
         Record record = new ArrayRecord(tableSchema);
         record.set("str", "strVal");

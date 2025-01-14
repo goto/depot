@@ -15,7 +15,7 @@ import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.message.proto.ProtoParsedMessage;
@@ -37,7 +37,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
     private final Descriptors.Descriptor descriptor = TestMaxComputeRecord.MaxComputeRecord.getDescriptor();
 
     private MaxComputeSinkConfig maxComputeSinkConfig;
-    private MaxComputeSchemaCache maxComputeSchemaCache;
+    private ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
     private ProtoMetadataColumnRecordDecorator protoMetadataColumnRecordDecorator;
 
     @Before
@@ -65,7 +65,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new Tuple<>("__kafka_topic", "topic"),
                 new Tuple<>("__kafka_offset", 100L)
         );
-        Record record = new ArrayRecord(maxComputeSchemaCache.getMaxComputeSchema().getColumns());
+        Record record = new ArrayRecord(protobufMaxComputeSchemaCache.getMaxComputeSchema().getColumns());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         LocalDateTime expectedLocalDateTime = Instant.ofEpochMilli(10002010L)
                 .atZone(ZoneId.of("UTC"))
@@ -101,7 +101,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
                 new Tuple<>("__kafka_topic", "topic"),
                 new Tuple<>("__kafka_offset", 100L)
         );
-        Record record = new ArrayRecord(maxComputeSchemaCache.getMaxComputeSchema().getColumns());
+        Record record = new ArrayRecord(protobufMaxComputeSchemaCache.getMaxComputeSchema().getColumns());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         LocalDateTime expectedLocalDateTime = Instant.ofEpochMilli(10002010L)
                 .atZone(ZoneId.of("UTC"))
@@ -147,8 +147,8 @@ public class ProtoMetadataColumnRecordDecoratorTest {
         MetadataUtil metadataUtil = new MetadataUtil(maxComputeSinkConfig);
         MaxComputeSchemaBuilder maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, sinkConfig, null, metadataUtil);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
-        maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
-        when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
-        protoMetadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(null, sinkConfig, maxComputeSchemaCache, metadataUtil);
+        protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
+        when(protobufMaxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
+        protoMetadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(null, sinkConfig, protobufMaxComputeSchemaCache, metadataUtil);
     }
 }

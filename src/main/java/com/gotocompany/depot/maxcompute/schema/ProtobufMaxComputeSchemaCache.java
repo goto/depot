@@ -20,7 +20,7 @@ import java.util.Map;
  * It also caches the MaxCompute schema.
  */
 @Slf4j
-public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
+public class ProtobufMaxComputeSchemaCache extends DepotStencilUpdateListener {
 
     private final MaxComputeSchemaBuilder maxComputeSchemaBuilder;
     private final SinkConfig sinkConfig;
@@ -28,10 +28,10 @@ public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
     private final MaxComputeClient maxComputeClient;
     private MaxComputeSchema maxComputeSchema;
 
-    public MaxComputeSchemaCache(MaxComputeSchemaBuilder maxComputeSchemaBuilder,
-                                 SinkConfig sinkConfig,
-                                 ProtobufConverterOrchestrator protobufConverterOrchestrator,
-                                 MaxComputeClient maxComputeClient) {
+    public ProtobufMaxComputeSchemaCache(MaxComputeSchemaBuilder maxComputeSchemaBuilder,
+                                         SinkConfig sinkConfig,
+                                         ProtobufConverterOrchestrator protobufConverterOrchestrator,
+                                         MaxComputeClient maxComputeClient) {
         this.maxComputeSchemaBuilder = maxComputeSchemaBuilder;
         this.sinkConfig = sinkConfig;
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
