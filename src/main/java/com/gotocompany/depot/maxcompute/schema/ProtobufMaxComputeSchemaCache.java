@@ -22,17 +22,17 @@ import java.util.Map;
 @Slf4j
 public class ProtobufMaxComputeSchemaCache extends DepotStencilUpdateListener {
 
-    private final MaxComputeSchemaBuilder maxComputeSchemaBuilder;
+    private final ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder;
     private final SinkConfig sinkConfig;
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private final MaxComputeClient maxComputeClient;
     private MaxComputeSchema maxComputeSchema;
 
-    public ProtobufMaxComputeSchemaCache(MaxComputeSchemaBuilder maxComputeSchemaBuilder,
+    public ProtobufMaxComputeSchemaCache(ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder,
                                          SinkConfig sinkConfig,
                                          ProtobufConverterOrchestrator protobufConverterOrchestrator,
                                          MaxComputeClient maxComputeClient) {
-        this.maxComputeSchemaBuilder = maxComputeSchemaBuilder;
+        this.protobufMaxComputeSchemaBuilder = protobufMaxComputeSchemaBuilder;
         this.sinkConfig = sinkConfig;
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
         this.maxComputeClient = maxComputeClient;
@@ -75,7 +75,7 @@ public class ProtobufMaxComputeSchemaCache extends DepotStencilUpdateListener {
     }
 
     private void updateMaxComputeTableSchema(Descriptors.Descriptor descriptor) {
-        MaxComputeSchema localSchema = maxComputeSchemaBuilder.build(descriptor);
+        MaxComputeSchema localSchema = protobufMaxComputeSchemaBuilder.build(descriptor);
         protobufConverterOrchestrator.clearCache();
         try {
             maxComputeClient.createOrUpdateTable(localSchema.getTableSchema());

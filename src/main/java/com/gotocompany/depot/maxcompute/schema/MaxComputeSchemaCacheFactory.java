@@ -9,7 +9,7 @@ import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 
 public class MaxComputeSchemaCacheFactory {
 
-    public static ProtobufMaxComputeSchemaCache createMaxComputeSchemaCache(
+    public static ProtobufMaxComputeSchemaCache createProtobufMaxComputeSchemaCache(
             ProtobufConverterOrchestrator protobufConverterOrchestrator,
             MaxComputeSinkConfig maxComputeSinkConfig,
             PartitioningStrategy partitioningStrategy,
@@ -18,7 +18,7 @@ public class MaxComputeSchemaCacheFactory {
             MetadataUtil metadataUtil
     ) {
         return new ProtobufMaxComputeSchemaCache(
-                new MaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil),
+                new ProtobufMaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil),
                 sinkConfig,
                 protobufConverterOrchestrator, maxComputeClient
         );

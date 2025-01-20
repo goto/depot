@@ -15,7 +15,7 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaCache;
@@ -47,7 +47,7 @@ public class ProtoDataColumnRecordDecoratorTest {
 
     private static final Descriptors.Descriptor DESCRIPTOR = TestMaxComputeRecord.MaxComputeRecord.getDescriptor();
 
-    private MaxComputeSchemaBuilder maxComputeSchemaBuilder;
+    private ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder;
     private ProtoDataColumnRecordDecorator protoDataColumnRecordDecorator;
 
     @Before
@@ -69,7 +69,7 @@ public class ProtoDataColumnRecordDecoratorTest {
 
     @Test
     public void decorateShouldProcessDataColumnToRecord() throws IOException {
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
@@ -110,7 +110,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         PartitioningStrategy partitioningStrategy = new DefaultPartitioningStrategy(TypeInfoFactory.STRING,
                 maxComputeSinkConfig);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, partitioningStrategy, getMockedMessage());
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
@@ -153,7 +153,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new TimestampPartitioningStrategy(maxComputeSinkConfig);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, partitioningStrategy, getMockedMessage());
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
@@ -209,7 +209,7 @@ public class ProtoDataColumnRecordDecoratorTest {
                 ))
                 .build();
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, partitioningStrategy, maxComputeRecord);
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         Message message = new Message(null, maxComputeRecord.toByteArray());
@@ -233,7 +233,7 @@ public class ProtoDataColumnRecordDecoratorTest {
 
     @Test
     public void decorateShouldPutDefaultPartitionSpec() throws IOException {
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
@@ -273,7 +273,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, recordDecorator, null, getMockedMessage());
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         Record record = new ArrayRecord(maxComputeSchema.getTableSchema());
         RecordWrapper recordWrapper = new RecordWrapper(record, 0, null, null);
         TestMaxComputeRecord.MaxComputeRecord maxComputeRecord = getMockedMessage();
@@ -303,13 +303,13 @@ public class ProtoDataColumnRecordDecoratorTest {
                                                            PartitioningStrategy partitioningStrategy,
                                                            com.google.protobuf.Message mockedMessage) throws IOException {
         ProtobufConverterOrchestrator protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
-        maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(
+        protobufMaxComputeSchemaBuilder = new ProtobufMaxComputeSchemaBuilder(
                 protobufConverterOrchestrator,
                 maxComputeSinkConfig,
                 partitioningStrategy,
                 new MetadataUtil(maxComputeSinkConfig)
         );
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(DESCRIPTOR);
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
         when(protobufMaxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);

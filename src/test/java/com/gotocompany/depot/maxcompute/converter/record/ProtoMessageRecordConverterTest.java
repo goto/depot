@@ -15,7 +15,7 @@ import com.gotocompany.depot.exception.InvalidMessageException;
 import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
-import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaBuilder;
+import com.gotocompany.depot.maxcompute.schema.ProtobufMaxComputeSchemaBuilder;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.model.RecordWrappers;
@@ -57,7 +57,7 @@ public class ProtoMessageRecordConverterTest {
     private MaxComputeSinkConfig maxComputeSinkConfig;
     private ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private ProtoMessageParser protoMessageParser;
-    private MaxComputeSchemaBuilder maxComputeSchemaBuilder;
+    private ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder;
     private SinkConfig sinkConfig;
     private ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache;
     private ProtoMessageRecordConverter protoMessageRecordConverter;
@@ -97,9 +97,9 @@ public class ProtoMessageRecordConverterTest {
                 descriptor
         );
         MetadataUtil metadataUtil = new MetadataUtil(maxComputeSinkConfig);
-        maxComputeSchemaBuilder = new MaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil);
+        protobufMaxComputeSchemaBuilder = new ProtobufMaxComputeSchemaBuilder(protobufConverterOrchestrator, maxComputeSinkConfig, partitioningStrategy, metadataUtil);
         protobufMaxComputeSchemaCache = Mockito.mock(ProtobufMaxComputeSchemaCache.class);
-        MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
+        MaxComputeSchema maxComputeSchema = protobufMaxComputeSchemaBuilder.build(descriptor);
         when(protobufMaxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
         Mockito.doNothing().when(instrumentation)

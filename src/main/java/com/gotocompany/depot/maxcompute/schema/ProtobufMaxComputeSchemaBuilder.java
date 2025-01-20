@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class MaxComputeSchemaBuilder {
+public class ProtobufMaxComputeSchemaBuilder {
 
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
     private final MaxComputeSinkConfig maxComputeSinkConfig;

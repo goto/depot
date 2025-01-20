@@ -2,6 +2,7 @@ package com.gotocompany.depot.maxcompute;
 
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.Sink;
+import com.gotocompany.depot.SinkFactory;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.client.MaxComputeClient;
@@ -24,7 +25,7 @@ import org.aeonbits.owner.ConfigFactory;
 
 import java.util.Map;
 
-public class MaxComputeSinkFactory {
+public class ProtobufMaxComputeSinkFactory implements SinkFactory {
 
     private final MaxComputeSinkConfig maxComputeSinkConfig;
     private final SinkConfig sinkConfig;
@@ -39,9 +40,9 @@ public class MaxComputeSinkFactory {
     private PartitioningStrategy partitioningStrategy;
     private MessageParser messageParser;
 
-    public MaxComputeSinkFactory(StatsDReporter statsDReporter,
-                                 StencilClient stencilClient,
-                                 Map<String, String> env) {
+    public ProtobufMaxComputeSinkFactory(StatsDReporter statsDReporter,
+                                         StencilClient stencilClient,
+                                         Map<String, String> env) {
         this.statsDReporter = statsDReporter;
         this.maxComputeSinkConfig = ConfigFactory.create(MaxComputeSinkConfig.class, env);
         this.sinkConfig = ConfigFactory.create(SinkConfig.class, env);
@@ -52,16 +53,18 @@ public class MaxComputeSinkFactory {
         this.metadataUtil = new MetadataUtil(maxComputeSinkConfig);
     }
 
+    @Override
     public void init() {
         Descriptors.Descriptor descriptor = stencilClient.get(getProtoSchemaClassName(sinkConfig));
         this.partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(protobufConverterOrchestrator, maxComputeSinkConfig, descriptor);
-        this.protobufMaxComputeSchemaCache = MaxComputeSchemaCacheFactory.createMaxComputeSchemaCache(protobufConverterOrchestrator,
+        this.protobufMaxComputeSchemaCache = MaxComputeSchemaCacheFactory.createProtobufMaxComputeSchemaCache(protobufConverterOrchestrator,
                 maxComputeSinkConfig, partitioningStrategy, sinkConfig, maxComputeClient, metadataUtil);
         this.messageParser = MessageParserFactory.getParser(sinkConfig, statsDReporter, protobufMaxComputeSchemaCache);
         protobufMaxComputeSchemaCache.setMessageParser(messageParser);
         protobufMaxComputeSchemaCache.updateSchema();
     }
 
+    @Override
     public Sink create() {
         RecordDecorator recordDecorator = RecordDecoratorFactory.createProtobufRecordDecorator(
                 new RecordDecoratorFactory.RecordDecoratorConfig(protobufConverterOrchestrator, protobufMaxComputeSchemaCache, messageParser,

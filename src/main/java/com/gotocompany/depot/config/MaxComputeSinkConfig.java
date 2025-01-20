@@ -1,13 +1,16 @@
 package com.gotocompany.depot.config;
 
+import com.aliyun.odps.Column;
 import com.aliyun.odps.tunnel.io.CompressOption;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.converter.ConfToListConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
+import com.gotocompany.depot.config.converter.MaxComputeDefaultColumnConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
 import com.gotocompany.depot.config.converter.ZoneIdConverter;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -148,5 +151,11 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_MAX_FUTURE_EVENT_TIME_DIFFERENCE_YEAR")
     @DefaultValue("1")
     int getMaxFutureYearEventTimeDifference();
+
+    @DefaultValue("")
+    @Key("SINK_MAXCOMPUTE_DEFAULT_COLUMNS")
+    @ConverterClass(MaxComputeDefaultColumnConverter.class)
+    @Separator(",")
+    List<Column> getDefaultColumns();
 
 }

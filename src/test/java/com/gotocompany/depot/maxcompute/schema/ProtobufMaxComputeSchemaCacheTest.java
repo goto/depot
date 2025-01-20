@@ -30,11 +30,11 @@ public class ProtobufMaxComputeSchemaCacheTest {
     public void shouldBuildAndReturnMaxComputeSchema() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
         newDescriptor.put("class", Mockito.mock(Descriptors.Descriptor.class));
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = Mockito.mock(MaxComputeSchemaBuilder.class);
+        ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder = Mockito.mock(ProtobufMaxComputeSchemaBuilder.class);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         when(protoMessageParser.getDescriptorMap()).thenReturn(newDescriptor);
         MaxComputeSchema mockedMaxComputeSchema = new MaxComputeSchema(null, null);
-        when(maxComputeSchemaBuilder.build(Mockito.any()))
+        when(protobufMaxComputeSchemaBuilder.build(Mockito.any()))
                 .thenReturn(mockedMaxComputeSchema);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode())
@@ -47,7 +47,7 @@ public class ProtobufMaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
-                maxComputeSchemaBuilder,
+                protobufMaxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
@@ -72,11 +72,11 @@ public class ProtobufMaxComputeSchemaCacheTest {
     public void shouldReturnMaxComputeSchemaIfExists() throws OdpsException, NoSuchFieldException, IllegalAccessException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
         newDescriptor.put("class", Mockito.mock(Descriptors.Descriptor.class));
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = Mockito.mock(MaxComputeSchemaBuilder.class);
+        ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder = Mockito.mock(ProtobufMaxComputeSchemaBuilder.class);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         when(protoMessageParser.getDescriptorMap()).thenReturn(newDescriptor);
         MaxComputeSchema mockedMaxComputeSchema = new MaxComputeSchema(null, null);
-        when(maxComputeSchemaBuilder.build(Mockito.any()))
+        when(protobufMaxComputeSchemaBuilder.build(Mockito.any()))
                 .thenReturn(mockedMaxComputeSchema);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode())
@@ -87,7 +87,7 @@ public class ProtobufMaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
-                maxComputeSchemaBuilder,
+                protobufMaxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
@@ -107,10 +107,10 @@ public class ProtobufMaxComputeSchemaCacheTest {
     public void shouldUpdateSchemaBasedOnNewDescriptor() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
         newDescriptor.put("class", Mockito.mock(Descriptors.Descriptor.class));
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = Mockito.mock(MaxComputeSchemaBuilder.class);
+        ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder = Mockito.mock(ProtobufMaxComputeSchemaBuilder.class);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         MaxComputeSchema mockedMaxComputeSchema = new MaxComputeSchema(null, null);
-        when(maxComputeSchemaBuilder.build(Mockito.any()))
+        when(protobufMaxComputeSchemaBuilder.build(Mockito.any()))
                 .thenReturn(mockedMaxComputeSchema);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode())
@@ -121,7 +121,7 @@ public class ProtobufMaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
-                maxComputeSchemaBuilder,
+                protobufMaxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
@@ -145,10 +145,10 @@ public class ProtobufMaxComputeSchemaCacheTest {
     public void shouldUpdateSchemaUsingLogKeyBasedOnNewDescriptor() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
         newDescriptor.put("class", Mockito.mock(Descriptors.Descriptor.class));
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = Mockito.mock(MaxComputeSchemaBuilder.class);
+        ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder = Mockito.mock(ProtobufMaxComputeSchemaBuilder.class);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         MaxComputeSchema mockedMaxComputeSchema = new MaxComputeSchema(null, null);
-        when(maxComputeSchemaBuilder.build(Mockito.any()))
+        when(protobufMaxComputeSchemaBuilder.build(Mockito.any()))
                 .thenReturn(mockedMaxComputeSchema);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode())
@@ -159,7 +159,7 @@ public class ProtobufMaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
-                maxComputeSchemaBuilder,
+                protobufMaxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
@@ -183,10 +183,10 @@ public class ProtobufMaxComputeSchemaCacheTest {
     public void shouldThrowMaxComputeTableOperationExceptionWhenUpsertIsFailing() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
         newDescriptor.put("class", Mockito.mock(Descriptors.Descriptor.class));
-        MaxComputeSchemaBuilder maxComputeSchemaBuilder = Mockito.mock(MaxComputeSchemaBuilder.class);
+        ProtobufMaxComputeSchemaBuilder protobufMaxComputeSchemaBuilder = Mockito.mock(ProtobufMaxComputeSchemaBuilder.class);
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         MaxComputeSchema mockedMaxComputeSchema = new MaxComputeSchema(null, null);
-        when(maxComputeSchemaBuilder.build(Mockito.any()))
+        when(protobufMaxComputeSchemaBuilder.build(Mockito.any()))
                 .thenReturn(mockedMaxComputeSchema);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode())
@@ -197,7 +197,7 @@ public class ProtobufMaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         ProtobufMaxComputeSchemaCache protobufMaxComputeSchemaCache = new ProtobufMaxComputeSchemaCache(
-                maxComputeSchemaBuilder,
+                protobufMaxComputeSchemaBuilder,
                 sinkConfig,
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeClient
