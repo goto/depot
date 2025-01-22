@@ -7,9 +7,12 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
+import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.exception.InvalidMessageException;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -21,9 +24,20 @@ import static org.junit.Assert.assertTrue;
 
 public class PrimitiveProtobufMaxComputeConverterTest {
 
-    private final PrimitiveProtobufMaxComputeConverter primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter();
-    private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestFields.getDescriptor();
-    private final Descriptors.Descriptor descriptorRepeated = TestMaxComputeTypeInfo.TestFieldsRepeated.getDescriptor();
+    private PrimitiveProtobufMaxComputeConverter primitiveProtobufMaxComputeConverter;
+    private Descriptors.Descriptor descriptor;
+    private Descriptors.Descriptor descriptorRepeated;
+
+    @Before
+    public void init() {
+        this.descriptor = TestMaxComputeTypeInfo.TestFields.getDescriptor();
+        this.descriptorRepeated = TestMaxComputeTypeInfo.TestFieldsRepeated.getDescriptor();
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.isUpcastIntegerTypesEnabled()).thenReturn(false);
+        Mockito.when(maxComputeSinkConfig.isCastDoubleToDecimalEnabled()).thenReturn(false);
+        Mockito.when(maxComputeSinkConfig.isCastFloatToDecimalEnabled()).thenReturn(false);
+        this.primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter(maxComputeSinkConfig);
+    }
 
     @Test
     public void shouldConvertToBinary() {

@@ -6,6 +6,7 @@ import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.tunnel.TableTunnel;
+import com.aliyun.odps.type.TypeInfoFactory;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.client.ddl.DdlManager;
 import com.gotocompany.depot.maxcompute.client.insert.InsertManager;

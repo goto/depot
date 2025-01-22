@@ -149,4 +149,32 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("1")
     int getMaxFutureYearEventTimeDifference();
 
+    @Key("SINK_MAXCOMPUTE_UPCAST_INTEGER_TYPES_ENABLED")
+    @DefaultValue("false")
+    boolean isUpcastIntegerTypesEnabled();
+
+    @Key("SINK_MAXCOMPUTE_CAST_FLOAT_TO_DECIMAL_ENABLED")
+    @DefaultValue("false")
+    boolean isCastFloatToDecimalEnabled();
+
+    @Key("SINK_MAXCOMPUTE_FLOAT_DECIMAL_FORM_PRECISION")
+    @DefaultValue("38")
+    int getFloatDecimalFormPrecision();
+
+    @Key("SINK_MAXCOMPUTE_FLOAT_DECIMAL_FORM_SCALE")
+    @DefaultValue("18")
+    int getFloatDecimalFormScale();
+
+    @Key("SINK_MAXCOMPUTE_CAST_DOUBLE_TO_DECIMAL_ENABLED")
+    @DefaultValue("false")
+    boolean isCastDoubleToDecimalEnabled();
+
+    @Key("SINK_MAXCOMPUTE_DOUBLE_DECIMAL_FORM_PRECISION")
+    @DefaultValue("38")
+    int getDoubleDecimalFormPrecision();
+
+    @Key("SINK_MAXCOMPUTE_DOUBLE_DECIMAL_FORM_SCALE")
+    @DefaultValue("18")
+    int getDoubleDecimalFormScale();
+
 }
