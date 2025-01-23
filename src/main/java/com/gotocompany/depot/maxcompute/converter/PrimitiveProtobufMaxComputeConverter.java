@@ -3,8 +3,8 @@ package com.gotocompany.depot.maxcompute.converter;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.converter.strategy.PrimitiveProtobufMappingStrategy;
-import com.gotocompany.depot.maxcompute.converter.strategy.PrimitiveProtobufMappingStrategyFactory;
+import com.gotocompany.depot.maxcompute.converter.strategy.ProtoPrimitiveDataTypeMappingStrategy;
+import com.gotocompany.depot.maxcompute.converter.strategy.ProtoPrimitiveDataTypeMappingStrategyFactory;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
 /**
@@ -12,20 +12,20 @@ import com.gotocompany.depot.maxcompute.model.ProtoPayload;
  */
 public class PrimitiveProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
-    private final PrimitiveProtobufMappingStrategy primitiveProtobufMappingStrategy;
+    private final ProtoPrimitiveDataTypeMappingStrategy protoPrimitiveDataTypeMappingStrategy;
 
     public PrimitiveProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.primitiveProtobufMappingStrategy = PrimitiveProtobufMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        this.protoPrimitiveDataTypeMappingStrategy = ProtoPrimitiveDataTypeMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
     }
 
     @Override
     public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return primitiveProtobufMappingStrategy.getProtoTypeMap().get(fieldDescriptor.getType());
+        return protoPrimitiveDataTypeMappingStrategy.getProtoTypeMap().get(fieldDescriptor.getType());
     }
 
     @Override
     public Object convertSingularPayload(ProtoPayload protoPayload) {
-        return primitiveProtobufMappingStrategy.getProtoPayloadMapperMap().get(protoPayload.getFieldDescriptor().getType()).apply(protoPayload.getParsedObject());
+        return protoPrimitiveDataTypeMappingStrategy.getProtoPayloadMapperMap().get(protoPayload.getFieldDescriptor().getType()).apply(protoPayload.getParsedObject());
     }
 
 }

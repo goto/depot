@@ -13,13 +13,13 @@ import java.math.RoundingMode;
 import java.util.Map;
 import java.util.function.Function;
 
-public class DecimalCastedDoublePrimitiveProtobufMappingStrategy implements PrimitiveProtobufMappingStrategy {
+public class DoubleToDecimalDataTypeMappingStrategy implements ProtoPrimitiveDataTypeMappingStrategy {
 
     private final int precision;
     private final int scale;
     private final RoundingMode roundingMode;
 
-    public DecimalCastedDoublePrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
+    public DoubleToDecimalDataTypeMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.precision = maxComputeSinkConfig.getProtoDoubleToDecimalPrecision();
         this.scale = maxComputeSinkConfig.getProtoDoubleToDecimalScale();
         this.roundingMode = maxComputeSinkConfig.getDecimalRoundingMode();

@@ -14,9 +14,9 @@ import java.math.RoundingMode;
 
 import static org.junit.Assert.assertEquals;
 
-public class DecimalCastedDoublePrimitiveProtobufMappingStrategyTest {
+public class DoubleToDecimalDataTypeMappingStrategyTest {
 
-    private DecimalCastedDoublePrimitiveProtobufMappingStrategy decimalCastedDoublePrimitiveProtobufMappingStrategy;
+    private DoubleToDecimalDataTypeMappingStrategy decimalCastedDoublePrimitiveProtobufMappingStrategy;
 
     @Before
     public void setUp() {
@@ -24,7 +24,7 @@ public class DecimalCastedDoublePrimitiveProtobufMappingStrategyTest {
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalPrecision()).thenReturn(38);
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(18);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
-        decimalCastedDoublePrimitiveProtobufMappingStrategy = new DecimalCastedDoublePrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        decimalCastedDoublePrimitiveProtobufMappingStrategy = new DoubleToDecimalDataTypeMappingStrategy(maxComputeSinkConfig);
     }
 
 

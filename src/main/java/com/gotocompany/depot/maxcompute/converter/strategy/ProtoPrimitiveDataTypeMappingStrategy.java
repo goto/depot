@@ -7,23 +7,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public interface PrimitiveProtobufMappingStrategy {
+public interface ProtoPrimitiveDataTypeMappingStrategy {
     Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap();
 
     Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap();
 
-    default PrimitiveProtobufMappingStrategy mergeStrategy(PrimitiveProtobufMappingStrategy strategy) {
-        return new PrimitiveProtobufMappingStrategy() {
+    default ProtoPrimitiveDataTypeMappingStrategy mergeStrategy(ProtoPrimitiveDataTypeMappingStrategy strategy) {
+        return new ProtoPrimitiveDataTypeMappingStrategy() {
             @Override
             public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
-                Map<Descriptors.FieldDescriptor.Type, TypeInfo> finalMap = new HashMap<>(PrimitiveProtobufMappingStrategy.this.getProtoTypeMap());
+                Map<Descriptors.FieldDescriptor.Type, TypeInfo> finalMap = new HashMap<>(ProtoPrimitiveDataTypeMappingStrategy.this.getProtoTypeMap());
                 finalMap.putAll(strategy.getProtoTypeMap());
                 return finalMap;
             }
 
             @Override
             public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
-                Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> finalMap = new HashMap<>(PrimitiveProtobufMappingStrategy.this.getProtoPayloadMapperMap());
+                Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> finalMap = new HashMap<>(ProtoPrimitiveDataTypeMappingStrategy.this.getProtoPayloadMapperMap());
                 finalMap.putAll(strategy.getProtoPayloadMapperMap());
                 return finalMap;
             }

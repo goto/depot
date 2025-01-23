@@ -13,11 +13,11 @@ import org.mockito.Mockito;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class DecimalCastedFloatPrimitiveProtobufMappingStrategyTest {
+public class FloatToDecimalDataTypeMappingStrategyTest {
 
     private static final int PRECISION = 38;
     private static final int SCALE = 18;
-    private DecimalCastedFloatPrimitiveProtobufMappingStrategy decimalCastedFloatPrimitiveProtobufMappingStrategy;
+    private FloatToDecimalDataTypeMappingStrategy decimalCastedFloatPrimitiveProtobufMappingStrategy;
 
     @Before
     public void setup() {
@@ -25,7 +25,7 @@ public class DecimalCastedFloatPrimitiveProtobufMappingStrategyTest {
         Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalPrecision()).thenReturn(PRECISION);
         Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalScale()).thenReturn(SCALE);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
-        decimalCastedFloatPrimitiveProtobufMappingStrategy = new DecimalCastedFloatPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        decimalCastedFloatPrimitiveProtobufMappingStrategy = new FloatToDecimalDataTypeMappingStrategy(maxComputeSinkConfig);
     }
 
     @Test

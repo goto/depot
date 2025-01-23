@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DoublePrimitiveProtobufMappingStrategyTest {
+public class DoubleDataTypeMappingStrategyTest {
 
-    private final DoublePrimitiveProtobufMappingStrategy doublePrimitiveProtobufMappingStrategy = new DoublePrimitiveProtobufMappingStrategy();
+    private final DoubleDataTypeMappingStrategy doublePrimitiveProtobufMappingStrategy = new DoubleDataTypeMappingStrategy();
 
     @Test
     public void shouldMapProtoDoubleToOdpsDouble() {

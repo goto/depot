@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UpcastedIntegerPrimitiveProtobufMappingStrategyTest {
+public class IntegerToBigintDataTypeMappingStrategyTest {
 
-    private final UpcastedIntegerPrimitiveProtobufMappingStrategy upcastedIntegerPrimitiveProtobufMappingStrategy = new UpcastedIntegerPrimitiveProtobufMappingStrategy();
+    private final IntegerToBigintDataTypeMappingStrategy upcastedIntegerPrimitiveProtobufMappingStrategy = new IntegerToBigintDataTypeMappingStrategy();
 
     @Test
     public void shouldMapProtoInt64ToOdpsBigInt() {

@@ -12,9 +12,9 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BasePrimitiveProtobufMappingStrategyTest {
+public class BaseDataTypeMappingStrategyTest {
 
-    private final BasePrimitiveProtobufMappingStrategy basePrimitiveProtobufMappingStrategy = new BasePrimitiveProtobufMappingStrategy();
+    private final BaseDataTypeMappingStrategy basePrimitiveProtobufMappingStrategy = new BaseDataTypeMappingStrategy();
 
     @Test
     public void shouldMapProtoBytesToOdpsBinaryType() {

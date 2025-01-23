@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FloatPrimitiveProtobufMappingStrategyTest {
+public class FloatDataTypeMappingStrategyTest {
 
-    private final FloatPrimitiveProtobufMappingStrategy floatPrimitiveProtobufMappingStrategy = new FloatPrimitiveProtobufMappingStrategy();
+    private final FloatDataTypeMappingStrategy floatPrimitiveProtobufMappingStrategy = new FloatDataTypeMappingStrategy();
 
     @Test
     public void shouldMapProtoFloatToOdpsFloat() {
@@ -50,5 +50,5 @@ public class FloatPrimitiveProtobufMappingStrategyTest {
 
         assertEquals(value, mappedValue);
     }
-    
+
 }
