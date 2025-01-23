@@ -43,6 +43,6 @@ public class DoubleToDecimalDataTypeMappingStrategy implements ProtoPrimitiveDat
         if (!Double.isFinite(value)) {
             throw new InvalidMessageException("Invalid float value: " + value);
         }
-        return new BigDecimal(value, new MathContext(precision)).setScale(scale, roundingMode);
+        return new BigDecimal(String.valueOf(value), new MathContext(precision)).setScale(scale, roundingMode);
     }
 }
