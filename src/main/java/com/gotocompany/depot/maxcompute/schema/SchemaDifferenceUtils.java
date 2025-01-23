@@ -47,7 +47,7 @@ public class SchemaDifferenceUtils {
             Map.Entry<String, MaxComputeColumnDetail> entry = newMaxComputeColumnDetailIterator.next();
             String columnName = entry.getKey();
             MaxComputeColumnDetail oldMetadata = oldMaxComputeColumnDetail.get(columnName);
-            if (!Objects.isNull(oldMetadata) && !(isStructType(oldMetadata.getTypeInfo()) || isStructArrayType(oldMetadata.getTypeInfo())) && !entry.getValue().getTypeInfo().equals(oldMetadata.getTypeInfo())) {
+            if (!Objects.isNull(oldMetadata) && (isPrimitiveType(oldMetadata.getTypeInfo()) || isPrimitiveArrayType(oldMetadata.getTypeInfo())) && !entry.getValue().getTypeInfo().equals(oldMetadata.getTypeInfo())) {
                 throw new UnsupportedOperationException(String.format("Cannot change column type for column %s from %s to %s", columnName, oldMetadata.getTypeInfo(), entry.getValue().getTypeInfo()));
             }
             if (Objects.isNull(oldMetadata)) { //handle new column / struct field
