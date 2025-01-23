@@ -36,7 +36,7 @@ public class MetadataUtil {
         this.maxComputeTimestampDataType = maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType();
         this.zoneId = maxComputeSinkConfig.getZoneId();
         metadataTypeMap = ImmutableMap.<String, TypeInfo>builder()
-                .put(INTEGER, TypeInfoFactory.INT)
+                .put(INTEGER, maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled() ? TypeInfoFactory.BIGINT : TypeInfoFactory.INT)
                 .put(LONG, TypeInfoFactory.BIGINT)
                 .put(FLOAT, TypeInfoFactory.FLOAT)
                 .put(DOUBLE, TypeInfoFactory.DOUBLE)
@@ -45,7 +45,12 @@ public class MetadataUtil {
                 .put(TIMESTAMP, maxComputeTimestampDataType.getTypeInfo())
                 .build();
         metadataMapperMap = ImmutableMap.<String, Function<Object, Object>>builder()
-                .put(INTEGER, obj -> ((Number) obj).intValue())
+                .put(INTEGER, obj -> {
+                    if (maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()) {
+                        return ((Number) obj).longValue();
+                    }
+                    return ((Number) obj).intValue();
+                })
                 .put(LONG, obj -> ((Number) obj).longValue())
                 .put(FLOAT, obj -> ((Number) obj).floatValue())
                 .put(DOUBLE, obj -> ((Number) obj).doubleValue())
