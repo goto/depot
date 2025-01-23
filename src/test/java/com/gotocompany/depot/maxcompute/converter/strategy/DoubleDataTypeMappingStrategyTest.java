@@ -50,5 +50,4 @@ public class DoubleDataTypeMappingStrategyTest {
 
         assertEquals(value, mappedValue);
     }
-    
 }
