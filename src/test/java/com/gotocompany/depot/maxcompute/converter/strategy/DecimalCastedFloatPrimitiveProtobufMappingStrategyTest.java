@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class DecimalCastedFloatPrimitiveProtobufMappingStrategyTest {
 
@@ -21,8 +22,9 @@ public class DecimalCastedFloatPrimitiveProtobufMappingStrategyTest {
     @Before
     public void setup() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getFloatDecimalFormPrecision()).thenReturn(PRECISION);
-        Mockito.when(maxComputeSinkConfig.getFloatDecimalFormScale()).thenReturn(SCALE);
+        Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalPrecision()).thenReturn(PRECISION);
+        Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalScale()).thenReturn(SCALE);
+        Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
         decimalCastedFloatPrimitiveProtobufMappingStrategy = new DecimalCastedFloatPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
     }
 

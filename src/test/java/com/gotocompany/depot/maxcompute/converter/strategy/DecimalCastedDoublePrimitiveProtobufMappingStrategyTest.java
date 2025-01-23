@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,8 +21,9 @@ public class DecimalCastedDoublePrimitiveProtobufMappingStrategyTest {
     @Before
     public void setUp() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.getDoubleDecimalFormPrecision()).thenReturn(38);
-        Mockito.when(maxComputeSinkConfig.getDoubleDecimalFormScale()).thenReturn(18);
+        Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalPrecision()).thenReturn(38);
+        Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(18);
+        Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
         decimalCastedDoublePrimitiveProtobufMappingStrategy = new DecimalCastedDoublePrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
     }
 

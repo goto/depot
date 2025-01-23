@@ -17,10 +17,12 @@ public class DecimalCastedDoublePrimitiveProtobufMappingStrategy implements Prim
 
     private final int precision;
     private final int scale;
+    private final RoundingMode roundingMode;
 
     public DecimalCastedDoublePrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.precision = maxComputeSinkConfig.getDoubleDecimalFormPrecision();
-        this.scale = maxComputeSinkConfig.getDoubleDecimalFormScale();
+        this.precision = maxComputeSinkConfig.getProtoDoubleToDecimalPrecision();
+        this.scale = maxComputeSinkConfig.getProtoDoubleToDecimalScale();
+        this.roundingMode = maxComputeSinkConfig.getDecimalRoundingMode();
     }
 
     @Override
@@ -41,6 +43,6 @@ public class DecimalCastedDoublePrimitiveProtobufMappingStrategy implements Prim
         if (!Double.isFinite(value)) {
             throw new InvalidMessageException("Invalid float value: " + value);
         }
-        return new BigDecimal(value, new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
+        return new BigDecimal(value, new MathContext(precision)).setScale(scale, roundingMode);
     }
 }

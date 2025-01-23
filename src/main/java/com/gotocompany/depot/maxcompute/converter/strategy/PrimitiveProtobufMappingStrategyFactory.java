@@ -6,11 +6,11 @@ public class PrimitiveProtobufMappingStrategyFactory {
 
     public static PrimitiveProtobufMappingStrategy createPrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
         PrimitiveProtobufMappingStrategy basePrimitiveProtobufMappingStrategy = new BasePrimitiveProtobufMappingStrategy();
-        PrimitiveProtobufMappingStrategy integerPrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isUpcastIntegerTypesEnabled()
+        PrimitiveProtobufMappingStrategy integerPrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()
                 ? new UpcastedIntegerPrimitiveProtobufMappingStrategy() : new IntegerPrimitiveProtobufMappingStrategy();
-        PrimitiveProtobufMappingStrategy floatPrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isCastFloatToDecimalEnabled()
+        PrimitiveProtobufMappingStrategy floatPrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()
                 ? new DecimalCastedFloatPrimitiveProtobufMappingStrategy(maxComputeSinkConfig) : new FloatPrimitiveProtobufMappingStrategy();
-        PrimitiveProtobufMappingStrategy doublePrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isCastDoubleToDecimalEnabled()
+        PrimitiveProtobufMappingStrategy doublePrimitiveProtobufMappingStrategy = maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()
                 ? new DecimalCastedDoublePrimitiveProtobufMappingStrategy(maxComputeSinkConfig) : new DoublePrimitiveProtobufMappingStrategy();
 
         return basePrimitiveProtobufMappingStrategy.mergeStrategy(integerPrimitiveProtobufMappingStrategy)

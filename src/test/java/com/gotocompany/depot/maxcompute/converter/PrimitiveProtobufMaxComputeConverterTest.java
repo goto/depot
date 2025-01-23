@@ -33,9 +33,9 @@ public class PrimitiveProtobufMaxComputeConverterTest {
         this.descriptor = TestMaxComputeTypeInfo.TestFields.getDescriptor();
         this.descriptorRepeated = TestMaxComputeTypeInfo.TestFieldsRepeated.getDescriptor();
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
-        Mockito.when(maxComputeSinkConfig.isUpcastIntegerTypesEnabled()).thenReturn(false);
-        Mockito.when(maxComputeSinkConfig.isCastDoubleToDecimalEnabled()).thenReturn(false);
-        Mockito.when(maxComputeSinkConfig.isCastFloatToDecimalEnabled()).thenReturn(false);
+        Mockito.when(maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()).thenReturn(false);
+        Mockito.when(maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()).thenReturn(false);
+        Mockito.when(maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()).thenReturn(false);
         this.primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter(maxComputeSinkConfig);
     }
 

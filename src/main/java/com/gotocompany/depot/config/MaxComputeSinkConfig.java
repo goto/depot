@@ -9,6 +9,7 @@ import com.gotocompany.depot.config.converter.ZoneIdConverter;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
 
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -149,32 +150,36 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("1")
     int getMaxFutureYearEventTimeDifference();
 
-    @Key("SINK_MAXCOMPUTE_UPCAST_INTEGER_TYPES_ENABLED")
+    @Key("SINK_MAXCOMPUTE_PROTO_INTEGER_TYPES_TO_BIGINT_ENABLED")
     @DefaultValue("false")
-    boolean isUpcastIntegerTypesEnabled();
+    boolean isProtoIntegerTypesToBigintEnabled();
 
-    @Key("SINK_MAXCOMPUTE_CAST_FLOAT_TO_DECIMAL_ENABLED")
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED")
     @DefaultValue("false")
-    boolean isCastFloatToDecimalEnabled();
+    boolean isProtoFloatTypeToDecimalEnabled();
 
-    @Key("SINK_MAXCOMPUTE_FLOAT_DECIMAL_FORM_PRECISION")
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TO_DECIMAL_PRECISION")
     @DefaultValue("38")
-    int getFloatDecimalFormPrecision();
+    int getProtoFloatToDecimalPrecision();
 
-    @Key("SINK_MAXCOMPUTE_FLOAT_DECIMAL_FORM_SCALE")
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TO_DECIMAL_SCALE")
     @DefaultValue("18")
-    int getFloatDecimalFormScale();
+    int getProtoFloatToDecimalScale();
 
     @Key("SINK_MAXCOMPUTE_CAST_DOUBLE_TO_DECIMAL_ENABLED")
     @DefaultValue("false")
-    boolean isCastDoubleToDecimalEnabled();
+    boolean isProtoDoubleToDecimalEnabled();
 
-    @Key("SINK_MAXCOMPUTE_DOUBLE_DECIMAL_FORM_PRECISION")
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TO_DECIMAL_PRECISION")
     @DefaultValue("38")
-    int getDoubleDecimalFormPrecision();
+    int getProtoDoubleToDecimalPrecision();
 
-    @Key("SINK_MAXCOMPUTE_DOUBLE_DECIMAL_FORM_SCALE")
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TO_DECIMAL_SCALE")
     @DefaultValue("18")
-    int getDoubleDecimalFormScale();
+    int getProtoDoubleToDecimalScale();
+
+    @Key("SINK_MAXCOMPUTE_DECIMAL_ROUNDING_MODE")
+    @DefaultValue("UNECSSARY")
+    RoundingMode getDecimalRoundingMode();
 
 }

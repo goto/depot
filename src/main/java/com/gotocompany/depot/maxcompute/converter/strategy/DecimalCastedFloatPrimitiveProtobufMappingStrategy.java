@@ -19,10 +19,12 @@ public class DecimalCastedFloatPrimitiveProtobufMappingStrategy implements Primi
 
     private final int scale;
     private final int precision;
+    private final RoundingMode roundingMode;
 
     public DecimalCastedFloatPrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.scale = maxComputeSinkConfig.getFloatDecimalFormScale();
-        this.precision = maxComputeSinkConfig.getFloatDecimalFormPrecision();
+        this.scale = maxComputeSinkConfig.getProtoFloatToDecimalScale();
+        this.precision = maxComputeSinkConfig.getProtoFloatToDecimalPrecision();
+        this.roundingMode = maxComputeSinkConfig.getDecimalRoundingMode();
     }
 
     @Override
@@ -44,7 +46,7 @@ public class DecimalCastedFloatPrimitiveProtobufMappingStrategy implements Primi
             throw new InvalidMessageException("Invalid float value: " + value);
         }
         return new BigDecimal(Float.toString(value), new MathContext(precision))
-                .setScale(scale, RoundingMode.HALF_UP);
+                .setScale(scale, roundingMode);
     }
 
 }
