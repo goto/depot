@@ -179,7 +179,7 @@ public interface MaxComputeSinkConfig extends Config {
     int getProtoDoubleToDecimalScale();
 
     @Key("SINK_MAXCOMPUTE_DECIMAL_ROUNDING_MODE")
-    @DefaultValue("UNECSSARY")
+    @DefaultValue("UNNECESSARY")
     RoundingMode getDecimalRoundingMode();
 
 }
