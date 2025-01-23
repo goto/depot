@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.initializer;
+package com.gotocompany.depot.maxcompute.converter.strategy;
 
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 

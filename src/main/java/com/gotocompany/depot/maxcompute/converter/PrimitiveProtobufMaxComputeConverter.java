@@ -3,8 +3,8 @@ package com.gotocompany.depot.maxcompute.converter;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.converter.initializer.PrimitiveProtobufMappingStrategy;
-import com.gotocompany.depot.maxcompute.converter.initializer.PrimitiveProtobufMappingStrategyFactory;
+import com.gotocompany.depot.maxcompute.converter.strategy.PrimitiveProtobufMappingStrategy;
+import com.gotocompany.depot.maxcompute.converter.strategy.PrimitiveProtobufMappingStrategyFactory;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
 /**

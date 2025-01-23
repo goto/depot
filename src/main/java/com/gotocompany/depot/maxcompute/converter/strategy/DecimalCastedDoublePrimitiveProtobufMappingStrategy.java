@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.initializer;
+package com.gotocompany.depot.maxcompute.converter.strategy;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -13,38 +13,34 @@ import java.math.RoundingMode;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.google.protobuf.Descriptors.FieldDescriptor.Type.FLOAT;
+public class DecimalCastedDoublePrimitiveProtobufMappingStrategy implements PrimitiveProtobufMappingStrategy {
 
-public class DecimalCastedFloatPrimitiveProtobufMappingStrategy implements PrimitiveProtobufMappingStrategy {
-
-    private final int scale;
     private final int precision;
+    private final int scale;
 
-    public DecimalCastedFloatPrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.scale = maxComputeSinkConfig.getFloatDecimalFormScale();
-        this.precision = maxComputeSinkConfig.getFloatDecimalFormPrecision();
+    public DecimalCastedDoublePrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
+        this.precision = maxComputeSinkConfig.getDoubleDecimalFormPrecision();
+        this.scale = maxComputeSinkConfig.getDoubleDecimalFormScale();
     }
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, TypeInfo>builder()
-                .put(FLOAT, TypeInfoFactory.getDecimalTypeInfo(precision, scale))
+                .put(Descriptors.FieldDescriptor.Type.DOUBLE, TypeInfoFactory.getDecimalTypeInfo(precision, scale))
                 .build();
     }
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(FLOAT, object -> handleFloat((float) object))
+                .put(Descriptors.FieldDescriptor.Type.DOUBLE, value -> handleDouble((double) value))
                 .build();
     }
 
-    private BigDecimal handleFloat(float value) {
-        if (!Float.isFinite(value)) {
+    private BigDecimal handleDouble(double value) {
+        if (!Double.isFinite(value)) {
             throw new InvalidMessageException("Invalid float value: " + value);
         }
-        return new BigDecimal(Float.toString(value), new MathContext(precision))
-                .setScale(scale, RoundingMode.HALF_UP);
+        return new BigDecimal(value, new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
     }
-
 }
