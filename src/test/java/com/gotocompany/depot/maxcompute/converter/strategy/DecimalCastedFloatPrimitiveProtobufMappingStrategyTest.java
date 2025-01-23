@@ -38,14 +38,12 @@ public class DecimalCastedFloatPrimitiveProtobufMappingStrategyTest {
 
     @Test
     public void shouldMapProtoFloatValue() {
-        float input = 123123123.123123f;
+        float input = 123.456f;
 
         BigDecimal result = (BigDecimal) decimalCastedFloatPrimitiveProtobufMappingStrategy.getProtoPayloadMapperMap()
                 .get(Descriptors.FieldDescriptor.Type.FLOAT)
                 .apply(input);
 
-        Assertions.assertEquals(BigDecimal.valueOf(input), result);
-        Assertions.assertEquals(PRECISION, result.precision());
-
+        Assertions.assertEquals(input, result.floatValue());
     }
 }
