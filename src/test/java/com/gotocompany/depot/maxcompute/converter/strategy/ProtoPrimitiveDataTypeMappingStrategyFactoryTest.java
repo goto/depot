@@ -12,14 +12,12 @@ import java.math.RoundingMode;
 import java.util.Map;
 
 public class ProtoPrimitiveDataTypeMappingStrategyFactoryTest {
-    
     @Test
     public void shouldReturnDefaultImplementation() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         Mockito.when(maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()).thenReturn(false);
-        
         ProtoPrimitiveDataTypeMappingStrategy protoPrimitiveDataTypeMappingStrategy = ProtoPrimitiveDataTypeMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
         Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMappingStrategy.getProtoTypeMap();
 
@@ -71,5 +69,4 @@ public class ProtoPrimitiveDataTypeMappingStrategyFactoryTest {
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT64));
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT32));
     }
-    
 }
