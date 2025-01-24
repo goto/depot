@@ -62,6 +62,7 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.isProtoDefaultValueEnabled()).thenReturn(false);
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, null, getMockedMessage());
@@ -325,7 +326,8 @@ public class ProtoDataColumnRecordDecoratorTest {
                 sinkConfig,
                 partitioningStrategy,
                 Mockito.mock(StatsDReporter.class),
-                maxComputeMetrics
+                maxComputeMetrics,
+                maxComputeSinkConfig
         );
     }
 

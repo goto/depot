@@ -2,6 +2,7 @@ package com.gotocompany.depot.maxcompute.record;
 
 import com.aliyun.odps.PartitionSpec;
 import com.google.protobuf.Descriptors;
+import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -19,7 +20,7 @@ import com.gotocompany.depot.metrics.StatsDReporter;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -40,6 +41,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
     private final MaxComputeMetrics maxComputeMetrics;
     private final boolean sinkConnectorSchemaProtoAllowUnknownFieldsEnable;
     private final boolean sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable;
+    private final boolean defaultValueEnabled;
 
     public ProtoDataColumnRecordDecorator(RecordDecorator decorator,
                                           ProtobufConverterOrchestrator protobufConverterOrchestrator,
@@ -47,7 +49,8 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                                           SinkConfig sinkConfig,
                                           PartitioningStrategy partitioningStrategy,
                                           StatsDReporter statsDReporter,
-                                          MaxComputeMetrics maxComputeMetrics) {
+                                          MaxComputeMetrics maxComputeMetrics,
+                                          MaxComputeSinkConfig maxComputeSinkConfig) {
         super(decorator);
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
         this.protoMessageParser = messageParser;
@@ -66,13 +69,14 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         this.maxComputeMetrics = maxComputeMetrics;
         this.sinkConnectorSchemaProtoAllowUnknownFieldsEnable = sinkConfig.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable();
         this.sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable = sinkConfig.getSinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable();
+        this.defaultValueEnabled = maxComputeSinkConfig.isProtoDefaultValueEnabled();
     }
 
     /**
      * Converts protobuf message to maxcompute record, populating the data column and partition column.
      *
      * @param recordWrapper record template to be populated
-     * @param message protobuf raw message
+     * @param message       protobuf raw message
      * @return populated record
      * @throws IOException if an error occurs while processing the message
      */
@@ -91,13 +95,17 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             }
         }
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
-        Map<Descriptors.FieldDescriptor, Object> fields = protoMessage.getAllFields();
-        for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : fields.entrySet()) {
-            if (entry.getKey().getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
+        for (Descriptors.FieldDescriptor fieldDescriptor : protoMessage.getDescriptorForType().getFields()) {
+            if (fieldDescriptor.getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
                 continue;
             }
-            recordWrapper.getRecord()
-                    .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(entry.getKey(), entry.getValue()));
+            if (!fieldDescriptor.isRepeated() && !protoMessage.hasField(fieldDescriptor)) {
+                if (defaultValueEnabled) {
+                    recordWrapper.getRecord().set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(fieldDescriptor, getDefaultValue(fieldDescriptor)));
+                }
+                continue;
+            }
+            recordWrapper.getRecord().set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(fieldDescriptor, protoMessage.getField(fieldDescriptor)));
         }
         PartitionSpec partitionSpec = null;
         if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {
@@ -109,6 +117,16 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
+    }
+
+    private Object getDefaultValue(Descriptors.FieldDescriptor fieldDescriptor) {
+        if (fieldDescriptor.isRepeated()) {
+            return Collections.emptyList();
+        }
+        if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+            return fieldDescriptor.toProto().getDefaultInstanceForType();
+        }
+        return fieldDescriptor.getDefaultValue();
     }
 
 }

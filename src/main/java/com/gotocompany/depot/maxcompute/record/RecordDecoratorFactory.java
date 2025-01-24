@@ -27,7 +27,8 @@ public class RecordDecoratorFactory {
                 recordDecoratorConfig.sinkConfig,
                 recordDecoratorConfig.partitioningStrategy,
                 recordDecoratorConfig.statsDReporter,
-                recordDecoratorConfig.maxComputeMetrics);
+                recordDecoratorConfig.maxComputeMetrics,
+                recordDecoratorConfig.maxComputeSinkConfig);
         if (!recordDecoratorConfig.maxComputeSinkConfig.shouldAddMetadata()) {
             return dataColumnRecordDecorator;
         }

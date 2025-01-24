@@ -182,4 +182,7 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("UNNECESSARY")
     RoundingMode getDecimalRoundingMode();
 
+    @Key("SINK_MAXCOMPUTE_PROTO_DEFAULT_VALUE_ENABLED")
+    @DefaultValue("false")
+    boolean isProtoDefaultValueEnabled();
 }
