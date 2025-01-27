@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CsvPairToMapConverter implements Converter<Map<String, String>> {
+public class KeyValuePairsToMapConverter implements Converter<Map<String, String>> {
 
     private static final String KEY_VALUE_SEPARATOR = "=";
     private static final String ENTRY_SEPARATOR = ",";
