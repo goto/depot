@@ -30,14 +30,14 @@ public class NonNumericDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(BYTES, object -> handleBytes((ByteString) object))
+                .put(BYTES, object -> toBinaryFrom((ByteString) object))
                 .put(STRING, Function.identity())
                 .put(ENUM, Object::toString)
                 .put(BOOL, Function.identity())
                 .build();
     }
 
-    private static Binary handleBytes(ByteString object) {
+    private static Binary toBinaryFrom(ByteString object) {
         return new Binary(object.toByteArray());
     }
 
