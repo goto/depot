@@ -167,7 +167,7 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("18")
     int getProtoFloatToDecimalScale();
 
-    @Key("SINK_MAXCOMPUTE_CAST_DOUBLE_TO_DECIMAL_ENABLED")
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED")
     @DefaultValue("false")
     boolean isProtoDoubleToDecimalEnabled();
 
