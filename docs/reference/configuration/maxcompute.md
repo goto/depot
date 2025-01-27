@@ -329,3 +329,12 @@ Supported values are `HALF_UP`, `HALF_DOWN`, `HALF_EVEN`, `UP`, `DOWN`, `CEILING
 * Example value: `HALF_UP`
 * Type: `required when any of SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED or SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED is true`
 * Default value: `UNNECESSARY`
+
+## SINK_MAXCOMPUTE_TABLE_PROPERTIES
+
+Properties for the MaxCompute table. This config will be used for setting the properties for the MaxCompute table. 
+The format of this config is `key1=value1,key2=value2,...`. Further documentation on table properties [here](https://www.alibabacloud.com/help/en/maxcompute/user-guide/table-operations).
+
+* Example value: `table.format.version=2`
+* Type: `optional`
+* Default value: ``
