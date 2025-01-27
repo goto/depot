@@ -3,8 +3,8 @@ package com.gotocompany.depot.maxcompute.converter;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
-import com.gotocompany.depot.maxcompute.converter.strategy.ProtoPrimitiveDataTypeMapper;
-import com.gotocompany.depot.maxcompute.converter.strategy.ProtoPrimitiveDataTypeMappingStrategyFactory;
+import com.gotocompany.depot.maxcompute.converter.mapper.ProtoPrimitiveDataTypeMapper;
+import com.gotocompany.depot.maxcompute.converter.mapper.ProtoPrimitiveDataTypeMapperFactory;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
 /**
@@ -15,7 +15,7 @@ public class PrimitiveProtobufMaxComputeConverter implements ProtobufMaxComputeC
     private final ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper;
 
     public PrimitiveProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        this.protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMapperFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
     }
 
     @Override

@@ -1,9 +1,10 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.noncasted;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Descriptors;
+import com.gotocompany.depot.maxcompute.converter.mapper.ProtoPrimitiveDataTypeMapper;
 
 import java.util.Map;
 import java.util.function.Function;

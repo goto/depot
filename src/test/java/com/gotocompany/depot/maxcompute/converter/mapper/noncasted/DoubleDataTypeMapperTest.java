@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.noncasted;
 
 import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.type.TypeInfo;
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DoubleDataTypeMappingStrategyTest {
+public class DoubleDataTypeMapperTest {
 
     private final DoubleDataTypeMapper doublePrimitiveProtobufMappingStrategy = new DoubleDataTypeMapper();
 

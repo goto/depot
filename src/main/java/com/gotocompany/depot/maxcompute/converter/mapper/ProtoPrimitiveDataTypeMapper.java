@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;

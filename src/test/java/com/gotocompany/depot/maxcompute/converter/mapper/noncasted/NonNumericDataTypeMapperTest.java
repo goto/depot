@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.noncasted;
 
 import com.aliyun.odps.data.Binary;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BaseDataTypeMappingStrategyTest {
+public class NonNumericDataTypeMapperTest {
 
     private final NonNumericDataTypeMapper basePrimitiveProtobufMappingStrategy = new NonNumericDataTypeMapper();
 

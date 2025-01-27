@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -18,7 +18,7 @@ public class ProtoPrimitiveDataTypeMapperFactoryTest {
         Mockito.when(maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()).thenReturn(false);
-        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMapperFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
         Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapper.getProtoTypeMap();
 
         Assertions.assertEquals(TypeInfoFactory.INT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT32));
@@ -51,7 +51,7 @@ public class ProtoPrimitiveDataTypeMapperFactoryTest {
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(scale);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
 
-        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMappingStrategyFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
+        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMapperFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
         Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapper.getProtoTypeMap();
 
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT32));

@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.casted;
 
 import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.type.DecimalTypeInfo;
@@ -13,7 +13,7 @@ import org.mockito.Mockito;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class FloatToDecimalDataTypeMappingStrategyTest {
+public class FloatToDecimalDataTypeMapperTest {
 
     private static final int PRECISION = 38;
     private static final int SCALE = 18;

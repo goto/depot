@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.casted;
 
 import com.aliyun.odps.OdpsType;
 import com.aliyun.odps.type.TypeInfo;
@@ -14,7 +14,7 @@ import java.math.RoundingMode;
 
 import static org.junit.Assert.assertEquals;
 
-public class DoubleToDecimalDataTypeMappingStrategyTest {
+public class DoubleToDecimalDataTypeMapperTest {
 
     private DoubleToDecimalDataTypeMapper decimalCastedDoublePrimitiveProtobufMappingStrategy;
 

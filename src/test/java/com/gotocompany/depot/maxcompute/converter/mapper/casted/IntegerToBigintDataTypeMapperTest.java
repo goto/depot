@@ -1,4 +1,4 @@
-package com.gotocompany.depot.maxcompute.converter.strategy;
+package com.gotocompany.depot.maxcompute.converter.mapper.casted;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class IntegerToBigintDataTypeMappingStrategyTest {
+public class IntegerToBigintDataTypeMapperTest {
 
     private final IntegerToBigintDataTypeMapper upcastedIntegerPrimitiveProtobufMappingStrategy = new IntegerToBigintDataTypeMapper();
 
