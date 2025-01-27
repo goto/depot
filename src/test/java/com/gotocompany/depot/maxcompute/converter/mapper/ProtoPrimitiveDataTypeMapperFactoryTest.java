@@ -18,8 +18,9 @@ public class ProtoPrimitiveDataTypeMapperFactoryTest {
         Mockito.when(maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()).thenReturn(false);
         Mockito.when(maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()).thenReturn(false);
-        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMapperFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
-        Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapper.getProtoTypeMap();
+        ProtoPrimitiveDataTypeMapperFactory protoPrimitiveDataTypeMapperFactory = new ProtoPrimitiveDataTypeMapperFactory(maxComputeSinkConfig);
+
+        Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapperFactory.getProtoTypeMap();
 
         Assertions.assertEquals(TypeInfoFactory.INT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT32));
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT64));
@@ -50,9 +51,9 @@ public class ProtoPrimitiveDataTypeMapperFactoryTest {
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalPrecision()).thenReturn(precision);
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(scale);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
+        ProtoPrimitiveDataTypeMapperFactory protoPrimitiveDataTypeMapperFactory = new ProtoPrimitiveDataTypeMapperFactory(maxComputeSinkConfig);
 
-        ProtoPrimitiveDataTypeMapper protoPrimitiveDataTypeMapper = ProtoPrimitiveDataTypeMapperFactory.createPrimitiveProtobufMappingStrategy(maxComputeSinkConfig);
-        Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapper.getProtoTypeMap();
+        Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapperFactory.getProtoTypeMap();
 
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT32));
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT64));
