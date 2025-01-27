@@ -159,11 +159,11 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("false")
     boolean isProtoFloatTypeToDecimalEnabled();
 
-    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TO_DECIMAL_PRECISION")
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_PRECISION")
     @DefaultValue("38")
     int getProtoFloatToDecimalPrecision();
 
-    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TO_DECIMAL_SCALE")
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_SCALE")
     @DefaultValue("18")
     int getProtoFloatToDecimalScale();
 
@@ -171,11 +171,11 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("false")
     boolean isProtoDoubleToDecimalEnabled();
 
-    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TO_DECIMAL_PRECISION")
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_PRECISION")
     @DefaultValue("38")
     int getProtoDoubleToDecimalPrecision();
 
-    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TO_DECIMAL_SCALE")
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_SCALE")
     @DefaultValue("18")
     int getProtoDoubleToDecimalScale();
 
