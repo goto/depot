@@ -261,3 +261,80 @@ Contains the maximum future event time difference in years. Records with event t
 * Type: `required`
 * Default value: `1`
 
+## SINK_MAXCOMPUTE_PROTO_INTEGER_TYPES_TO_BIGINT_ENABLED
+
+Configuration for enabling the conversion of proto integer types to bigint. This config will be used for enabling the conversion of all proto integer types to bigint. 
+Otherwise proto integer types will be converted to corresponding MaxCompute types ( 32 bit -> INT, 64 bit -> BIGINT).
+
+* Example value: `true`
+* Type: `required`
+* Default value: `false`
+
+## SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED
+
+Configuration for enabling the conversion of proto float types to maxcompute decimal. There are possibilities of precision loss when using plain float type in MaxCompute.
+For further information, check the official documentation [here](https://www.alibabacloud.com/help/en/maxcompute/user-guide/maxcompute-v2-0-data-type-edition).
+
+* Example value: `true`
+* Type: `required`
+* Default value: `false`
+
+## SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_PRECISION
+
+Contains the precision for the conversion of proto float types to maxcompute decimal. This config will be used for setting the precision for the conversion of proto float types to maxcompute decimal.
+
+* Example value: `38`
+* Type: `required when SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED is true`
+* Default value: `38`
+
+## SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_SCALE
+
+Contains the scale for the conversion of proto float types to maxcompute decimal. This config will be used for setting the scale for the conversion of proto float types to maxcompute decimal.
+
+* Example value: `18`
+* Type: `required when SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED is true`
+* Default value: `18`
+
+## SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED
+
+Configuration for enabling the conversion of proto double types to maxcompute decimal. There are possibilities of precision loss when using plain double type in MaxCompute.
+For further information, check the official documentation [here](https://www.alibabacloud.com/help/en/maxcompute/user-guide/maxcompute-v2-0-data-type-edition).
+
+* Example value: `true`
+* Type: `required`
+* Default value: `false`
+
+## SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_PRECISION
+
+Contains the precision for the conversion of proto double types to maxcompute decimal. This config will be used for setting the precision for the conversion of proto double types to maxcompute decimal.
+
+* Example value: `38`
+* Type: `required when SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED is true`
+* Default value: `38`
+
+## SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_SCALE
+
+Contains the scale for the conversion of proto double types to maxcompute decimal. This config will be used for setting the scale for the conversion of proto double types to maxcompute decimal.
+
+* Example value: `18`
+* Type: `required when SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED is true`
+* Default value: `18`
+
+## SINK_MAXCOMPUTE_DECIMAL_ROUNDING_MODE
+
+Contains the rounding mode for the conversion of proto float and double types to maxcompute decimal. 
+This config will be used for setting the rounding mode for the conversion of proto float and double types to maxcompute decimal.
+Supported values are `HALF_UP`, `HALF_DOWN`, `HALF_EVEN`, `UP`, `DOWN`, `CEILING`, `FLOOR`, `UNNECESSARY`.
+
+* Example value: `HALF_UP`
+* Type: `required when any of SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED or SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED is true`
+* Default value: `UNNECESSARY`
+
+## SINK_MAXCOMPUTE_TABLE_PROPERTIES
+
+Properties for the MaxCompute table. This config will be used for setting the properties for the MaxCompute table. 
+The format of this config is `key1=value1,key2=value2,...`. Further documentation on table properties [here](https://www.alibabacloud.com/help/en/maxcompute/user-guide/table-operations).
+
+* Example value: `table.format.version=2`
+* Type: `optional`
+* Default value: ``

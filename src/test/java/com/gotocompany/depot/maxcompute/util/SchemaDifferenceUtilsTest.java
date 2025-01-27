@@ -55,4 +55,40 @@ public class SchemaDifferenceUtilsTest {
                 .collect(Collectors.toSet())));
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void shouldThrowUnsupportedExceptionWhenChangingPrimitiveType() {
+        TableSchema oldSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.INT).build())
+                .build();
+        TableSchema newSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.BIGINT).build())
+                .build();
+
+        SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, newSchema, "test_schema", "test_table");
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void shouldThrowUnsupportedExceptionWhenChangingArrayPrimitiveTypeToDifferentArrayType() {
+        TableSchema oldSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.INT)).build())
+                .build();
+        TableSchema newSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.BIGINT)).build())
+                .build();
+
+        SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, newSchema, "test_schema", "test_table");
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void shouldThrowUnsupportedExceptionWhenChangingArrayPrimitiveTypeToNonArrayType() {
+        TableSchema oldSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.INT)).build())
+                .build();
+        TableSchema newSchema = TableSchema.builder()
+                .withColumn(Column.newBuilder("col1", TypeInfoFactory.INT).build())
+                .build();
+
+        SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, newSchema, "test_schema", "test_table");
+    }
+
 }

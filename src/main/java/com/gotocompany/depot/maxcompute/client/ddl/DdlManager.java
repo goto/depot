@@ -64,9 +64,11 @@ public class DdlManager {
         tableValidator.validate(tableName, maxComputeSinkConfig.getMaxComputeTableLifecycleDays(), tableSchema);
         RetryUtils.executeWithRetry(() -> {
                     Instant start = Instant.now();
-                    this.odps.tables().create(projectName, datasetName, tableName, tableSchema, "",
-                            true, maxComputeSinkConfig.getMaxComputeTableLifecycleDays(),
-                            null, null);
+                    this.odps.tables().newTableCreator(projectName, tableName, tableSchema)
+                            .withSchemaName(datasetName)
+                            .withLifeCycle(maxComputeSinkConfig.getMaxComputeTableLifecycleDays())
+                            .withTblProperties(maxComputeSinkConfig.getTableProperties())
+                            .create();
                     instrumentation.logInfo("Successfully created maxCompute table " + tableName);
                     instrument(start, MaxComputeMetrics.MaxComputeAPIType.TABLE_CREATE);
                 }, maxComputeSinkConfig.getMaxDdlRetryCount(), maxComputeSinkConfig.getDdlRetryBackoffMillis(),

@@ -3,12 +3,14 @@ package com.gotocompany.depot.config;
 import com.aliyun.odps.tunnel.io.CompressOption;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.converter.ConfToListConverter;
+import com.gotocompany.depot.config.converter.KeyValuePairsToMapConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
 import com.gotocompany.depot.config.converter.ZoneIdConverter;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
 
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -148,5 +150,42 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_MAX_FUTURE_EVENT_TIME_DIFFERENCE_YEAR")
     @DefaultValue("1")
     int getMaxFutureYearEventTimeDifference();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_INTEGER_TYPES_TO_BIGINT_ENABLED")
+    @DefaultValue("false")
+    boolean isProtoIntegerTypesToBigintEnabled();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED")
+    @DefaultValue("false")
+    boolean isProtoFloatTypeToDecimalEnabled();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_PRECISION")
+    @DefaultValue("38")
+    int getProtoFloatToDecimalPrecision();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_SCALE")
+    @DefaultValue("18")
+    int getProtoFloatToDecimalScale();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_ENABLED")
+    @DefaultValue("false")
+    boolean isProtoDoubleToDecimalEnabled();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_PRECISION")
+    @DefaultValue("38")
+    int getProtoDoubleToDecimalPrecision();
+
+    @Key("SINK_MAXCOMPUTE_PROTO_DOUBLE_TYPE_TO_DECIMAL_SCALE")
+    @DefaultValue("18")
+    int getProtoDoubleToDecimalScale();
+
+    @Key("SINK_MAXCOMPUTE_DECIMAL_ROUNDING_MODE")
+    @DefaultValue("UNNECESSARY")
+    RoundingMode getDecimalRoundingMode();
+
+    @Key("SINK_MAXCOMPUTE_TABLE_PROPERTIES")
+    @ConverterClass(KeyValuePairsToMapConverter.class)
+    @DefaultValue("")
+    Map<String, String> getTableProperties();
 
 }
