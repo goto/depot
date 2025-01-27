@@ -37,11 +37,11 @@ public class FloatToDecimalDataTypeMapper implements ProtoPrimitiveDataTypeMappe
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(FLOAT, object -> handleFloat((float) object))
+                .put(FLOAT, object -> isValid((float) object))
                 .build();
     }
 
-    private BigDecimal handleFloat(float value) {
+    private BigDecimal isValid(float value) {
         if (!Float.isFinite(value)) {
             throw new InvalidMessageException("Invalid float value: " + value);
         }

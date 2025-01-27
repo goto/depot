@@ -35,13 +35,13 @@ public class DoubleToDecimalDataTypeMapper implements ProtoPrimitiveDataTypeMapp
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(Descriptors.FieldDescriptor.Type.DOUBLE, value -> handleDouble((double) value))
+                .put(Descriptors.FieldDescriptor.Type.DOUBLE, value -> isValid((double) value))
                 .build();
     }
 
-    private BigDecimal handleDouble(double value) {
+    private BigDecimal isValid(double value) {
         if (!Double.isFinite(value)) {
-            throw new InvalidMessageException("Invalid float value: " + value);
+            throw new InvalidMessageException("Invalid double value: " + value);
         }
         return new BigDecimal(String.valueOf(value), new MathContext(precision)).setScale(scale, roundingMode);
     }

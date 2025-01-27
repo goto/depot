@@ -23,13 +23,13 @@ public class DoubleDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(DOUBLE, object -> handleDouble((double) object))
+                .put(DOUBLE, object -> isValid((double) object))
                 .build();
     }
 
-    private static double handleDouble(double value) {
+    private static double isValid(double value) {
         if (!Double.isFinite(value)) {
-            throw new InvalidMessageException("Invalid float value: " + value);
+            throw new InvalidMessageException("Invalid double value: " + value);
         }
         return value;
     }
