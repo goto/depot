@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class DoubleToDecimalDataTypeMappingStrategyTest {
 
-    private DoubleToDecimalDataTypeMappingStrategy decimalCastedDoublePrimitiveProtobufMappingStrategy;
+    private DoubleToDecimalDataTypeMapper decimalCastedDoublePrimitiveProtobufMappingStrategy;
 
     @Before
     public void setUp() {
@@ -24,7 +24,7 @@ public class DoubleToDecimalDataTypeMappingStrategyTest {
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalPrecision()).thenReturn(38);
         Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(18);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
-        decimalCastedDoublePrimitiveProtobufMappingStrategy = new DoubleToDecimalDataTypeMappingStrategy(maxComputeSinkConfig);
+        decimalCastedDoublePrimitiveProtobufMappingStrategy = new DoubleToDecimalDataTypeMapper(maxComputeSinkConfig);
     }
 
 

@@ -15,7 +15,7 @@ import static com.google.protobuf.Descriptors.FieldDescriptor.Type.BYTES;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.ENUM;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.STRING;
 
-public class BaseDataTypeMappingStrategy implements ProtoPrimitiveDataTypeMappingStrategy {
+public class NonNumericDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {

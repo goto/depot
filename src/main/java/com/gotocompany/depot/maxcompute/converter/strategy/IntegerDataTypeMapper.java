@@ -19,7 +19,7 @@ import static com.google.protobuf.Descriptors.FieldDescriptor.Type.SINT64;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT32;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT64;
 
-public class IntegerDataTypeMappingStrategy implements ProtoPrimitiveDataTypeMappingStrategy {
+public class IntegerDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {

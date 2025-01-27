@@ -13,36 +13,40 @@ import java.math.RoundingMode;
 import java.util.Map;
 import java.util.function.Function;
 
-public class DoubleToDecimalDataTypeMappingStrategy implements ProtoPrimitiveDataTypeMappingStrategy {
+import static com.google.protobuf.Descriptors.FieldDescriptor.Type.FLOAT;
 
-    private final int precision;
+public class FloatToDecimalDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
+
     private final int scale;
+    private final int precision;
     private final RoundingMode roundingMode;
 
-    public DoubleToDecimalDataTypeMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
-        this.precision = maxComputeSinkConfig.getProtoDoubleToDecimalPrecision();
-        this.scale = maxComputeSinkConfig.getProtoDoubleToDecimalScale();
+    public FloatToDecimalDataTypeMapper(MaxComputeSinkConfig maxComputeSinkConfig) {
+        this.scale = maxComputeSinkConfig.getProtoFloatToDecimalScale();
+        this.precision = maxComputeSinkConfig.getProtoFloatToDecimalPrecision();
         this.roundingMode = maxComputeSinkConfig.getDecimalRoundingMode();
     }
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, TypeInfo>builder()
-                .put(Descriptors.FieldDescriptor.Type.DOUBLE, TypeInfoFactory.getDecimalTypeInfo(precision, scale))
+                .put(FLOAT, TypeInfoFactory.getDecimalTypeInfo(precision, scale))
                 .build();
     }
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
-                .put(Descriptors.FieldDescriptor.Type.DOUBLE, value -> handleDouble((double) value))
+                .put(FLOAT, object -> handleFloat((float) object))
                 .build();
     }
 
-    private BigDecimal handleDouble(double value) {
-        if (!Double.isFinite(value)) {
+    private BigDecimal handleFloat(float value) {
+        if (!Float.isFinite(value)) {
             throw new InvalidMessageException("Invalid float value: " + value);
         }
-        return new BigDecimal(String.valueOf(value), new MathContext(precision)).setScale(scale, roundingMode);
+        return new BigDecimal(Float.toString(value), new MathContext(precision))
+                .setScale(scale, roundingMode);
     }
+
 }

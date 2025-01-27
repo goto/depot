@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FloatDataTypeMappingStrategyTest {
 
-    private final FloatDataTypeMappingStrategy floatPrimitiveProtobufMappingStrategy = new FloatDataTypeMappingStrategy();
+    private final FloatDataTypeMapper floatPrimitiveProtobufMappingStrategy = new FloatDataTypeMapper();
 
     @Test
     public void shouldMapProtoFloatToOdpsFloat() {

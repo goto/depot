@@ -17,7 +17,7 @@ public class FloatToDecimalDataTypeMappingStrategyTest {
 
     private static final int PRECISION = 38;
     private static final int SCALE = 18;
-    private FloatToDecimalDataTypeMappingStrategy decimalCastedFloatPrimitiveProtobufMappingStrategy;
+    private FloatToDecimalDataTypeMapper decimalCastedFloatPrimitiveProtobufMappingStrategy;
 
     @Before
     public void setup() {
@@ -25,7 +25,7 @@ public class FloatToDecimalDataTypeMappingStrategyTest {
         Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalPrecision()).thenReturn(PRECISION);
         Mockito.when(maxComputeSinkConfig.getProtoFloatToDecimalScale()).thenReturn(SCALE);
         Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
-        decimalCastedFloatPrimitiveProtobufMappingStrategy = new FloatToDecimalDataTypeMappingStrategy(maxComputeSinkConfig);
+        decimalCastedFloatPrimitiveProtobufMappingStrategy = new FloatToDecimalDataTypeMapper(maxComputeSinkConfig);
     }
 
     @Test

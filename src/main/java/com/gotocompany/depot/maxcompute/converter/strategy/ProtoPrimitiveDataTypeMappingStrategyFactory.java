@@ -4,18 +4,18 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 
 public class ProtoPrimitiveDataTypeMappingStrategyFactory {
 
-    public static ProtoPrimitiveDataTypeMappingStrategy createPrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
-        ProtoPrimitiveDataTypeMappingStrategy baseProtoPrimitiveDataTypeMappingStrategy = new BaseDataTypeMappingStrategy();
-        ProtoPrimitiveDataTypeMappingStrategy integerProtoPrimitiveDataTypeMappingStrategy = maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()
-                ? new IntegerToBigintDataTypeMappingStrategy() : new IntegerDataTypeMappingStrategy();
-        ProtoPrimitiveDataTypeMappingStrategy floatProtoPrimitiveDataTypeMappingStrategy = maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()
-                ? new FloatToDecimalDataTypeMappingStrategy(maxComputeSinkConfig) : new FloatDataTypeMappingStrategy();
-        ProtoPrimitiveDataTypeMappingStrategy doubleProtoPrimitiveDataTypeMappingStrategy = maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()
-                ? new DoubleToDecimalDataTypeMappingStrategy(maxComputeSinkConfig) : new DoubleDataTypeMappingStrategy();
+    public static ProtoPrimitiveDataTypeMapper createPrimitiveProtobufMappingStrategy(MaxComputeSinkConfig maxComputeSinkConfig) {
+        ProtoPrimitiveDataTypeMapper baseProtoPrimitiveDataTypeMapper = new NonNumericDataTypeMapper();
+        ProtoPrimitiveDataTypeMapper integerProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()
+                ? new IntegerToBigintDataTypeMapper() : new IntegerDataTypeMapper();
+        ProtoPrimitiveDataTypeMapper floatProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled()
+                ? new FloatToDecimalDataTypeMapper(maxComputeSinkConfig) : new FloatDataTypeMapper();
+        ProtoPrimitiveDataTypeMapper doubleProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()
+                ? new DoubleToDecimalDataTypeMapper(maxComputeSinkConfig) : new DoubleDataTypeMapper();
 
-        return baseProtoPrimitiveDataTypeMappingStrategy.mergeStrategy(integerProtoPrimitiveDataTypeMappingStrategy)
-                .mergeStrategy(floatProtoPrimitiveDataTypeMappingStrategy)
-                .mergeStrategy(doubleProtoPrimitiveDataTypeMappingStrategy);
+        return baseProtoPrimitiveDataTypeMapper.mergeStrategy(integerProtoPrimitiveDataTypeMapper)
+                .mergeStrategy(floatProtoPrimitiveDataTypeMapper)
+                .mergeStrategy(doubleProtoPrimitiveDataTypeMapper);
     }
 
 }

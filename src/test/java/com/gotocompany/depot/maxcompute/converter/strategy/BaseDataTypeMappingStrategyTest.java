@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class BaseDataTypeMappingStrategyTest {
 
-    private final BaseDataTypeMappingStrategy basePrimitiveProtobufMappingStrategy = new BaseDataTypeMappingStrategy();
+    private final NonNumericDataTypeMapper basePrimitiveProtobufMappingStrategy = new NonNumericDataTypeMapper();
 
     @Test
     public void shouldMapProtoBytesToOdpsBinaryType() {

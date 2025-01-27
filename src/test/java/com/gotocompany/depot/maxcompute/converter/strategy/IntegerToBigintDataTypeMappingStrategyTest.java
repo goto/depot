@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class IntegerToBigintDataTypeMappingStrategyTest {
 
-    private final IntegerToBigintDataTypeMappingStrategy upcastedIntegerPrimitiveProtobufMappingStrategy = new IntegerToBigintDataTypeMappingStrategy();
+    private final IntegerToBigintDataTypeMapper upcastedIntegerPrimitiveProtobufMappingStrategy = new IntegerToBigintDataTypeMapper();
 
     @Test
     public void shouldMapProtoInt64ToOdpsBigInt() {

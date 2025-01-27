@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.DOUBLE;
 
-public class DoubleDataTypeMappingStrategy implements ProtoPrimitiveDataTypeMappingStrategy {
+public class DoubleDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
