@@ -3,6 +3,7 @@ package com.gotocompany.depot.config;
 import com.aliyun.odps.tunnel.io.CompressOption;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.converter.ConfToListConverter;
+import com.gotocompany.depot.config.converter.CsvPairToMapConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
 import com.gotocompany.depot.config.converter.ZoneIdConverter;
@@ -181,5 +182,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_DECIMAL_ROUNDING_MODE")
     @DefaultValue("UNNECESSARY")
     RoundingMode getDecimalRoundingMode();
+
+    @Key("SINK_MAXCOMPUTE_TABLE_PROPERTIES")
+    @ConverterClass(CsvPairToMapConverter.class)
+    @DefaultValue("")
+    Map<String, String> getTableProperties();
 
 }
