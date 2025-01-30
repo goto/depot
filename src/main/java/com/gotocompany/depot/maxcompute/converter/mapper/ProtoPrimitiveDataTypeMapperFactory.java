@@ -7,6 +7,7 @@ import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.mapper.casted.DoubleToDecimalDataTypeMapper;
 import com.gotocompany.depot.maxcompute.converter.mapper.casted.FloatToDecimalDataTypeMapper;
+import com.gotocompany.depot.maxcompute.converter.mapper.casted.FloatToDoubleDataTypeMapper;
 import com.gotocompany.depot.maxcompute.converter.mapper.casted.IntegerToBigintDataTypeMapper;
 import com.gotocompany.depot.maxcompute.converter.mapper.noncasted.DoubleDataTypeMapper;
 import com.gotocompany.depot.maxcompute.converter.mapper.noncasted.FloatDataTypeMapper;
@@ -29,8 +30,12 @@ public class ProtoPrimitiveDataTypeMapperFactory {
     public ProtoPrimitiveDataTypeMapperFactory(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.nonNumericDataTypeMapper = new NonNumericDataTypeMapper();
         this.integerProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled() ? new IntegerToBigintDataTypeMapper() : new IntegerDataTypeMapper();
-        this.floatProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled() ? new FloatToDecimalDataTypeMapper(maxComputeSinkConfig) : new FloatDataTypeMapper();
         this.doubleProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoDoubleToDecimalEnabled() ? new DoubleToDecimalDataTypeMapper(maxComputeSinkConfig) : new DoubleDataTypeMapper();
+        if (maxComputeSinkConfig.isProtoFloatTypeToDoubleEnabled()) {
+            this.floatProtoPrimitiveDataTypeMapper = new FloatToDoubleDataTypeMapper();
+        } else {
+            this.floatProtoPrimitiveDataTypeMapper = maxComputeSinkConfig.isProtoFloatTypeToDecimalEnabled() ? new FloatToDecimalDataTypeMapper(maxComputeSinkConfig) : new FloatDataTypeMapper();
+        }
     }
 
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {

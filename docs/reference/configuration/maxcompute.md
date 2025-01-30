@@ -270,6 +270,15 @@ Otherwise proto integer types will be converted to corresponding MaxCompute type
 * Type: `required`
 * Default value: `false`
 
+## SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DOUBLE_ENABLED
+
+Configuration for enabling the conversion of proto float types to double. This config will be used for enabling the conversion of proto float types to MaxCompute double ( 64 bit ).
+This configuration takes precedence over the SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED configuration. 
+
+* Example value: `true`
+* Type: `required`
+* Default value: `false`
+
 ## SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_ENABLED
 
 Configuration for enabling the conversion of proto float types to maxcompute decimal. There are possibilities of precision loss when using plain float type in MaxCompute.

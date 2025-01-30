@@ -159,6 +159,10 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("false")
     boolean isProtoFloatTypeToDecimalEnabled();
 
+    @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DOUBLE_ENABLED")
+    @DefaultValue("false")
+    boolean isProtoFloatTypeToDoubleEnabled();
+
     @Key("SINK_MAXCOMPUTE_PROTO_FLOAT_TYPE_TO_DECIMAL_PRECISION")
     @DefaultValue("38")
     int getProtoFloatToDecimalPrecision();
