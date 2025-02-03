@@ -28,7 +28,7 @@ public class DurationProtobufMaxComputeConverterTest {
 
         TypeInfo typeInfo = durationProtobufMaxComputeConverter.convertTypeInfo(fieldDescriptor);
 
-        assertEquals("STRUCT<seconds:BIGINT,nanos:INT>", typeInfo.getTypeName());
+        assertEquals("STRUCT<seconds:BIGINT,nanos:BIGINT>", typeInfo.getTypeName());
     }
 
     @Test
@@ -41,8 +41,8 @@ public class DurationProtobufMaxComputeConverterTest {
                 .setDurationField(duration)
                 .build();
         List<String> expectedFieldNames = Arrays.asList("seconds", "nanos");
-        List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.INT);
-        List<Object> values = Arrays.asList(1L, 1);
+        List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
+        List<Object> values = Arrays.asList(1L, 1L);
         Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), true));
 
         assertThat(result)
@@ -65,9 +65,9 @@ public class DurationProtobufMaxComputeConverterTest {
                 .addAllDurationFields(Arrays.asList(duration1, duration2))
                 .build();
         List<String> expectedFieldNames = Arrays.asList("seconds", "nanos");
-        List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.INT);
-        List<Object> values1 = Arrays.asList(1L, 1);
-        List<Object> values2 = Arrays.asList(2L, 2);
+        List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
+        List<Object> values1 = Arrays.asList(1L, 1L);
+        List<Object> values2 = Arrays.asList(2L, 2L);
 
         Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(5), message.getField(repeatedDescriptor.getFields().get(5)), true));
 

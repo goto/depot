@@ -20,7 +20,7 @@ public class DurationProtobufMaxComputeConverter implements ProtobufMaxComputeCo
     private static final String SECONDS = "seconds";
     private static final String NANOS = "nanos";
     private static final List<String> FIELD_NAMES = Arrays.asList(SECONDS, NANOS);
-    private static final List<TypeInfo> TYPE_INFOS = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.INT);
+    private static final List<TypeInfo> TYPE_INFOS = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
 
     @Override
     public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
@@ -35,8 +35,9 @@ public class DurationProtobufMaxComputeConverter implements ProtobufMaxComputeCo
 
     private static List<Object> getValues(Message durationMessage) {
         List<Object> values = new ArrayList<>();
+        Integer nanos = (Integer) durationMessage.getField(durationMessage.getDescriptorForType().findFieldByName(NANOS));
         values.add(durationMessage.getField(durationMessage.getDescriptorForType().findFieldByName(SECONDS)));
-        values.add(durationMessage.getField(durationMessage.getDescriptorForType().findFieldByName(NANOS)));
+        values.add(nanos.longValue());
         return values;
     }
 
