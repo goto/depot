@@ -70,4 +70,36 @@ public class ProtoPrimitiveDataTypeMapperFactoryTest {
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT64));
         Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT32));
     }
+
+    @Test
+    public void shouldReturnCustomImplementationWithFloatToDouble() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        Mockito.when(maxComputeSinkConfig.isProtoIntegerTypesToBigintEnabled()).thenReturn(true);
+        int precision = 38;
+        int scale = 18;
+        Mockito.when(maxComputeSinkConfig.isProtoFloatTypeToDoubleEnabled()).thenReturn(true);
+        Mockito.when(maxComputeSinkConfig.isProtoDoubleToDecimalEnabled()).thenReturn(true);
+        Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalPrecision()).thenReturn(precision);
+        Mockito.when(maxComputeSinkConfig.getProtoDoubleToDecimalScale()).thenReturn(scale);
+        Mockito.when(maxComputeSinkConfig.getDecimalRoundingMode()).thenReturn(RoundingMode.UNNECESSARY);
+        ProtoPrimitiveDataTypeMapperFactory protoPrimitiveDataTypeMapperFactory = new ProtoPrimitiveDataTypeMapperFactory(maxComputeSinkConfig);
+
+        Map<Descriptors.FieldDescriptor.Type, TypeInfo> protoTypeToOdpsTypeMap = protoPrimitiveDataTypeMapperFactory.getProtoTypeMap();
+
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT32));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.INT64));
+        Assertions.assertEquals(TypeInfoFactory.STRING, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.STRING));
+        Assertions.assertEquals(TypeInfoFactory.getDecimalTypeInfo(precision, scale), protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.DOUBLE));
+        Assertions.assertEquals(TypeInfoFactory.DOUBLE, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.FLOAT));
+        Assertions.assertEquals(TypeInfoFactory.BINARY, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.BYTES));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.UINT64));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.UINT32));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.FIXED64));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.FIXED32));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SFIXED64));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SFIXED32));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT64));
+        Assertions.assertEquals(TypeInfoFactory.BIGINT, protoTypeToOdpsTypeMap.get(Descriptors.FieldDescriptor.Type.SINT32));
+    }
+
 }
