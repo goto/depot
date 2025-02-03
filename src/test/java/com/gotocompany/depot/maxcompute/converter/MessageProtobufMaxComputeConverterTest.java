@@ -100,7 +100,7 @@ public class MessageProtobufMaxComputeConverterTest {
                                 "cart_id",
                                 Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1)), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", null))),
                                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC),
-                                new SimpleStruct(durationTypeInfo, Arrays.asList(duration.getSeconds(), ((Integer)duration.getNanos()).longValue())))),
+                                new SimpleStruct(durationTypeInfo, Arrays.asList(duration.getSeconds(), ((Integer) duration.getNanos()).longValue())))),
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)
         );
 
