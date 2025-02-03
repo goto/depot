@@ -53,7 +53,7 @@ public class ProtobufConverterOrchestratorTest {
         String expectedMessageTypeRepresentation = "STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>";
         String expectedRepeatedMessageTypeRepresentation = String.format("ARRAY<%s>", expectedMessageTypeRepresentation);
         String expectedTimestampTypeInfoRepresentation = "TIMESTAMP_NTZ";
-        String expectedDurationTypeInfoRepresentation = "STRUCT<seconds:BIGINT,nanos:INT>";
+        String expectedDurationTypeInfoRepresentation = "STRUCT<seconds:BIGINT,nanos:BIGINT>";
         String expectedStructTypeInfoRepresentation = "STRING";
 
         TypeInfo stringTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("string_field"));
@@ -122,7 +122,7 @@ public class ProtobufConverterOrchestratorTest {
 
         assertEquals("string_field", stringRecord);
         assertEquals(LocalDateTime.ofEpochSecond(100, 0, ZoneOffset.UTC), timestampRecord);
-        assertEquals(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.INT)), Arrays.asList(100L, 0)), durationRecord);
+        assertEquals(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT)), Arrays.asList(100L, 0L)), durationRecord);
         assertEquals(expectedMessage, messageRecord);
         assertEquals(Collections.singletonList(expectedMessage), repeatedMessageRecord);
         assertEquals("{\"intField\":1.0,\"stringField\":\"String\"}", structRecord);
