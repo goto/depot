@@ -86,6 +86,21 @@ public class MetadataUtilTest {
     }
 
     @Test
+    public void shouldReturnNullWhenActualMetadataValueIsNull() {
+        assertThat(metadataUtil.getValidMetadataValue("integer", null)).isNull();
+    }
+
+    @Test
+    public void shouldReturnNullWhenMetadataTypeIsNull() {
+        assertThat(metadataUtil.getValidMetadataValue(null, 1)).isNull();
+    }
+
+    @Test
+    public void shouldReturnNullWhenMetadataTypeIsNotSupported() {
+        assertThat(metadataUtil.getValidMetadataValue("unsupported", 1)).isNull();
+    }
+
+    @Test
     public void shouldReturnIntegerValue() {
         assertThat(metadataUtil.getValidMetadataValue("integer", 1)).isEqualTo(1);
     }
