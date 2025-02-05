@@ -193,7 +193,7 @@ public interface MaxComputeSinkConfig extends Config {
     Map<String, String> getTableProperties();
 
     @Key("SINK_MAXCOMPUTE_NANO_HANDLING_ENABLED")
-    @DefaultValue("false")
+    @DefaultValue("true")
     boolean isNanoHandlingEnabled();
 
 }

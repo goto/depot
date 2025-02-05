@@ -40,15 +40,10 @@ public class LocalDateTimeValidator {
     }
 
     public LocalDateTime parseAndValidate(long seconds, int nanos, String fieldName, boolean isRootLevel) {
-
         if (isNanoHandlingEnabled) {
-            if (nanos < 0) {
-                nanos = 0;
-            } else if (nanos > NANOS_IN_ONE_SECOND) {
-                int extraSeconds = nanos / NANOS_IN_ONE_SECOND;
-                seconds += extraSeconds;
-                nanos = nanos % NANOS_IN_ONE_SECOND;
-            }
+                long[] adjustedValues = adjustNanos(seconds, nanos);
+                seconds = adjustedValues[0];
+                nanos = (int) adjustedValues[1];
         }
         Instant instant = Instant.now();
         ZoneOffset zoneOffset = zoneId.getRules().getOffset(instant);
@@ -56,6 +51,16 @@ public class LocalDateTimeValidator {
         validateTimestampRange(localDateTime);
         validateTimestampPartitionKey(fieldName, localDateTime, isRootLevel);
         return localDateTime;
+    }
+
+    private long[] adjustNanos(long seconds, int nanos) {
+        if (nanos < 0) {
+            return new long[]{seconds, 0};
+        } else if (nanos >= NANOS_IN_ONE_SECOND) {
+            seconds += nanos / NANOS_IN_ONE_SECOND;
+            nanos = nanos % NANOS_IN_ONE_SECOND;
+        }
+        return new long[]{seconds, nanos};
     }
 
     private void validateTimestampRange(LocalDateTime localDateTime) {
