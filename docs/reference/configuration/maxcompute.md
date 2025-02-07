@@ -347,3 +347,17 @@ The format of this config is `key1=value1,key2=value2,...`. Further documentatio
 * Example value: `table.format.version=2`
 * Type: `optional`
 * Default value: ``
+
+## SINK_MAXCOMPUTE_NANO_HANDLING_ENABLED
+
+This configuration is used to handle nano data values. Its default value is true.
+
+If it is enabled:
+1. If nano is less than 0, it will be set to 0.
+2. If nano exceeds its range (> 999,999,999), the extra value will be added to the seconds.
+
+If it is disabled and nano is outside the default range, firehose will crash.
+
+* Example value: `true`
+* Type: `optional`
+* Default value: `true`
