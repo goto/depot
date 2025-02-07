@@ -13,6 +13,7 @@ import java.time.temporal.TemporalAmount;
 public class LocalDateTimeValidator {
 
     private static final long DAYS_IN_YEAR = 365L;
+    private static final int NANOS_IN_ONE_SECOND = 1_000_000_000;
 
     private final TemporalAmount maxPastEventTimeDifference;
     private final TemporalAmount maxFutureEventTimeDifference;
@@ -23,6 +24,7 @@ public class LocalDateTimeValidator {
     private final String tablePartitionKey;
     private final int maxPastYearEventTimeDifference;
     private final int maxFutureYearEventTimeDifference;
+    private final boolean isNanoHandlingEnabled;
 
     public LocalDateTimeValidator(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * DAYS_IN_YEAR);
@@ -34,9 +36,18 @@ public class LocalDateTimeValidator {
         this.tablePartitionKey = maxComputeSinkConfig.getTablePartitionKey();
         this.maxPastYearEventTimeDifference = maxComputeSinkConfig.getMaxPastYearEventTimeDifference();
         this.maxFutureYearEventTimeDifference = maxComputeSinkConfig.getMaxFutureYearEventTimeDifference();
+        this.isNanoHandlingEnabled = maxComputeSinkConfig.isNanoHandlingEnabled();
     }
 
     public LocalDateTime parseAndValidate(long seconds, int nanos, String fieldName, boolean isRootLevel) {
+        if (isNanoHandlingEnabled) {
+            if (nanos < 0) {
+                nanos = 0;
+            } else if (nanos >= NANOS_IN_ONE_SECOND) {
+                seconds += nanos / NANOS_IN_ONE_SECOND;
+                nanos = nanos % NANOS_IN_ONE_SECOND;
+            }
+        }
         Instant instant = Instant.now();
         ZoneOffset zoneOffset = zoneId.getRules().getOffset(instant);
         LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(seconds, nanos, zoneOffset);

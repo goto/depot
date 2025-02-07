@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
@@ -230,4 +231,113 @@ public class TimestampProtobufMaxComputeConverterTest {
 
         assertThat(result).isEqualTo(expectedTimestamp);
     }
+
+    @Test
+    public void shouldConvertExcessNanosToSecondsWhenEnabled() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isNanoHandlingEnabled()).thenReturn(true);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(1500000000)
+                .build();
+        TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
+                .setTimestampField(timestamp)
+                .build();
+
+        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds() + 1, 500000000, ZoneOffset.UTC));
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        assertThat(result).isEqualTo(expectedTimestamp);
+    }
+
+    @Test(expected = java.time.DateTimeException.class)
+    public void shouldThrowExceptionForExcessNanosWhenDisabled() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(false);
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isNanoHandlingEnabled()).thenReturn(false);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(1000000000)
+                .build();
+        TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
+                .setTimestampField(timestamp)
+                .build();
+
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+    }
+
+    @Test(expected = java.time.DateTimeException.class)
+    public void shouldThrowExceptionForNegativeNanosWhenDisabled() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(false);
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isNanoHandlingEnabled()).thenReturn(false);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(-1)
+                .build();
+        TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
+                .setTimestampField(timestamp)
+                .build();
+
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+    }
+
+    @Test
+    public void shouldHandleNegativeNanosWhenEnabled() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isNanoHandlingEnabled()).thenReturn(true);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(-500000000)  // Negative nanoseconds
+                .build();
+        TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
+                .setTimestampField(timestamp)
+                .build();
+
+        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), 0, ZoneOffset.UTC));
+
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+
+        assertThat(result).isEqualTo(expectedTimestamp);
+    }
+
+    @Test
+    public void shouldConvertPayloadWithValidNanos() {
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(500000000)
+                .build();
+        TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
+                .setTimestampField(timestamp)
+                .build();
+        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
+                timestamp.getSeconds(), timestamp.getNanos(), ZoneOffset.UTC));
+
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        assertThat(result).isEqualTo(expectedTimestamp);
+    }
+
 }
