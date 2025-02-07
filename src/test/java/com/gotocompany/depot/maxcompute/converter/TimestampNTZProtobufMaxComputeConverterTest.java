@@ -336,7 +336,7 @@ public class TimestampNTZProtobufMaxComputeConverterTest {
 
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(2500)
-                .setNanos(1_000_000_000)
+                .setNanos(1_500_000_000)
                 .build();
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
@@ -345,6 +345,6 @@ public class TimestampNTZProtobufMaxComputeConverterTest {
         Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(
                 new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
 
-        assertThat(result).isEqualTo(LocalDateTime.ofEpochSecond(2501, 0, ZoneOffset.UTC));
+        assertThat(result).isEqualTo(LocalDateTime.ofEpochSecond(2501, 500000000, ZoneOffset.UTC));
     }
 }

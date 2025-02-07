@@ -244,14 +244,14 @@ public class TimestampProtobufMaxComputeConverterTest {
 
         Timestamp timestamp = Timestamp.newBuilder()
                 .setSeconds(2500)
-                .setNanos(1000000000)
+                .setNanos(1500000000)
                 .build();
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setTimestampField(timestamp)
                 .build();
 
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
-                timestamp.getSeconds() + 1, 0, ZoneOffset.UTC));
+                timestamp.getSeconds() + 1, 500000000, ZoneOffset.UTC));
         Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
         assertThat(result).isEqualTo(expectedTimestamp);
     }
