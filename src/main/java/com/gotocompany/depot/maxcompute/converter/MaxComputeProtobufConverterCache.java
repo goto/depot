@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
 import java.util.Map;
 import java.util.Set;
@@ -44,24 +45,24 @@ public class MaxComputeProtobufConverterCache {
                 ? new TimestampNTZProtobufMaxComputeConverter(maxComputeSinkConfig) : new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig));
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_DURATION, new DurationProtobufMaxComputeConverter());
         protobufMaxComputeConverterMap.put(GOOGLE_PROTOBUF_STRUCT, new StructProtobufMaxComputeConverter());
-        protobufMaxComputeConverterMap.put(MESSAGE.toString(), new MessageProtobufMaxComputeConverter(this));
+        protobufMaxComputeConverterMap.put(MESSAGE.toString(), new MessageProtobufMaxComputeConverter(this, maxComputeSinkConfig));
     }
 
-    public TypeInfo getOrCreateTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        TypeInfo typeInfo = typeInfoCache.get(fieldDescriptor.getFullName());
+    public TypeInfo getOrCreateTypeInfo(ProtoPayload protoPayload) {
+        TypeInfo typeInfo = typeInfoCache.get(protoPayload.getFieldDescriptor().getFullName());
         if (isNull(typeInfo)) {
-            ProtobufMaxComputeConverter protobufMaxComputeConverter = getConverter(fieldDescriptor);
-            typeInfo = protobufMaxComputeConverter.convertTypeInfo(fieldDescriptor);
-            typeInfoCache.put(fieldDescriptor.getFullName(), typeInfo);
+            ProtobufMaxComputeConverter protobufMaxComputeConverter = getConverter(protoPayload.getFieldDescriptor());
+            typeInfo = protobufMaxComputeConverter.convertTypeInfo(protoPayload);
+            typeInfoCache.put(protoPayload.getFieldDescriptor().getFullName(), typeInfo);
         }
         return typeInfo;
     }
 
-    public TypeInfo getOrCreateTypeInfo(Descriptors.FieldDescriptor fieldDescriptor, Supplier<TypeInfo> supplier) {
-        TypeInfo typeInfo = typeInfoCache.get(fieldDescriptor.getFullName());
+    public TypeInfo getOrCreateTypeInfo(ProtoPayload protoPayload, Supplier<TypeInfo> supplier) {
+        TypeInfo typeInfo = typeInfoCache.get(protoPayload.getFieldDescriptor().getFullName());
         if (isNull(typeInfo)) {
             typeInfo = supplier.get();
-            typeInfoCache.put(fieldDescriptor.getFullName(), typeInfo);
+            typeInfoCache.put(protoPayload.getFieldDescriptor().getFullName(), typeInfo);
         }
         return typeInfo;
     }

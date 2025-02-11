@@ -44,6 +44,7 @@ public class MaxComputeSchemaBuilderTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
                 maxComputeSinkConfig,
@@ -102,6 +103,7 @@ public class MaxComputeSchemaBuilderTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         int expectedNonPartitionColumnCount = 5;
         int expectedPartitionColumnCount = 1;
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(
@@ -152,6 +154,7 @@ public class MaxComputeSchemaBuilderTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         int expectedNonPartitionColumnCount = 4;
         int expectedPartitionColumnCount = 0;
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(

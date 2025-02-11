@@ -18,7 +18,7 @@ public class StructProtobufMaxComputeConverter implements ProtobufMaxComputeConv
             .omittingInsignificantWhitespace();
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.STRING;
     }
 

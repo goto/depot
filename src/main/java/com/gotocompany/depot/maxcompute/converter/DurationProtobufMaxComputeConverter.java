@@ -4,7 +4,6 @@ import com.aliyun.odps.data.SimpleStruct;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
@@ -23,14 +22,14 @@ public class DurationProtobufMaxComputeConverter implements ProtobufMaxComputeCo
     private static final List<TypeInfo> TYPE_INFOS = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.getStructTypeInfo(FIELD_NAMES, TYPE_INFOS);
     }
 
     @Override
     public Object convertSingularPayload(ProtoPayload protoPayload) {
         List<Object> values = getValues((Message) protoPayload.getParsedObject());
-        return new SimpleStruct((StructTypeInfo) convertSingularTypeInfo(protoPayload.getFieldDescriptor()), values);
+        return new SimpleStruct((StructTypeInfo) convertSingularTypeInfo(protoPayload), values);
     }
 
     private static List<Object> getValues(Message durationMessage) {

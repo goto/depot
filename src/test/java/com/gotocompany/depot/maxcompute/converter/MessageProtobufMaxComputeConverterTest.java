@@ -38,13 +38,14 @@ public class MessageProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
-        messageProtobufMaxComputeConverter = new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        messageProtobufMaxComputeConverter = new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }
 
     @Test
     public void shouldConvertMessageToProperTypeInfo() {
-        TypeInfo firstMessageFieldTypeInfo = messageProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(1));
-        TypeInfo secondMessageFieldTypeInfo = messageProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(2));
+        TypeInfo firstMessageFieldTypeInfo = messageProtobufMaxComputeConverter.convertTypeInfo(new ProtoPayload(descriptor.getFields().get(1)));
+        TypeInfo secondMessageFieldTypeInfo = messageProtobufMaxComputeConverter.convertTypeInfo(new ProtoPayload(descriptor.getFields().get(2)));
 
         String expectedFirstMessageTypeRepresentation = "STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>";
         String expectedSecondMessageTypeRepresentation = String.format("ARRAY<%s>", expectedFirstMessageTypeRepresentation);
@@ -104,7 +105,7 @@ public class MessageProtobufMaxComputeConverterTest {
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)
         );
 
-        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), true));
+        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), true, 0));
 
         assertThat(object)
                 .extracting("typeInfo", "values")

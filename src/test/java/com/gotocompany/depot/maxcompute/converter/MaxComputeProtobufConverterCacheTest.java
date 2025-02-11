@@ -6,6 +6,7 @@ import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.TestMaxComputeProtobufConverterCacheOuterClass;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -48,7 +49,7 @@ public class MaxComputeProtobufConverterCacheTest {
         Map<String, TypeInfo> typeInfoCache = ((Map<String, TypeInfo>) cacheField.get(maxComputeProtobufConverterCache));
         assertEquals(0, typeInfoCache.size());
 
-        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("string_field"));
+        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field")));
 
         assertEquals(1, typeInfoCache.size());
         assertEquals(typeInfo, typeInfoCache.get(descriptor.findFieldByName("string_field").getFullName()));
@@ -58,11 +59,11 @@ public class MaxComputeProtobufConverterCacheTest {
     public void shouldGetCachedTypeInfo() throws NoSuchFieldException, IllegalAccessException {
         Field cacheField = maxComputeProtobufConverterCache.getClass().getDeclaredField("typeInfoCache");
         cacheField.setAccessible(true);
-        maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("string_field"));
+        maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field")));
         Map<String, TypeInfo> typeInfoCache = Mockito.spy((Map<String, TypeInfo>) cacheField.get(maxComputeProtobufConverterCache));
         assertEquals(1, typeInfoCache.size());
 
-        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("string_field"));
+        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field")));
 
         assertEquals(1, typeInfoCache.size());
         verify(typeInfoCache, Mockito.times(0)).put(descriptor.findFieldByName("string_field").getFullName(), typeInfo);
@@ -78,7 +79,7 @@ public class MaxComputeProtobufConverterCacheTest {
         Map<String, TypeInfo> typeInfoCache = ((Map<String, TypeInfo>) cacheField.get(maxComputeProtobufConverterCache));
         assertEquals(0, typeInfoCache.size());
 
-        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("inner_message_field"),
+        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_message_field")),
                 () -> expectedTypeInfo);
 
         assertEquals(1, typeInfoCache.size());
@@ -92,11 +93,11 @@ public class MaxComputeProtobufConverterCacheTest {
                 .getDeclaredField("typeInfoCache");
         cacheField.setAccessible(true);
         Map<String, TypeInfo> typeInfoCache = ((Map<String, TypeInfo>) cacheField.get(maxComputeProtobufConverterCache));
-        maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("inner_message_field"),
+        maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_message_field")),
                 () -> expectedTypeInfo);
         assertEquals(1, typeInfoCache.size());
 
-        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("inner_message_field"),
+        TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_message_field")),
                 () -> expectedTypeInfo);
 
         assertEquals(1, typeInfoCache.size());
@@ -154,7 +155,7 @@ public class MaxComputeProtobufConverterCacheTest {
                 .getDeclaredField("typeInfoCache");
         cacheField.setAccessible(true);
         Map<String, TypeInfo> typeInfoCache = ((Map<String, TypeInfo>) cacheField.get(maxComputeProtobufConverterCache));
-        maxComputeProtobufConverterCache.getOrCreateTypeInfo(descriptor.findFieldByName("string_field"));
+        maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field")));
         assertEquals(1, typeInfoCache.size());
 
         maxComputeProtobufConverterCache.clearCache();

@@ -23,8 +23,8 @@ public class ProtobufConverterOrchestrator {
      * @param fieldDescriptor the Protobuf field descriptor
      * @return the MaxCompute TypeInfo
      */
-    public TypeInfo toMaxComputeTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(fieldDescriptor);
+    public TypeInfo toMaxComputeTypeInfo(ProtoPayload protoPayload) {
+        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(protoPayload);
     }
 
     /**
@@ -36,7 +36,7 @@ public class ProtobufConverterOrchestrator {
      */
     public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object parsedObject) {
         ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
-        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, true));
+        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, true, 0));
     }
 
     /**

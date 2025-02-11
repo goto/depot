@@ -25,7 +25,7 @@ public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxCompu
     }
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.TIMESTAMP_NTZ;
     }
 

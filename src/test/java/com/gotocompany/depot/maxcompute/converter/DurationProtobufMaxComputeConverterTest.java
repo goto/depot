@@ -26,7 +26,7 @@ public class DurationProtobufMaxComputeConverterTest {
     public void shouldConvertToStruct() {
         Descriptors.FieldDescriptor fieldDescriptor = descriptor.getFields().get(DURATION_INDEX);
 
-        TypeInfo typeInfo = durationProtobufMaxComputeConverter.convertTypeInfo(fieldDescriptor);
+        TypeInfo typeInfo = durationProtobufMaxComputeConverter.convertTypeInfo(new ProtoPayload(fieldDescriptor));
 
         assertEquals("STRUCT<seconds:BIGINT,nanos:BIGINT>", typeInfo.getTypeName());
     }
@@ -43,7 +43,7 @@ public class DurationProtobufMaxComputeConverterTest {
         List<String> expectedFieldNames = Arrays.asList("seconds", "nanos");
         List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
         List<Object> values = Arrays.asList(1L, 1L);
-        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), true));
+        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), true, 0));
 
         assertThat(result)
                 .isInstanceOf(com.aliyun.odps.data.SimpleStruct.class)
@@ -69,7 +69,7 @@ public class DurationProtobufMaxComputeConverterTest {
         List<Object> values1 = Arrays.asList(1L, 1L);
         List<Object> values2 = Arrays.asList(2L, 2L);
 
-        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(5), message.getField(repeatedDescriptor.getFields().get(5)), true));
+        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(5), message.getField(repeatedDescriptor.getFields().get(5)), true, 0));
 
         assertThat(result)
                 .isInstanceOf(List.class);

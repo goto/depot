@@ -14,22 +14,22 @@ public interface ProtobufMaxComputeConverter {
      * Converts a Protobuf field descriptor to a MaxCompute TypeInfo.
      * This method wraps the singular type conversion with array type handling if the field is repeated.
      *
-     * @param fieldDescriptor the Protobuf field descriptor to convert
+     * @param protoPayload the Protobuf payload wrapper containing field descriptor to convert
      * @return the corresponding MaxCompute TypeInfo
      */
-    default TypeInfo convertTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        TypeInfo typeInfo = convertSingularTypeInfo(fieldDescriptor);
-        return fieldDescriptor.isRepeated() ? TypeInfoFactory.getArrayTypeInfo(typeInfo) : typeInfo;
+    default TypeInfo convertTypeInfo(ProtoPayload protoPayload) {
+        TypeInfo typeInfo = convertSingularTypeInfo(protoPayload);
+        return protoPayload.getFieldDescriptor().isRepeated() ? TypeInfoFactory.getArrayTypeInfo(typeInfo) : typeInfo;
     }
 
     /**
      * Converts a singular Protobuf field descriptor to a MaxCompute TypeInfo.
      * This method should be implemented by subclasses to handle specific field types.
      *
-     * @param fieldDescriptor the Protobuf field descriptor to convert
+     * @param protoPayload the Protobuf payload wrapper containing field descriptor to convert
      * @return the corresponding MaxCompute TypeInfo for the singular field
      */
-    TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor);
+    TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload);
 
     /**
      * Converts a proto payload to a format that can be used by the MaxCompute SDK.
@@ -41,7 +41,7 @@ public interface ProtobufMaxComputeConverter {
             return convertSingularPayload(protoPayload);
         }
         return ((List<?>) protoPayload.getParsedObject()).stream()
-                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.isRootLevel())))
+                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.isRootLevel(), protoPayload.getLevel())))
                 .collect(Collectors.toList());
     }
 

@@ -22,7 +22,7 @@ public class TimestampProtobufMaxComputeConverter implements ProtobufMaxComputeC
     }
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.TIMESTAMP;
     }
 

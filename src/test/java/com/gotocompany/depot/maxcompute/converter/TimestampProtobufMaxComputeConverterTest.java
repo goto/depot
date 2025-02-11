@@ -49,7 +49,7 @@ public class TimestampProtobufMaxComputeConverterTest {
 
     @Test
     public void shouldConvertToTimestampNtz() {
-        TypeInfo typeInfo = timestampProtobufMaxComputeConverter.convertTypeInfo(descriptor.getFields().get(TIMESTAMP_INDEX));
+        TypeInfo typeInfo = timestampProtobufMaxComputeConverter.convertTypeInfo(new ProtoPayload(descriptor.getFields().get(TIMESTAMP_INDEX)));
 
         assertEquals(TypeInfoFactory.TIMESTAMP, typeInfo);
     }
@@ -66,7 +66,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
 
-        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
 
         assertThat(result)
                 .isEqualTo(expectedTimestamp);
@@ -90,7 +90,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         java.sql.Timestamp expectedLocalDateTime2 = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 timestamp2.getSeconds(), timestamp2.getNanos(), java.time.ZoneOffset.UTC));
 
-        Object result = timestampProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(3), message.getField(repeatedDescriptor.getFields().get(3)), true));
+        Object result = timestampProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(3), message.getField(repeatedDescriptor.getFields().get(3)), true, 0));
 
         assertThat(result)
                 .isInstanceOf(List.class);
@@ -111,7 +111,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -130,7 +130,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -152,7 +152,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test(expected = InvalidMessageException.class)
@@ -174,7 +174,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test
@@ -199,7 +199,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
 
         java.sql.Timestamp result = (java.sql.Timestamp) timestampProtobufMaxComputeConverter.convertSingularPayload(
-                new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+                new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
 
         assertThat(result)
                 .isEqualTo(expectedTimestamp);
@@ -227,7 +227,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC));
 
         java.sql.Timestamp result = (java.sql.Timestamp) timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3),
-                message.getField(descriptor.getFields().get(3)), false));
+                message.getField(descriptor.getFields().get(3)), false, 1));
 
         assertThat(result).isEqualTo(expectedTimestamp);
     }
@@ -252,7 +252,7 @@ public class TimestampProtobufMaxComputeConverterTest {
 
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds() + 1, 500000000, ZoneOffset.UTC));
-        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
         assertThat(result).isEqualTo(expectedTimestamp);
     }
 
@@ -274,7 +274,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test(expected = java.time.DateTimeException.class)
@@ -295,7 +295,7 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .setTimestampField(timestamp)
                 .build();
 
-        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
     }
 
     @Test
@@ -319,7 +319,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), 0, ZoneOffset.UTC));
 
-        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
 
         assertThat(result).isEqualTo(expectedTimestamp);
     }
@@ -336,7 +336,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), timestamp.getNanos(), ZoneOffset.UTC));
 
-        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true));
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), true, 0));
         assertThat(result).isEqualTo(expectedTimestamp);
     }
 
