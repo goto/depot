@@ -1,7 +1,6 @@
 package com.gotocompany.depot.maxcompute.model;
 
 import com.google.protobuf.Descriptors;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
