@@ -20,7 +20,7 @@ public class ProtobufConverterOrchestrator {
     /**
      * Converts a Protobuf field to a MaxCompute TypeInfo.
      *
-     * @param fieldDescriptor the Protobuf field descriptor
+     * @param protoPayload the proto payload wrapper for Protobuf field descriptor
      * @return the MaxCompute TypeInfo
      */
     public TypeInfo toMaxComputeTypeInfo(ProtoPayload protoPayload) {

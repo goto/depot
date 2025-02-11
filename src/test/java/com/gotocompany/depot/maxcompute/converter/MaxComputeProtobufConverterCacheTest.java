@@ -38,6 +38,7 @@ public class MaxComputeProtobufConverterCacheTest {
         when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
         when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("partition_key");
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         maxComputeProtobufConverterCache = new MaxComputeProtobufConverterCache(maxComputeSinkConfig);
     }
 

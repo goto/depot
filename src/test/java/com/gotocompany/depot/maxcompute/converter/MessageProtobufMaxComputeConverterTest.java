@@ -112,4 +112,11 @@ public class MessageProtobufMaxComputeConverterTest {
                 .containsExactly(expectedStructTypeInfo, expectedStructValues);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowIllegalArgumentExceptionWhenMaxNestedMessageDepthIsLessThanOne() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(0);
+
+        new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
+    }
 }

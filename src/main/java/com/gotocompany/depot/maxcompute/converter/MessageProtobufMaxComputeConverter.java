@@ -28,7 +28,10 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     public MessageProtobufMaxComputeConverter(MaxComputeProtobufConverterCache maxComputeProtobufConverterCache,
                                               MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxComputeProtobufConverterCache = maxComputeProtobufConverterCache;
-        this.maxNestedMessageDepth = maxComputeSinkConfig.getMaxNestedMessageDepth();
+        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1) {
+            throw new IllegalArgumentException("Max nested cannot be less than 1");
+        }
+        this.maxNestedMessageDepth = maxComputeSinkConfig.getMaxNestedMessageDepth() - 1;
     }
 
     @Override
@@ -66,14 +69,14 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .stream()
                 .filter(fd -> protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE)
                 .forEach(innerFieldDescriptor -> {
-            if (!payloadFields.containsKey(innerFieldDescriptor)) {
-                values.add(null);
-                return;
-            }
-            Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                    .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), false, protoPayload.getLevel() + 1));
-            values.add(mappedInnerValue);
-        });
+                    if (!payloadFields.containsKey(innerFieldDescriptor)) {
+                        values.add(null);
+                        return;
+                    }
+                    Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
+                            .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), false, protoPayload.getLevel() + 1));
+                    values.add(mappedInnerValue);
+                });
         TypeInfo typeInfo = convertTypeInfo(protoPayload);
         StructTypeInfo structTypeInfo = (StructTypeInfo) (typeInfo instanceof ArrayTypeInfo ? ((ArrayTypeInfo) typeInfo).getElementTypeInfo() : typeInfo);
         return new SimpleStruct(structTypeInfo, values);
