@@ -39,6 +39,7 @@ public class MessageProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         messageProtobufMaxComputeConverter = new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }
 
@@ -121,9 +122,10 @@ public class MessageProtobufMaxComputeConverterTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenMaxNestedMessageDepthIsMoreThanTwenty() {
+    public void shouldThrowIllegalArgumentExceptionWhenMaxNestedMessageDepthIsMoreThanConfigured() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(21);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }

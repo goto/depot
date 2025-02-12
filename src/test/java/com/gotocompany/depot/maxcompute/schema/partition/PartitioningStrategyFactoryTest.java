@@ -26,6 +26,7 @@ public class PartitioningStrategyFactoryTest {
         when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn(stringFieldName);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
@@ -46,6 +47,7 @@ public class PartitioningStrategyFactoryTest {
         when(maxComputeSinkConfig.getTablePartitionByTimestampTimeUnit()).thenReturn("DAY");
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
@@ -62,6 +64,7 @@ public class PartitioningStrategyFactoryTest {
         when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(Boolean.FALSE);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         PartitioningStrategy partitioningStrategy = PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
@@ -81,6 +84,7 @@ public class PartitioningStrategyFactoryTest {
         when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn(unsupportedTypeFieldName);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),
@@ -98,6 +102,7 @@ public class PartitioningStrategyFactoryTest {
         when(maxComputeSinkConfig.getTablePartitionColumnName()).thenReturn(fieldName);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
 
         PartitioningStrategyFactory.createPartitioningStrategy(
                 new ProtobufConverterOrchestrator(maxComputeSinkConfig),

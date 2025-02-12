@@ -371,3 +371,12 @@ Range should be between 1 and 20.
 * Example value: `15`
 * Type: `optional`
 * Default value: `15`
+
+## SINK_MAXCOMPUTE_PLATFORM_MAX_NESTED_MESSAGE_DEPTH_LIMIT
+
+This configuration is used as reference to the maximum allowed depth supported by the platform.
+This is used to validate the SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH configuration.
+
+* Example value: `20`
+* Type: `optional`
+* Default value: `20`

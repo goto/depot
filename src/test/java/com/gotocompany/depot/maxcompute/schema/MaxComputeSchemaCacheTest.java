@@ -47,6 +47,7 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -88,6 +89,7 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -123,6 +125,7 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -162,6 +165,7 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -201,6 +205,7 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
