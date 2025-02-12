@@ -49,7 +49,7 @@ public class MaxComputeProtobufConverterCache {
     }
 
     public TypeInfo getOrCreateTypeInfo(ProtoPayload protoPayload) {
-        TypeInfo typeInfo = typeInfoCache.get(protoPayload.getFieldDescriptor().getFullName());
+        TypeInfo typeInfo = typeInfoCache.get(getTypeInfoCacheKey(protoPayload));
         if (isNull(typeInfo)) {
             ProtobufMaxComputeConverter protobufMaxComputeConverter = getConverter(protoPayload.getFieldDescriptor());
             typeInfo = protobufMaxComputeConverter.convertTypeInfo(protoPayload);
@@ -59,7 +59,7 @@ public class MaxComputeProtobufConverterCache {
     }
 
     public TypeInfo getOrCreateTypeInfo(ProtoPayload protoPayload, Supplier<TypeInfo> supplier) {
-        TypeInfo typeInfo = typeInfoCache.get(protoPayload.getFieldDescriptor().getFullName());
+        TypeInfo typeInfo = typeInfoCache.get(getTypeInfoCacheKey(protoPayload));
         if (isNull(typeInfo)) {
             typeInfo = supplier.get();
             typeInfoCache.put(protoPayload.getFieldDescriptor().getFullName(), typeInfo);
@@ -85,6 +85,10 @@ public class MaxComputeProtobufConverterCache {
             throw new IllegalArgumentException("Unsupported type: " + fieldDescriptor.getType());
         }
         return protobufMaxComputeConverter;
+    }
+
+    private String getTypeInfoCacheKey(ProtoPayload protoPayload) {
+        return String.format("%d_%s", protoPayload.getLevel(), protoPayload.getFieldDescriptor().getFullName());
     }
 
     public void clearCache() {
