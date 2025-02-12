@@ -22,14 +22,15 @@ import java.util.stream.Collectors;
 @Setter
 public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
+    private static final int MAXCOMPUTE_MAX_NESTED_LEVEL = 20;
     private final MaxComputeProtobufConverterCache maxComputeProtobufConverterCache;
     private final int maxNestedMessageDepth;
 
     public MessageProtobufMaxComputeConverter(MaxComputeProtobufConverterCache maxComputeProtobufConverterCache,
                                               MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxComputeProtobufConverterCache = maxComputeProtobufConverterCache;
-        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1) {
-            throw new IllegalArgumentException("Max nested cannot be less than 1");
+        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1 || maxComputeSinkConfig.getMaxNestedMessageDepth() > MAXCOMPUTE_MAX_NESTED_LEVEL) {
+            throw new IllegalArgumentException("Max nested message depth should be between 1 and 20");
         }
         this.maxNestedMessageDepth = maxComputeSinkConfig.getMaxNestedMessageDepth() - 1;
     }
