@@ -36,7 +36,7 @@ public class ProtobufConverterOrchestrator {
      */
     public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object parsedObject) {
         ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
-        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, true, 0));
+        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, 0));
     }
 
     /**

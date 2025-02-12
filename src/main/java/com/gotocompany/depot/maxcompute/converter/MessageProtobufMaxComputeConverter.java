@@ -52,7 +52,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .filter(fd -> protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE)
                 .map(fd -> {
                     ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fd);
-                    return converter.convertTypeInfo(new ProtoPayload(fd, null, false, protoPayload.getLevel() + 1));
+                    return converter.convertTypeInfo(new ProtoPayload(fd, null, protoPayload.getLevel() + 1));
                 })
                 .collect(Collectors.toList());
         return TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
@@ -74,7 +74,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                         return;
                     }
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                            .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), false, protoPayload.getLevel() + 1));
+                            .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), protoPayload.getLevel() + 1));
                     values.add(mappedInnerValue);
                 });
         TypeInfo typeInfo = convertTypeInfo(protoPayload);

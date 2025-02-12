@@ -40,7 +40,7 @@ public interface ProtobufMaxComputeConverter {
             return convertSingularPayload(protoPayload);
         }
         return ((List<?>) protoPayload.getParsedObject()).stream()
-                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.isRootLevel(), protoPayload.getLevel())))
+                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.getLevel())))
                 .collect(Collectors.toList());
     }
 

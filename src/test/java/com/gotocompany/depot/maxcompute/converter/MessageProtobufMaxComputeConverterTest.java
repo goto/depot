@@ -105,7 +105,7 @@ public class MessageProtobufMaxComputeConverterTest {
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)
         );
 
-        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), true, 0));
+        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), 0));
 
         assertThat(object)
                 .extracting("typeInfo", "values")
