@@ -120,5 +120,5 @@ public class MessageProtobufMaxComputeConverterTest {
 
         new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }
-    
+
 }

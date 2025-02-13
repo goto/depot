@@ -83,7 +83,7 @@ public class ProtoMessageRecordConverterTest {
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
-        
+
         protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
         protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         ParsedMessage parsedMessage = Mockito.mock(ParsedMessage.class);
@@ -124,7 +124,7 @@ public class ProtoMessageRecordConverterTest {
                 new Tuple<>("__kafka_offset", 100L)
         );
         LocalDateTime expectedTimestampLocalDateTime = Instant.ofEpochMilli(
-                123012311L).atZone(ZoneId.of("UTC"))
+                        123012311L).atZone(ZoneId.of("UTC"))
                 .toLocalDateTime();
         LocalDateTime expectedPayloadLocalDateTime = LocalDateTime.ofEpochSecond(
                 10002010L,
