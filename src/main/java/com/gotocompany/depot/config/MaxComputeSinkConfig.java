@@ -200,8 +200,4 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("15")
     int getMaxNestedMessageDepth();
 
-    @Key("SINK_MAXCOMPUTE_PLATFORM_MAX_NESTED_MESSAGE_DEPTH_LIMIT")
-    @DefaultValue("20")
-    int getPlatformMaxNestedMessageDepthLimit();
-
 }
