@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,10 +66,15 @@ public class MetadataUtil {
     }
 
     public Object getValidMetadataValue(String type, Object value) {
+        if (Objects.isNull(value) || Objects.isNull(type)) {
+            return null;
+        }
         if (TIMESTAMP.equalsIgnoreCase(type) && value instanceof Long) {
             return getTimestampValue((long) value);
         }
-        return metadataMapperMap.get(type.toLowerCase()).apply(value);
+        return Optional.ofNullable(metadataMapperMap.get(type.toLowerCase()))
+                .map(mapper -> mapper.apply(value))
+                .orElse(null);
     }
 
     public StructTypeInfo getMetadataTypeInfo(List<TupleString> metadataColumnsTypes) {
