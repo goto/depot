@@ -46,7 +46,7 @@ public class ProtobufConverterOrchestratorTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
-        when(maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()).thenReturn(20);
+        
         protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
     }
 

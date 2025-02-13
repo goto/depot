@@ -365,18 +365,9 @@ If it is disabled and nano is outside the default range, firehose will crash.
 ## SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH
 
 This configuration is used to limit the nested depth of table schema inferred from the proto schema.
-Beyond the specified depth, any message type will be omitted.
-Range should be between 1 and 20.
+Beyond the specified depth, any proto message type will be omitted.
+Value set should be more than 0.
 
 * Example value: `15`
 * Type: `optional`
 * Default value: `15`
-
-## SINK_MAXCOMPUTE_PLATFORM_MAX_NESTED_MESSAGE_DEPTH_LIMIT
-
-This configuration is used as reference to the maximum allowed depth supported by the platform.
-This is used to validate the SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH configuration.
-
-* Example value: `20`
-* Type: `optional`
-* Default value: `20`

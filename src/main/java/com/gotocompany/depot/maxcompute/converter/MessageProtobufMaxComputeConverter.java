@@ -28,9 +28,9 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     public MessageProtobufMaxComputeConverter(MaxComputeProtobufConverterCache maxComputeProtobufConverterCache,
                                               MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxComputeProtobufConverterCache = maxComputeProtobufConverterCache;
-        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1 || maxComputeSinkConfig.getMaxNestedMessageDepth() > maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()) {
-            throw new IllegalArgumentException(String.format("Max nested message depth config (SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH) should be between 1 and %d, provided value: %d",
-                    maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit(), maxComputeSinkConfig.getMaxNestedMessageDepth()));
+        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1) {
+            throw new IllegalArgumentException(String.format("Max nested message depth config (SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH) should be greater than 0. Current value: %d",
+                    maxComputeSinkConfig.getPlatformMaxNestedMessageDepthLimit()));
         }
         this.maxNestedMessageDepth = maxComputeSinkConfig.getMaxNestedMessageDepth() - 1;
     }
