@@ -7,6 +7,7 @@ import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import lombok.Setter;
 
@@ -22,26 +23,37 @@ import java.util.stream.Collectors;
 public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
     private final MaxComputeProtobufConverterCache maxComputeProtobufConverterCache;
+    private final int maxNestedMessageDepth;
 
-    public MessageProtobufMaxComputeConverter(MaxComputeProtobufConverterCache maxComputeProtobufConverterCache) {
+    public MessageProtobufMaxComputeConverter(MaxComputeProtobufConverterCache maxComputeProtobufConverterCache,
+                                              MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxComputeProtobufConverterCache = maxComputeProtobufConverterCache;
+        if (maxComputeSinkConfig.getMaxNestedMessageDepth() < 1) {
+            throw new IllegalArgumentException(String.format("Max nested message depth config (SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH) should be greater than 0. Current value: %d",
+                    maxComputeSinkConfig.getMaxNestedMessageDepth()));
+        }
+        this.maxNestedMessageDepth = maxComputeSinkConfig.getMaxNestedMessageDepth() - 1;
     }
 
     @Override
-    public TypeInfo convertTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(fieldDescriptor,
-                () -> ProtobufMaxComputeConverter.super.convertTypeInfo(fieldDescriptor));
+    public TypeInfo convertTypeInfo(ProtoPayload protoPayload) {
+        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(protoPayload, () -> ProtobufMaxComputeConverter.super.convertTypeInfo(protoPayload));
     }
 
     @Override
-    public StructTypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        List<String> fieldNames = fieldDescriptor.getMessageType().getFields().stream()
+    public StructTypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
+        List<String> fieldNames = protoPayload.getFieldDescriptor().getMessageType().getFields().stream()
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .map(Descriptors.FieldDescriptor::getName)
                 .collect(Collectors.toList());
-        List<TypeInfo> typeInfos = fieldDescriptor.getMessageType().getFields().stream()
+        List<TypeInfo> typeInfos = protoPayload.getFieldDescriptor()
+                .getMessageType()
+                .getFields()
+                .stream()
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .map(fd -> {
                     ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fd);
-                    return converter.convertTypeInfo(fd);
+                    return converter.convertTypeInfo(new ProtoPayload(fd, null, protoPayload.getLevel() + 1));
                 })
                 .collect(Collectors.toList());
         return TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
@@ -52,18 +64,27 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
         Message dynamicMessage = (Message) protoPayload.getParsedObject();
         List<Object> values = new ArrayList<>();
         Map<Descriptors.FieldDescriptor, Object> payloadFields = dynamicMessage.getAllFields();
-        protoPayload.getFieldDescriptor().getMessageType().getFields().forEach(innerFieldDescriptor -> {
-            if (!payloadFields.containsKey(innerFieldDescriptor)) {
-                values.add(null);
-                return;
-            }
-            Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                    .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), false));
-            values.add(mappedInnerValue);
-        });
-        TypeInfo typeInfo = convertTypeInfo(protoPayload.getFieldDescriptor());
+        protoPayload.getFieldDescriptor()
+                .getMessageType()
+                .getFields()
+                .stream()
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
+                .forEach(innerFieldDescriptor -> {
+                    if (!payloadFields.containsKey(innerFieldDescriptor)) {
+                        values.add(null);
+                        return;
+                    }
+                    Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
+                            .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), protoPayload.getLevel() + 1));
+                    values.add(mappedInnerValue);
+                });
+        TypeInfo typeInfo = convertTypeInfo(protoPayload);
         StructTypeInfo structTypeInfo = (StructTypeInfo) (typeInfo instanceof ArrayTypeInfo ? ((ArrayTypeInfo) typeInfo).getElementTypeInfo() : typeInfo);
         return new SimpleStruct(structTypeInfo, values);
+    }
+
+    private boolean shouldIncludeField(ProtoPayload protoPayload, Descriptors.FieldDescriptor fd) {
+        return protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE;
     }
 
 }

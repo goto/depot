@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Set;
@@ -47,7 +48,7 @@ public class PartitioningStrategyFactory {
         if (fieldDescriptor == null) {
             throw new IllegalArgumentException("Partition key not found in the descriptor: " + partitionKey);
         }
-        TypeInfo partitionKeyTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(fieldDescriptor);
+        TypeInfo partitionKeyTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(fieldDescriptor));
         checkPartitionTypePrecondition(partitionKeyTypeInfo);
         if (TypeInfoFactory.TIMESTAMP_NTZ.equals(partitionKeyTypeInfo) || TypeInfoFactory.TIMESTAMP.equals(partitionKeyTypeInfo)) {
             return new TimestampPartitioningStrategy(maxComputeSinkConfig);

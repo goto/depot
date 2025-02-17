@@ -196,4 +196,8 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("true")
     boolean isNanoHandlingEnabled();
 
+    @Key("SINK_MAXCOMPUTE_PROTO_MAX_NESTED_MESSAGE_DEPTH")
+    @DefaultValue("15")
+    int getMaxNestedMessageDepth();
+
 }

@@ -53,6 +53,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
         ));
         when(config.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(config.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(config.getMaxNestedMessageDepth()).thenReturn(15);
         initializeDecorator(config);
     }
 
@@ -93,6 +94,7 @@ public class ProtoMetadataColumnRecordDecoratorTest {
         ));
         when(mcSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
         when(mcSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(mcSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         initializeDecorator(mcSinkConfig);
         Message message = new Message(
                 null,
