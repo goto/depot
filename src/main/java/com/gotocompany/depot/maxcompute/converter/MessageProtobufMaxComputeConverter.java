@@ -43,14 +43,14 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     @Override
     public StructTypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         List<String> fieldNames = protoPayload.getFieldDescriptor().getMessageType().getFields().stream()
-                .filter(fd -> protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE)
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .map(Descriptors.FieldDescriptor::getName)
                 .collect(Collectors.toList());
         List<TypeInfo> typeInfos = protoPayload.getFieldDescriptor()
                 .getMessageType()
                 .getFields()
                 .stream()
-                .filter(fd -> protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE)
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .map(fd -> {
                     ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fd);
                     return converter.convertTypeInfo(new ProtoPayload(fd, null, protoPayload.getLevel() + 1));
@@ -68,7 +68,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .getMessageType()
                 .getFields()
                 .stream()
-                .filter(fd -> protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE)
+                .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .forEach(innerFieldDescriptor -> {
                     if (!payloadFields.containsKey(innerFieldDescriptor)) {
                         values.add(null);
@@ -81,6 +81,10 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
         TypeInfo typeInfo = convertTypeInfo(protoPayload);
         StructTypeInfo structTypeInfo = (StructTypeInfo) (typeInfo instanceof ArrayTypeInfo ? ((ArrayTypeInfo) typeInfo).getElementTypeInfo() : typeInfo);
         return new SimpleStruct(structTypeInfo, values);
+    }
+
+    private boolean shouldIncludeField(ProtoPayload protoPayload, Descriptors.FieldDescriptor fd) {
+        return protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE;
     }
 
 }
