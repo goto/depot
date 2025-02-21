@@ -17,6 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
 /**
  * MaxComputeClient is a client to interact with MaxCompute.
  * It provides methods to execute table creation and update and inserting records into MaxCompute.
@@ -40,7 +42,9 @@ public class MaxComputeClient {
         this.instrumentation = new Instrumentation(statsDReporter, this.getClass());
         this.odps = initializeOdps();
         this.tableTunnel = new TableTunnel(odps);
-        this.tableTunnel.setEndpoint(maxComputeSinkConfig.getMaxComputeTunnelUrl());
+        if (Objects.nonNull(maxComputeSinkConfig.getMaxComputeTunnelUrl())) {
+            this.tableTunnel.setEndpoint(maxComputeSinkConfig.getMaxComputeTunnelUrl());
+        }
         this.maxComputeMetrics = maxComputeMetrics;
         this.ddlManager = initializeDdlManager();
     }
