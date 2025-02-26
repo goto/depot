@@ -46,7 +46,7 @@ dependencies {
     implementation(group: 'com.google.cloud', name: 'google-cloud-bigtable', version: '2.24.1') {
         exclude group: "io.grpc"
     }
-    implementation (group: 'com.aliyun.odps', name: 'odps-sdk-core', version: '0.51.8-public') {
+    implementation (group: 'com.aliyun.odps', name: 'odps-sdk-core', version: '0.51.9-public') {
         exclude group: "com.google"
         exclude group: "io.grpc"
         exclude group: "org.slf4j"
@@ -144,12 +144,8 @@ java {
 publishing {
     repositories {
         maven {
-            name = "OSSRH"
-            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
-            }
+            // Publishes to the local Maven repository (~/.m2/repository)
+            url = uri("file://${buildDir}/repo")
         }
     }
 
@@ -186,12 +182,6 @@ publishing {
     }
 }
 
-signing {
-    if (!project.hasProperty('local')) {
-        sign publishing.publications.maven
-    }
-}
-
 nexusPublishing {
     repositories {
         sonatype {
@@ -212,10 +202,7 @@ jacocoTestCoverageVerification {
                               '**/serializer/**',
                               '**/cortexpb/**',
                               '**/Clock**',
-                              '**/GoGoProtos**',
-                              '**/MaxComputeClient**',
-                              '**/MaxComputeSinkFactory**',
-                              ''])
+                              '**/GoGoProtos**',])
         })
     }
     violationRules {
@@ -223,6 +210,10 @@ jacocoTestCoverageVerification {
             limit {
                 minimum = 0.7
             }
+
+            excludes = [
+                    'com.gotocompany.depot.maxcompute.model'
+            ]
         }
     }
 }
