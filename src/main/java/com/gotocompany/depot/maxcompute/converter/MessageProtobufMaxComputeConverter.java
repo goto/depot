@@ -12,7 +12,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -51,14 +50,9 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     public Object convertSingularPayload(ProtoPayload protoPayload) {
         Message dynamicMessage = (Message) protoPayload.getParsedObject();
         List<Object> values = new ArrayList<>();
-        Map<Descriptors.FieldDescriptor, Object> payloadFields = dynamicMessage.getAllFields();
         protoPayload.getFieldDescriptor().getMessageType().getFields().forEach(innerFieldDescriptor -> {
-            if (!payloadFields.containsKey(innerFieldDescriptor)) {
-                values.add(null);
-                return;
-            }
             Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                    .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), false));
+                    .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), false));
             values.add(mappedInnerValue);
         });
         TypeInfo typeInfo = convertTypeInfo(protoPayload.getFieldDescriptor());
