@@ -144,8 +144,12 @@ java {
 publishing {
     repositories {
         maven {
-            // Publishes to the local Maven repository (~/.m2/repository)
-            url = uri("file://${buildDir}/repo")
+            name = "OSSRH"
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
         }
     }
 
@@ -182,6 +186,12 @@ publishing {
     }
 }
 
+signing {
+    if (!project.hasProperty('local')) {
+        sign publishing.publications.maven
+    }
+}
+
 nexusPublishing {
     repositories {
         sonatype {
@@ -202,7 +212,10 @@ jacocoTestCoverageVerification {
                               '**/serializer/**',
                               '**/cortexpb/**',
                               '**/Clock**',
-                              '**/GoGoProtos**',])
+                              '**/GoGoProtos**',
+                              '**/MaxComputeClient**',
+                              '**/MaxComputeSinkFactory**',
+                              ''])
         })
     }
     violationRules {
@@ -210,10 +223,6 @@ jacocoTestCoverageVerification {
             limit {
                 minimum = 0.7
             }
-
-            excludes = [
-                    'com.gotocompany.depot.maxcompute.model'
-            ]
         }
     }
 }
