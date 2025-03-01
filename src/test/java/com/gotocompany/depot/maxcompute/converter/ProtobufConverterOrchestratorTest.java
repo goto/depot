@@ -116,12 +116,13 @@ public class ProtobufConverterOrchestratorTest {
                 Collections.singletonList(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field"))));
         SimpleStruct expectedMessage = new SimpleStruct(messageTypeInfo, messageValues);
 
-        Object stringRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("string_field"), messagePayload.getField(descriptor.findFieldByName("string_field")));
-        Object messageRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("inner_field"), messagePayload.getField(descriptor.findFieldByName("inner_field")));
-        Object repeatedMessageRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("inner_list_field"), messagePayload.getField(descriptor.findFieldByName("inner_list_field")));
-        Object timestampRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("timestamp_field"), messagePayload.getField(descriptor.findFieldByName("timestamp_field")));
-        Object durationRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("duration_field"), messagePayload.getField(descriptor.findFieldByName("duration_field")));
-        Object structRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("struct_field"), messagePayload.getField(descriptor.findFieldByName("struct_field")));
+        Object stringRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("string_field"), messagePayload.getField(descriptor.findFieldByName("string_field")), 0));
+        Object messageRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("inner_field"), messagePayload.getField(descriptor.findFieldByName("inner_field")), 0));
+        Object repeatedMessageRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("inner_list_field"), messagePayload.getField(descriptor.findFieldByName("inner_list_field")), 0));
+        Object timestampRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("timestamp_field"), messagePayload.getField(descriptor.findFieldByName("timestamp_field")), 0));
+        Object durationRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("duration_field"), messagePayload.getField(descriptor.findFieldByName("duration_field")), 0));
+        Object structRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("struct_field"), messagePayload.getField(descriptor.findFieldByName("struct_field")), 0));
+
 
         assertEquals("string_field", stringRecord);
         assertEquals(LocalDateTime.ofEpochSecond(100, 0, ZoneOffset.UTC), timestampRecord);

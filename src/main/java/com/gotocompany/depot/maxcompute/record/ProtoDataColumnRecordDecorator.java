@@ -4,6 +4,7 @@ import com.aliyun.odps.PartitionSpec;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.partition.DefaultPartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
@@ -97,7 +98,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                 continue;
             }
             recordWrapper.getRecord()
-                    .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(entry.getKey(), protoMessage.getField(entry.getKey())));
+                    .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(entry.getKey(), protoMessage.getField(entry.getKey()), 0)));
         }
         PartitionSpec partitionSpec = null;
         if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {

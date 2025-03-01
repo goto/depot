@@ -30,13 +30,12 @@ public class ProtobufConverterOrchestrator {
     /**
      * Converts a Protobuf field to a MaxCompute record field.
      *
-     * @param fieldDescriptor the Protobuf field descriptor
-     * @param parsedObject parsed Protobuf field
+     * @param protoPayload the proto payload wrapper for Protobuf field descriptor
      * @return the MaxCompute record field
      */
-    public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object parsedObject) {
-        ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
-        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, 0));
+    public Object toMaxComputeValue(ProtoPayload protoPayload) {
+        ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(protoPayload.getFieldDescriptor());
+        return protobufMaxComputeConverter.convertPayload(protoPayload);
     }
 
     /**
