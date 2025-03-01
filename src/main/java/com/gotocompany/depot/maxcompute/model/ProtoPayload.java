@@ -17,6 +17,12 @@ public class ProtoPayload {
         this.level = 0;
     }
 
+    public ProtoPayload(Descriptors.FieldDescriptor fieldDescriptor, int level) {
+        this.fieldDescriptor = fieldDescriptor;
+        this.parsedObject = null;
+        this.level = level;
+    }
+
     public boolean isRootLevel() {
         return level == 0;
     }

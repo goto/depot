@@ -13,7 +13,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +52,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .map(fd -> {
                     ProtobufMaxComputeConverter converter = maxComputeProtobufConverterCache.getConverter(fd);
-                    return converter.convertTypeInfo(new ProtoPayload(fd, null, protoPayload.getLevel() + 1));
+                    return converter.convertTypeInfo(new ProtoPayload(fd, protoPayload.getLevel() + 1));
                 })
                 .collect(Collectors.toList());
         return TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos);
@@ -63,19 +62,14 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     public Object convertSingularPayload(ProtoPayload protoPayload) {
         Message dynamicMessage = (Message) protoPayload.getParsedObject();
         List<Object> values = new ArrayList<>();
-        Map<Descriptors.FieldDescriptor, Object> payloadFields = dynamicMessage.getAllFields();
         protoPayload.getFieldDescriptor()
                 .getMessageType()
                 .getFields()
                 .stream()
                 .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .forEach(innerFieldDescriptor -> {
-                    if (!payloadFields.containsKey(innerFieldDescriptor)) {
-                        values.add(null);
-                        return;
-                    }
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                            .convertPayload(new ProtoPayload(innerFieldDescriptor, payloadFields.get(innerFieldDescriptor), protoPayload.getLevel() + 1));
+                            .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), protoPayload.getLevel() + 1));
                     values.add(mappedInnerValue);
                 });
         TypeInfo typeInfo = convertTypeInfo(protoPayload);

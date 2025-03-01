@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +87,9 @@ public class MessageProtobufMaxComputeConverterTest {
                 .setBuyer(message)
                 .build();
         StructTypeInfo durationTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT));
-        StructTypeInfo itemTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("id", "quantity"), Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.INT));
+        StructTypeInfo itemTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("id", "quantity", "type", "empty_holder"),
+                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.INT, TypeInfoFactory.STRING, TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING))));
+        StructTypeInfo emptyHolderTypeInfo = TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING));
         StructTypeInfo cartTypeInfo = TypeInfoFactory.getStructTypeInfo(
                 Arrays.asList("cart_id", "items", "created_at", "cart_age"),
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.getArrayTypeInfo(itemTypeInfo), TypeInfoFactory.TIMESTAMP_NTZ, durationTypeInfo)
@@ -100,7 +103,7 @@ public class MessageProtobufMaxComputeConverterTest {
                 new SimpleStruct(cartTypeInfo,
                         Arrays.asList(
                                 "cart_id",
-                                Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1)), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", null))),
+                                Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1, "TEST_1", new SimpleStruct(emptyHolderTypeInfo, Collections.singletonList("")))), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", 0, "TEST_1", new SimpleStruct(emptyHolderTypeInfo, Collections.singletonList(""))))),
                                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC),
                                 new SimpleStruct(durationTypeInfo, Arrays.asList(duration.getSeconds(), ((Integer) duration.getNanos()).longValue())))),
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)

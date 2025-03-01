@@ -16,6 +16,7 @@ import com.gotocompany.depot.metrics.StatsDReporter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * MaxComputeClient is a client to interact with MaxCompute.
@@ -40,7 +41,9 @@ public class MaxComputeClient {
         this.instrumentation = new Instrumentation(statsDReporter, this.getClass());
         this.odps = initializeOdps();
         this.tableTunnel = new TableTunnel(odps);
-        this.tableTunnel.setEndpoint(maxComputeSinkConfig.getMaxComputeTunnelUrl());
+        if (StringUtils.isNotEmpty(maxComputeSinkConfig.getMaxComputeTunnelUrl())) {
+            this.tableTunnel.setEndpoint(maxComputeSinkConfig.getMaxComputeTunnelUrl());
+        }
         this.maxComputeMetrics = maxComputeMetrics;
         this.ddlManager = initializeDdlManager();
     }

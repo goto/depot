@@ -95,10 +95,17 @@ message TestCart {
 message TestItem {
   string id = 1;
   int32 quantity = 2;
+  TestEnum type = 3;
+  EmptyHolder empty_holder = 4;
 }
+
 enum TestEnum {
   TEST_1 = 0;
   TEST_2 = 1;
+}
+
+message EmptyHolder {
+  string id = 1;
 }
 
 

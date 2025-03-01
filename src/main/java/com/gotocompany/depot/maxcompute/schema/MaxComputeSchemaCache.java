@@ -76,8 +76,8 @@ public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
 
     private void updateMaxComputeTableSchema(Descriptors.Descriptor descriptor) {
         MaxComputeSchema localSchema = maxComputeSchemaBuilder.build(descriptor);
-        protobufConverterOrchestrator.clearCache();
         try {
+            log.info("Upserting MaxCompute table schema");
             maxComputeClient.createOrUpdateTable(localSchema.getTableSchema());
             log.info("MaxCompute table upserted successfully");
             TableSchema serverSideTableSchema = maxComputeClient.getLatestTableSchema();
@@ -87,6 +87,9 @@ public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
             );
         } catch (OdpsException e) {
             throw new MaxComputeTableOperationException("Error while updating MaxCompute table", e);
+        } finally {
+            log.info("Clearing protobuf converter cache");
+            protobufConverterOrchestrator.clearCache();
         }
     }
 
