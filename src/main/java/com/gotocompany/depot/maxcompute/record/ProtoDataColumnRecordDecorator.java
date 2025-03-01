@@ -17,6 +17,7 @@ import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import com.gotocompany.depot.metrics.StatsDReporter;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -100,6 +101,11 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             recordWrapper.getRecord()
                     .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(entry.getKey(), protoMessage.getField(entry.getKey()), 0)));
         }
+        PartitionSpec partitionSpec = getPartitionSpec(recordWrapper, protoMessage);
+        return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
+    }
+
+    private @Nullable PartitionSpec getPartitionSpec(RecordWrapper recordWrapper, com.google.protobuf.Message protoMessage) {
         PartitionSpec partitionSpec = null;
         if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {
             Descriptors.FieldDescriptor partitionFieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(partitioningStrategy.getOriginalPartitionColumnName());
@@ -109,7 +115,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         if (partitioningStrategy != null && partitioningStrategy instanceof TimestampPartitioningStrategy) {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
-        return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
+        return partitionSpec;
     }
 
 }
