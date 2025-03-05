@@ -11,6 +11,7 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.utils.ProtoUtils;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * Converts google.protobuf.Message to MaxCompute Struct.
  */
 @Setter
+@Slf4j
 public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
     private final MaxComputeProtobufConverterCache maxComputeProtobufConverterCache;
@@ -83,7 +85,11 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
     }
 
     private boolean shouldIncludeField(ProtoPayload protoPayload, Descriptors.FieldDescriptor fd) {
-        return protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE;
+        boolean shouldInclude = protoPayload.getLevel() != maxNestedMessageDepth || fd.getType() != Descriptors.FieldDescriptor.Type.MESSAGE;
+        if (!shouldInclude) {
+            log.warn("Skipping field {} at level {} because it exceeds the max nested message depth", fd.getName(), protoPayload.getLevel());
+        }
+        return shouldInclude;
     }
 
 }
