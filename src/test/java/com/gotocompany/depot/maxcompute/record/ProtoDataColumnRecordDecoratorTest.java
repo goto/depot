@@ -89,10 +89,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -132,10 +133,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -178,10 +180,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .isEqualTo(new Object[]{
                         "id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -233,9 +236,10 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .isEqualTo(new Object[]{
                         "id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
+                        null,
                         null});
         assertThat(decoratedWrapper.getPartitionSpec().toString())
                 .isEqualTo("__partition_key='__NULL__'");
@@ -261,10 +265,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -302,10 +307,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
         verify(recordDecorator, Mockito.times(1))
                 .decorate(Mockito.any(), Mockito.any());
     }

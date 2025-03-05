@@ -101,6 +101,9 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                     if (ProtoUtils.isNonRepeatedProtoMessage(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
                         return;
                     }
+                    if (ProtoUtils.isNonRepeatedString(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
+                        return;
+                    }
                     recordWrapper.getRecord()
                             .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
                 });

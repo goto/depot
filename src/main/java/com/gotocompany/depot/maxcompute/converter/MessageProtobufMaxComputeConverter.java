@@ -75,6 +75,10 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                         values.add(null);
                         return;
                     }
+                    if (ProtoUtils.isNonRepeatedString(innerFieldDescriptor) && !dynamicMessage.hasField(innerFieldDescriptor)) {
+                        values.add(null);
+                        return;
+                    }
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
                             .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), protoPayload.getLevel() + 1));
                     values.add(mappedInnerValue);

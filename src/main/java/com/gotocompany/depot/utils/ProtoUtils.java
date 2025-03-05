@@ -49,4 +49,12 @@ public class ProtoUtils {
         }
         return Descriptors.FieldDescriptor.Type.MESSAGE == fieldDescriptor.getType();
     }
+
+    public static boolean isNonRepeatedString(Descriptors.FieldDescriptor fieldDescriptor) {
+        if (fieldDescriptor.isRepeated()) {
+            return false;
+        }
+        return Descriptors.FieldDescriptor.Type.STRING == fieldDescriptor.getType();
+    }
+
 }
