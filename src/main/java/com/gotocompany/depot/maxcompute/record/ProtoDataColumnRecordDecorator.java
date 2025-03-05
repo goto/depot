@@ -17,11 +17,11 @@ import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import com.gotocompany.depot.metrics.StatsDReporter;
+import com.gotocompany.depot.utils.ProtoUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -93,14 +93,17 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             }
         }
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
-        Map<Descriptors.FieldDescriptor, Object> fields = protoMessage.getAllFields();
-        for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : fields.entrySet()) {
-            if (entry.getKey().getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
-                continue;
-            }
-            recordWrapper.getRecord()
-                    .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(entry.getKey(), protoMessage.getField(entry.getKey()), 0)));
-        }
+        protoMessage.getDescriptorForType().getFields()
+                .forEach(fieldDescriptor -> {
+                    if (fieldDescriptor.getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
+                        return;
+                    }
+                    if (ProtoUtils.isNonRepeatedProtoMessage(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
+                        return;
+                    }
+                    recordWrapper.getRecord()
+                            .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
+                });
         PartitionSpec partitionSpec = getPartitionSpec(recordWrapper, protoMessage);
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
     }

@@ -103,7 +103,7 @@ public class MessageProtobufMaxComputeConverterTest {
                 new SimpleStruct(cartTypeInfo,
                         Arrays.asList(
                                 "cart_id",
-                                Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1, "TEST_1", new SimpleStruct(emptyHolderTypeInfo, Collections.singletonList("")))), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", 0, "TEST_1", new SimpleStruct(emptyHolderTypeInfo, Collections.singletonList(""))))),
+                                Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1, "TEST_1", null)), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", 0, "TEST_1", null))),
                                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC),
                                 new SimpleStruct(durationTypeInfo, Arrays.asList(duration.getSeconds(), ((Integer) duration.getNanos()).longValue())))),
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)

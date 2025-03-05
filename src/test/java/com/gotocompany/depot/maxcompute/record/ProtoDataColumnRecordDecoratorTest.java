@@ -198,6 +198,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
         when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(100);
+        when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(100);
 
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);

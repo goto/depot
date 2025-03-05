@@ -9,6 +9,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
+import com.gotocompany.depot.utils.ProtoUtils;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -68,6 +69,10 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .stream()
                 .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .forEach(innerFieldDescriptor -> {
+                    if (ProtoUtils.isNonRepeatedProtoMessage(innerFieldDescriptor) && !dynamicMessage.hasField(innerFieldDescriptor)) {
+                        values.add(null);
+                        return;
+                    }
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
                             .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), protoPayload.getLevel() + 1));
                     values.add(mappedInnerValue);

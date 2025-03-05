@@ -1,5 +1,6 @@
 package com.gotocompany.depot.utils;
 
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.message.ProtoUnknownFieldValidationType;
 
@@ -40,5 +41,12 @@ public class ProtoUtils {
 
     private static List<Message> getMessageWithUnknownFields(List<Message> messages) {
         return messages.stream().filter(message -> !message.getUnknownFields().asMap().isEmpty()).collect(Collectors.toList());
+    }
+
+    public static boolean isNonRepeatedProtoMessage(Descriptors.FieldDescriptor fieldDescriptor) {
+        if (fieldDescriptor.isRepeated()) {
+            return false;
+        }
+        return Descriptors.FieldDescriptor.Type.MESSAGE == fieldDescriptor.getType();
     }
 }
