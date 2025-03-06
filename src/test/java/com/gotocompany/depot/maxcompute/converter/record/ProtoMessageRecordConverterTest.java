@@ -1,6 +1,8 @@
 package com.gotocompany.depot.maxcompute.converter.record;
 
+import com.aliyun.odps.Column;
 import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Timestamp;
@@ -103,13 +105,20 @@ public class ProtoMessageRecordConverterTest {
         maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(descriptor);
         when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
+        when(maxComputeSchemaCache.getColumnByName("id")).thenReturn(Column.newBuilder("id", TypeInfoFactory.STRING)
+                .build());
+        when(maxComputeSchemaCache.getColumnByName("inner_record")).thenReturn(Column.newBuilder("inner_record", TypeInfoFactory.getArrayTypeInfo(
+                        TypeInfoFactory.getStructTypeInfo(Arrays.asList("name", "balance", "unset_string_nested"), Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT, TypeInfoFactory.STRING))))
+                .build());
+        when(maxComputeSchemaCache.getColumnByName("timestamp")).thenReturn(Column.newBuilder("timestamp", TypeInfoFactory.TIMESTAMP).build());
+        when(maxComputeSchemaCache.getColumnByName("unset_string")).thenReturn(Column.newBuilder("unset_string", TypeInfoFactory.STRING).build());
         Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
         Mockito.doNothing().when(instrumentation)
                 .captureDurationSince(Mockito.any(), Mockito.any());
         MaxComputeMetrics maxComputeMetrics = new MaxComputeMetrics(sinkConfig);
         RecordDecorator protoDataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(null,
                 protobufConverterOrchestrator,
-                protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics, Mockito.mock(MaxComputeSchemaCache.class));
+                protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics, maxComputeSchemaCache);
         RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(protoDataColumnRecordDecorator, maxComputeSinkConfig, maxComputeSchemaCache, metadataUtil);
         protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, maxComputeSchemaCache);
     }
@@ -137,6 +146,10 @@ public class ProtoMessageRecordConverterTest {
         assertThat(recordWrappers.getValidRecords()).size().isEqualTo(1);
         RecordWrapper recordWrapper = recordWrappers.getValidRecords().get(0);
         assertThat(recordWrapper.getIndex()).isEqualTo(0);
+        StructTypeInfo structTypeInfo = TypeInfoFactory.getStructTypeInfo(
+                Arrays.asList("name", "balance", "unset_string_nested"),
+                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT, TypeInfoFactory.STRING)
+        );
         assertThat(recordWrapper.getRecord())
                 .extracting("values")
                 .isEqualTo(new Serializable[]{
@@ -146,21 +159,16 @@ public class ProtoMessageRecordConverterTest {
                         "id",
                         new ArrayList<>(Arrays.asList(
                                 new SimpleStruct(
-                                        TypeInfoFactory.getStructTypeInfo(
-                                                Arrays.asList("name", "balance"),
-                                                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT)
-                                        ),
-                                        Arrays.asList("name_1", 100.2f)
+                                        structTypeInfo,
+                                        Arrays.asList("name_1", 100.2f, null)
                                 ),
                                 new SimpleStruct(
-                                        TypeInfoFactory.getStructTypeInfo(
-                                                Arrays.asList("name", "balance"),
-                                                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT)
-                                        ),
-                                        Arrays.asList("name_2", 50f)
+                                        structTypeInfo,
+                                        Arrays.asList("name_2", 50f, null)
                                 )
                         )),
-                        expectedPayloadLocalDateTime
+                        expectedPayloadLocalDateTime,
+                        null
                 });
         assertThat(recordWrapper.getErrorInfo()).isNull();
     }
