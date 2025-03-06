@@ -64,7 +64,7 @@ public class TimestampNTZProtobufMaxComputeConverterTest {
         LocalDateTime expectedLocalDateTime = LocalDateTime.ofEpochSecond(
                 timestamp.getSeconds(), timestamp.getNanos(), java.time.ZoneOffset.UTC);
 
-        Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), 0,TypeInfoFactory.TIMESTAMP_NTZ));
+        Object result = timestampNtzProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), message.getField(descriptor.getFields().get(3)), 0, TypeInfoFactory.TIMESTAMP_NTZ));
 
         assertThat(result)
                 .isEqualTo(expectedLocalDateTime);
