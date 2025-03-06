@@ -1,11 +1,13 @@
 package com.gotocompany.depot.maxcompute.record;
 
 import com.aliyun.odps.PartitionSpec;
+import com.aliyun.odps.type.TypeInfo;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
+import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.maxcompute.schema.partition.DefaultPartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.TimestampPartitioningStrategy;
@@ -42,6 +44,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
     private final MaxComputeMetrics maxComputeMetrics;
     private final boolean sinkConnectorSchemaProtoAllowUnknownFieldsEnable;
     private final boolean sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable;
+    private final MaxComputeSchemaCache maxComputeSchemaCache;
 
     public ProtoDataColumnRecordDecorator(RecordDecorator decorator,
                                           ProtobufConverterOrchestrator protobufConverterOrchestrator,
@@ -49,7 +52,8 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                                           SinkConfig sinkConfig,
                                           PartitioningStrategy partitioningStrategy,
                                           StatsDReporter statsDReporter,
-                                          MaxComputeMetrics maxComputeMetrics) {
+                                          MaxComputeMetrics maxComputeMetrics,
+                                          MaxComputeSchemaCache maxComputeSchemaCache) {
         super(decorator);
         this.protobufConverterOrchestrator = protobufConverterOrchestrator;
         this.protoMessageParser = messageParser;
@@ -68,6 +72,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         this.maxComputeMetrics = maxComputeMetrics;
         this.sinkConnectorSchemaProtoAllowUnknownFieldsEnable = sinkConfig.getSinkConnectorSchemaProtoAllowUnknownFieldsEnable();
         this.sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable = sinkConfig.getSinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable();
+        this.maxComputeSchemaCache = maxComputeSchemaCache;
     }
 
     /**
@@ -104,8 +109,10 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                     if (ProtoUtils.isNonRepeatedString(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
                         return;
                     }
+                    TypeInfo typeInfo = maxComputeSchemaCache.getColumnByName(fieldDescriptor.getName().toLowerCase())
+                            .getTypeInfo();
                     recordWrapper.getRecord()
-                            .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
+                            .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0, typeInfo)));
                 });
         PartitionSpec partitionSpec = getPartitionSpec(recordWrapper, protoMessage);
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);

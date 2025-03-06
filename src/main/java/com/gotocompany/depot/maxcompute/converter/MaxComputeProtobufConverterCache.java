@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
+import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.google.common.collect.Sets;
 import com.google.protobuf.Descriptors;
@@ -11,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.*;
 import static java.util.Objects.isNull;
@@ -30,10 +33,12 @@ public class MaxComputeProtobufConverterCache {
 
     private final Map<String, ProtobufMaxComputeConverter> protobufMaxComputeConverterMap;
     private final Map<String, TypeInfo> typeInfoCache;
+    private final Map<TypeInfo, Map<String, Integer>> structFieldNamesIndexCache;
 
     public MaxComputeProtobufConverterCache(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.protobufMaxComputeConverterMap = new ConcurrentHashMap<>();
         this.typeInfoCache = new ConcurrentHashMap<>();
+        this.structFieldNamesIndexCache = new ConcurrentHashMap<>();
         PrimitiveProtobufMaxComputeConverter primitiveProtobufMaxComputeConverter = new PrimitiveProtobufMaxComputeConverter(maxComputeSinkConfig);
         SUPPORTED_PRIMITIVE_PROTO_TYPES.forEach(type -> protobufMaxComputeConverterMap.put(type.toString(), primitiveProtobufMaxComputeConverter));
         if (maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType() == MaxComputeTimestampDataType.TIMESTAMP_NTZ) {
@@ -67,6 +72,17 @@ public class MaxComputeProtobufConverterCache {
         return typeInfo;
     }
 
+    public Map<String, Integer> getStructFieldTypeIndexMap(StructTypeInfo structTypeInfo) {
+        Map<String, Integer> structFieldNamesIndex = structFieldNamesIndexCache.get(structTypeInfo);
+        if (isNull(structFieldNamesIndex)) {
+            structFieldNamesIndex = IntStream.range(0, structTypeInfo.getFieldCount())
+                    .boxed()
+                    .collect(Collectors.toMap(i -> structTypeInfo.getFieldNames().get(i), i -> i));
+            structFieldNamesIndexCache.put(structTypeInfo, structFieldNamesIndex);
+        }
+        return structFieldNamesIndex;
+    }
+
     public ProtobufMaxComputeConverter getConverter(Descriptors.FieldDescriptor fieldDescriptor) {
         if (fieldDescriptor.getType() == MESSAGE) {
             switch (fieldDescriptor.getMessageType().getFullName()) {
@@ -93,6 +109,7 @@ public class MaxComputeProtobufConverterCache {
 
     public void clearCache() {
         typeInfoCache.clear();
+        structFieldNamesIndexCache.clear();
     }
 
 }

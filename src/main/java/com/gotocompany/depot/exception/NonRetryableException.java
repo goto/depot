@@ -6,4 +6,8 @@ public class NonRetryableException extends RuntimeException {
         super(message, cause);
     }
 
+    public NonRetryableException(String message) {
+        super(message);
+    }
+
 }

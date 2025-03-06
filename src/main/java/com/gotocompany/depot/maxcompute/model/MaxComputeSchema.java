@@ -14,7 +14,6 @@ public class MaxComputeSchema {
 
     private final TableSchema tableSchema;
     private final Map<String, TypeInfo> metadataColumns;
-
     public Column[] getColumns() {
         return tableSchema.getColumns().toArray(new Column[]{});
     }

@@ -343,7 +343,8 @@ public class ProtoDataColumnRecordDecoratorTest {
                 sinkConfig,
                 partitioningStrategy,
                 Mockito.mock(StatsDReporter.class),
-                maxComputeMetrics
+                maxComputeMetrics,
+                Mockito.mock(MaxComputeSchemaCache.class)
         );
     }
 

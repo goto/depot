@@ -109,7 +109,7 @@ public class ProtoMessageRecordConverterTest {
         MaxComputeMetrics maxComputeMetrics = new MaxComputeMetrics(sinkConfig);
         RecordDecorator protoDataColumnRecordDecorator = new ProtoDataColumnRecordDecorator(null,
                 protobufConverterOrchestrator,
-                protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics);
+                protoMessageParser, sinkConfig, partitioningStrategy, Mockito.mock(StatsDReporter.class), maxComputeMetrics, Mockito.mock(MaxComputeSchemaCache.class));
         RecordDecorator metadataColumnRecordDecorator = new ProtoMetadataColumnRecordDecorator(protoDataColumnRecordDecorator, maxComputeSinkConfig, maxComputeSchemaCache, metadataUtil);
         protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, maxComputeSchemaCache);
     }

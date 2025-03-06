@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.schema;
 
+import com.aliyun.odps.Column;
 import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.TableSchema;
 import com.google.protobuf.Descriptors;
@@ -51,6 +52,10 @@ public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
             }
         }
         return maxComputeSchema;
+    }
+
+    public Column getColumnByName(String name) {
+        return maxComputeSchema.getTableSchema().getColumn(name);
     }
 
     /**
