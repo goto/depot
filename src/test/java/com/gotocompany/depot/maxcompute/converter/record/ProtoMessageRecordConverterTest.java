@@ -1,6 +1,7 @@
 package com.gotocompany.depot.maxcompute.converter.record;
 
 import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Timestamp;
@@ -137,6 +138,10 @@ public class ProtoMessageRecordConverterTest {
         assertThat(recordWrappers.getValidRecords()).size().isEqualTo(1);
         RecordWrapper recordWrapper = recordWrappers.getValidRecords().get(0);
         assertThat(recordWrapper.getIndex()).isEqualTo(0);
+        StructTypeInfo structTypeInfo = TypeInfoFactory.getStructTypeInfo(
+                Arrays.asList("name", "balance", "unset_string_nested"),
+                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT, TypeInfoFactory.STRING)
+        );
         assertThat(recordWrapper.getRecord())
                 .extracting("values")
                 .isEqualTo(new Serializable[]{
@@ -146,21 +151,16 @@ public class ProtoMessageRecordConverterTest {
                         "id",
                         new ArrayList<>(Arrays.asList(
                                 new SimpleStruct(
-                                        TypeInfoFactory.getStructTypeInfo(
-                                                Arrays.asList("name", "balance"),
-                                                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT)
-                                        ),
-                                        Arrays.asList("name_1", 100.2f)
+                                        structTypeInfo,
+                                        Arrays.asList("name_1", 100.2f, null)
                                 ),
                                 new SimpleStruct(
-                                        TypeInfoFactory.getStructTypeInfo(
-                                                Arrays.asList("name", "balance"),
-                                                Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT)
-                                        ),
-                                        Arrays.asList("name_2", 50f)
+                                        structTypeInfo,
+                                        Arrays.asList("name_2", 50f, null)
                                 )
                         )),
-                        expectedPayloadLocalDateTime
+                        expectedPayloadLocalDateTime,
+                        null
                 });
         assertThat(recordWrapper.getErrorInfo()).isNull();
     }
