@@ -86,7 +86,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                     }
                     Integer index = fieldNameToIndexMap.get(innerFieldDescriptor.getName().toLowerCase());
                     if (index == null) {
-                        throw new SchemaMismatchException(String.format("Missing field in struct: %s name: %s level: %d", innerFieldDescriptor.getName(), innerFieldDescriptor.getName(), protoPayload.getLevel()));
+                        throw new SchemaMismatchException(String.format("Schema is missing field name: %s in struct: %s level: %d", innerFieldDescriptor.getName(), structTypeInfo, protoPayload.getLevel()));
                     }
                     TypeInfo innerTypeInfo = structTypeInfo.getFieldTypeInfos().get(index);
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)

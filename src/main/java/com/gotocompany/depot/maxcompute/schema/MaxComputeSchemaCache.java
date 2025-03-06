@@ -55,7 +55,7 @@ public class MaxComputeSchemaCache extends DepotStencilUpdateListener {
     }
 
     public Column getColumnByName(String name) {
-        return maxComputeSchema.getTableSchema().getColumn(name);
+        return getMaxComputeSchema().getTableSchema().getColumn(name);
     }
 
     /**
