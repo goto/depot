@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
+import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
@@ -40,15 +41,15 @@ public class DurationProtobufMaxComputeConverterTest {
         TestMaxComputeTypeInfo.TestRoot message = TestMaxComputeTypeInfo.TestRoot.newBuilder()
                 .setDurationField(duration)
                 .build();
-        List<String> expectedFieldNames = Arrays.asList("seconds", "nanos");
-        List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
+        List<String> fieldNames = Arrays.asList("seconds", "nanos");
+        List<TypeInfo> typeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
         List<Object> values = Arrays.asList(1L, 1L);
-        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), 0));
+        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), 0, TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos)));
 
         assertThat(result)
                 .isInstanceOf(com.aliyun.odps.data.SimpleStruct.class)
                 .extracting("typeInfo", "values")
-                .containsExactly(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values);
+                .containsExactly(TypeInfoFactory.getStructTypeInfo(fieldNames, typeInfos), values);
     }
 
     @Test
@@ -66,10 +67,11 @@ public class DurationProtobufMaxComputeConverterTest {
                 .build();
         List<String> expectedFieldNames = Arrays.asList("seconds", "nanos");
         List<TypeInfo> expectedTypeInfos = Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT);
+        StructTypeInfo structTypeInfo = TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos);
         List<Object> values1 = Arrays.asList(1L, 1L);
         List<Object> values2 = Arrays.asList(2L, 2L);
 
-        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(5), message.getField(repeatedDescriptor.getFields().get(5)), 0));
+        Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(5), message.getField(repeatedDescriptor.getFields().get(5)), 0, TypeInfoFactory.getArrayTypeInfo(structTypeInfo)));
 
         assertThat(result)
                 .isInstanceOf(List.class);
@@ -78,8 +80,8 @@ public class DurationProtobufMaxComputeConverterTest {
                 .allMatch(element -> element instanceof com.aliyun.odps.data.SimpleStruct)
                 .extracting("typeInfo", "values")
                 .containsExactly(
-                        Assertions.tuple(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values1),
-                        Assertions.tuple(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values2)
+                        Assertions.tuple(structTypeInfo, values1),
+                        Assertions.tuple(structTypeInfo, values2)
                 );
     }
 

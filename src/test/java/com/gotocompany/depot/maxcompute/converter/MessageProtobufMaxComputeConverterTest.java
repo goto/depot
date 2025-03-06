@@ -89,12 +89,11 @@ public class MessageProtobufMaxComputeConverterTest {
         StructTypeInfo durationTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT));
         StructTypeInfo itemTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("id", "quantity", "type", "empty_holder"),
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.INT, TypeInfoFactory.STRING, TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING))));
-        StructTypeInfo emptyHolderTypeInfo = TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING));
         StructTypeInfo cartTypeInfo = TypeInfoFactory.getStructTypeInfo(
                 Arrays.asList("cart_id", "items", "created_at", "cart_age"),
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.getArrayTypeInfo(itemTypeInfo), TypeInfoFactory.TIMESTAMP_NTZ, durationTypeInfo)
         );
-        StructTypeInfo expectedStructTypeInfo = TypeInfoFactory.getStructTypeInfo(
+        StructTypeInfo messageStructTypeInfo = TypeInfoFactory.getStructTypeInfo(
                 Arrays.asList("name", "cart", "created_at"),
                 Arrays.asList(TypeInfoFactory.STRING, cartTypeInfo, TypeInfoFactory.TIMESTAMP_NTZ)
         );
@@ -109,11 +108,11 @@ public class MessageProtobufMaxComputeConverterTest {
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)
         );
 
-        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), 0));
+        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), 0, messageStructTypeInfo));
 
         assertThat(object)
                 .extracting("typeInfo", "values")
-                .containsExactly(expectedStructTypeInfo, expectedStructValues);
+                .containsExactly(messageStructTypeInfo, expectedStructValues);
     }
 
     @Test(expected = IllegalArgumentException.class)

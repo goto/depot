@@ -1,6 +1,7 @@
 package com.gotocompany.depot.maxcompute.converter;
 
 import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.type.ArrayTypeInfo;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -64,13 +65,9 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
 
     @Override
     public Object convertSingularPayload(ProtoPayload protoPayload) {
-        StructTypeInfo structTypeInfo = (StructTypeInfo) protoPayload.getMaxComputeTypeInfo();
-        return new SimpleStruct(structTypeInfo, buildValues((protoPayload)));
-    }
-
-    private List<Object> buildValues(ProtoPayload protoPayload) {
         Message dynamicMessage = (Message) protoPayload.getParsedObject();
-        StructTypeInfo structTypeInfo = (StructTypeInfo) protoPayload.getMaxComputeTypeInfo();
+        TypeInfo typeInfo = protoPayload.getMaxComputeTypeInfo();
+        StructTypeInfo structTypeInfo = (StructTypeInfo) (typeInfo instanceof ArrayTypeInfo ? ((ArrayTypeInfo) typeInfo).getElementTypeInfo() : typeInfo);
         if (structTypeInfo.getFieldNames().size() != dynamicMessage.getDescriptorForType().getFields().size()) {
             throw new SchemaMismatchException(String.format("Field count mismatch field name:%s level:%d", structTypeInfo.getTypeName(), protoPayload.getLevel()));
         }
@@ -91,12 +88,12 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                     if (index == null) {
                         throw new SchemaMismatchException(String.format("Field name mismatch field name:%s level:%d", innerFieldDescriptor.getName(), protoPayload.getLevel()));
                     }
-                    TypeInfo typeInfo = structTypeInfo.getFieldTypeInfos().get(index);
+                    TypeInfo innerTypeInfo = structTypeInfo.getFieldTypeInfos().get(index);
                     Object mappedInnerValue = maxComputeProtobufConverterCache.getConverter(innerFieldDescriptor)
-                            .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), protoPayload.getLevel() + 1, typeInfo));
+                            .convertPayload(new ProtoPayload(innerFieldDescriptor, dynamicMessage.getField(innerFieldDescriptor), protoPayload.getLevel() + 1, innerTypeInfo));
                     values[index] = mappedInnerValue;
                 });
-        return Arrays.asList(values);
+        return new SimpleStruct(structTypeInfo, Arrays.asList(values));
     }
 
     private boolean shouldIncludeField(ProtoPayload protoPayload, Descriptors.FieldDescriptor fd) {

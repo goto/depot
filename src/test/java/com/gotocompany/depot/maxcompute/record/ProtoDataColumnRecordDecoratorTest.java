@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.record;
 
+import com.aliyun.odps.Column;
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
@@ -330,6 +331,11 @@ public class ProtoDataColumnRecordDecoratorTest {
         MaxComputeSchema maxComputeSchema = maxComputeSchemaBuilder.build(DESCRIPTOR);
         MaxComputeSchemaCache maxComputeSchemaCache = Mockito.mock(MaxComputeSchemaCache.class);
         when(maxComputeSchemaCache.getMaxComputeSchema()).thenReturn(maxComputeSchema);
+        when(maxComputeSchemaCache.getColumnByName("id")).thenReturn(Column.newBuilder("id", TypeInfoFactory.STRING).build());
+        when(maxComputeSchemaCache.getColumnByName("timestamp")).thenReturn(Column.newBuilder("timestamp", TypeInfoFactory.TIMESTAMP_NTZ).build());
+        when(maxComputeSchemaCache.getColumnByName("inner_record")).thenReturn(Column.newBuilder("inner_record", TypeInfoFactory.getArrayTypeInfo(
+                TypeInfoFactory.getStructTypeInfo(Arrays.asList("name", "balance", "unset_string"), Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.FLOAT, TypeInfoFactory.STRING))
+        )).build());
         ProtoMessageParser protoMessageParser = Mockito.mock(ProtoMessageParser.class);
         ParsedMessage parsedMessage = Mockito.mock(ParsedMessage.class);
         when(parsedMessage.getRaw()).thenReturn(mockedMessage);
@@ -344,7 +350,7 @@ public class ProtoDataColumnRecordDecoratorTest {
                 partitioningStrategy,
                 Mockito.mock(StatsDReporter.class),
                 maxComputeMetrics,
-                Mockito.mock(MaxComputeSchemaCache.class)
+                maxComputeSchemaCache
         );
     }
 

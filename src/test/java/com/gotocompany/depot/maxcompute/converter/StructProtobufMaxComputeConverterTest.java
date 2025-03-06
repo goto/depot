@@ -34,7 +34,7 @@ public class StructProtobufMaxComputeConverterTest {
                 .build();
         String expected = "{\"intField\":1.0,\"stringField\":\"String\"}";
 
-        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(4), message.getField(descriptor.getFields().get(4)), 0));
+        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(4), message.getField(descriptor.getFields().get(4)), 0, TypeInfoFactory.STRING));
 
         assertTrue(result instanceof String);
         assertEquals(expected, result);
@@ -53,7 +53,7 @@ public class StructProtobufMaxComputeConverterTest {
                 .build();
         String expected = "[{\"intField\":1.0,\"stringField\":\"String\"}, {\"intField\":1.0,\"stringField\":\"String\"}]";
 
-        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(4), message.getField(repeatedDescriptor.getFields().get(4)), 0));
+        Object result = structProtobufMaxComputeConverter.convertPayload(new ProtoPayload(repeatedDescriptor.getFields().get(4), message.getField(repeatedDescriptor.getFields().get(4)), 0, TypeInfoFactory.STRING));
 
         assertTrue(result instanceof List);
         assertTrue(((List<?>) result).stream().allMatch(e -> e instanceof String));
