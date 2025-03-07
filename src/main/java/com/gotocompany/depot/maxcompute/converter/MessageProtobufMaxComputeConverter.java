@@ -1,6 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
-import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.data.ReorderableStruct;
 import com.aliyun.odps.type.ArrayTypeInfo;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
@@ -85,7 +85,7 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 });
         TypeInfo typeInfo = convertTypeInfo(protoPayload);
         StructTypeInfo structTypeInfo = (StructTypeInfo) (typeInfo instanceof ArrayTypeInfo ? ((ArrayTypeInfo) typeInfo).getElementTypeInfo() : typeInfo);
-        return new SimpleStruct(structTypeInfo, values);
+        return new ReorderableStruct(structTypeInfo, values);
     }
 
     private boolean shouldIncludeField(ProtoPayload protoPayload, Descriptors.FieldDescriptor fd) {

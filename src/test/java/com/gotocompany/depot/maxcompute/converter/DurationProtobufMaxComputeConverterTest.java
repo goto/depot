@@ -46,7 +46,7 @@ public class DurationProtobufMaxComputeConverterTest {
         Object result = durationProtobufMaxComputeConverter.convertPayload(new ProtoPayload(descriptor.getFields().get(5), message.getField(descriptor.getFields().get(5)), 0));
 
         assertThat(result)
-                .isInstanceOf(com.aliyun.odps.data.SimpleStruct.class)
+                .isInstanceOf(com.aliyun.odps.data.ReorderableStruct.class)
                 .extracting("typeInfo", "values")
                 .containsExactly(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values);
     }
@@ -75,7 +75,7 @@ public class DurationProtobufMaxComputeConverterTest {
                 .isInstanceOf(List.class);
         assertThat((List<?>) result)
                 .hasSize(2)
-                .allMatch(element -> element instanceof com.aliyun.odps.data.SimpleStruct)
+                .allMatch(element -> element instanceof com.aliyun.odps.data.ReorderableStruct)
                 .extracting("typeInfo", "values")
                 .containsExactly(
                         Assertions.tuple(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values1),

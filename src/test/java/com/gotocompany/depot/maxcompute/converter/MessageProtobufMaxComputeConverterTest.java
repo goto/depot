@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
+import com.aliyun.odps.data.ReorderableStruct;
 import com.aliyun.odps.data.SimpleStruct;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
@@ -89,7 +90,6 @@ public class MessageProtobufMaxComputeConverterTest {
         StructTypeInfo durationTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT));
         StructTypeInfo itemTypeInfo = TypeInfoFactory.getStructTypeInfo(Arrays.asList("id", "quantity", "type", "empty_holder"),
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.INT, TypeInfoFactory.STRING, TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING))));
-        StructTypeInfo emptyHolderTypeInfo = TypeInfoFactory.getStructTypeInfo(Collections.singletonList("id"), Collections.singletonList(TypeInfoFactory.STRING));
         StructTypeInfo cartTypeInfo = TypeInfoFactory.getStructTypeInfo(
                 Arrays.asList("cart_id", "items", "created_at", "cart_age"),
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.getArrayTypeInfo(itemTypeInfo), TypeInfoFactory.TIMESTAMP_NTZ, durationTypeInfo)
@@ -100,7 +100,7 @@ public class MessageProtobufMaxComputeConverterTest {
         );
         List<Object> expectedStructValues = Arrays.asList(
                 "buyerName",
-                new SimpleStruct(cartTypeInfo,
+                new ReorderableStruct(cartTypeInfo,
                         Arrays.asList(
                                 "cart_id",
                                 Arrays.asList(new SimpleStruct(itemTypeInfo, Arrays.asList("item1", 1, "TEST_1", null)), new SimpleStruct(itemTypeInfo, Arrays.asList("item2", 0, "TEST_1", null))),
@@ -109,11 +109,10 @@ public class MessageProtobufMaxComputeConverterTest {
                 LocalDateTime.ofEpochSecond(timestamp.getSeconds(), 0, java.time.ZoneOffset.UTC)
         );
 
-        Object object = messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), 0));
+        ReorderableStruct result =  (ReorderableStruct) messageProtobufMaxComputeConverter.convertPayload(new ProtoPayload(payloadDescriptor.getFields().get(0), wrapper.getField(payloadDescriptor.getFields().get(0)), 0));
 
-        assertThat(object)
-                .extracting("typeInfo", "values")
-                .containsExactly(expectedStructTypeInfo, expectedStructValues);
+        assertEquals(expectedStructTypeInfo, result.getTypeInfo());
+        assertEquals(expectedStructValues.toString(), result.getFieldValues().toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
