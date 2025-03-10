@@ -4,6 +4,7 @@ import com.aliyun.odps.PartitionSpec;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
 import com.gotocompany.depot.maxcompute.schema.partition.DefaultPartitioningStrategy;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
@@ -16,10 +17,11 @@ import com.gotocompany.depot.message.SinkConnectorSchemaMessageMode;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
 import com.gotocompany.depot.metrics.StatsDReporter;
+import com.gotocompany.depot.utils.ProtoUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -91,14 +93,25 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             }
         }
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
-        Map<Descriptors.FieldDescriptor, Object> fields = protoMessage.getAllFields();
-        for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : fields.entrySet()) {
-            if (entry.getKey().getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
-                continue;
-            }
-            recordWrapper.getRecord()
-                    .set(entry.getKey().getName(), protobufConverterOrchestrator.toMaxComputeValue(entry.getKey(), protoMessage.getField(entry.getKey())));
-        }
+        protoMessage.getDescriptorForType().getFields()
+                .forEach(fieldDescriptor -> {
+                    if (fieldDescriptor.getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
+                        return;
+                    }
+                    if (ProtoUtils.isNonRepeatedProtoMessage(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
+                        return;
+                    }
+                    if (ProtoUtils.isNonRepeatedString(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
+                        return;
+                    }
+                    recordWrapper.getRecord()
+                            .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
+                });
+        PartitionSpec partitionSpec = getPartitionSpec(recordWrapper, protoMessage);
+        return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
+    }
+
+    private @Nullable PartitionSpec getPartitionSpec(RecordWrapper recordWrapper, com.google.protobuf.Message protoMessage) {
         PartitionSpec partitionSpec = null;
         if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {
             Descriptors.FieldDescriptor partitionFieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(partitioningStrategy.getOriginalPartitionColumnName());
@@ -108,7 +121,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         if (partitioningStrategy != null && partitioningStrategy instanceof TimestampPartitioningStrategy) {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
-        return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
+        return partitionSpec;
     }
 
 }

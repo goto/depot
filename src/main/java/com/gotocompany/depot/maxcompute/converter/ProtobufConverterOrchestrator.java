@@ -1,7 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
 import com.aliyun.odps.type.TypeInfo;
-import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 
@@ -20,23 +19,22 @@ public class ProtobufConverterOrchestrator {
     /**
      * Converts a Protobuf field to a MaxCompute TypeInfo.
      *
-     * @param fieldDescriptor the Protobuf field descriptor
+     * @param protoPayload the proto payload wrapper for Protobuf field descriptor
      * @return the MaxCompute TypeInfo
      */
-    public TypeInfo toMaxComputeTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(fieldDescriptor);
+    public TypeInfo toMaxComputeTypeInfo(ProtoPayload protoPayload) {
+        return maxComputeProtobufConverterCache.getOrCreateTypeInfo(protoPayload);
     }
 
     /**
      * Converts a Protobuf field to a MaxCompute record field.
      *
-     * @param fieldDescriptor the Protobuf field descriptor
-     * @param parsedObject parsed Protobuf field
+     * @param protoPayload the proto payload wrapper for Protobuf field descriptor
      * @return the MaxCompute record field
      */
-    public Object toMaxComputeValue(Descriptors.FieldDescriptor fieldDescriptor, Object parsedObject) {
-        ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(fieldDescriptor);
-        return protobufMaxComputeConverter.convertPayload(new ProtoPayload(fieldDescriptor, parsedObject, true));
+    public Object toMaxComputeValue(ProtoPayload protoPayload) {
+        ProtobufMaxComputeConverter protobufMaxComputeConverter = maxComputeProtobufConverterCache.getConverter(protoPayload.getFieldDescriptor());
+        return protobufMaxComputeConverter.convertPayload(protoPayload);
     }
 
     /**

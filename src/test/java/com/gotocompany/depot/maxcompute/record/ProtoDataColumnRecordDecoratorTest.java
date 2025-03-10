@@ -62,6 +62,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, null, null, getMockedMessage());
@@ -87,10 +89,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -105,6 +108,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new DefaultPartitioningStrategy(TypeInfoFactory.STRING,
@@ -128,10 +133,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -148,7 +154,9 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new TimestampPartitioningStrategy(maxComputeSinkConfig);
@@ -172,10 +180,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .isEqualTo(new Object[]{
                         "id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -191,6 +200,10 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+        when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(100);
+        when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(100);
+
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         PartitioningStrategy partitioningStrategy = new TimestampPartitioningStrategy(maxComputeSinkConfig);
@@ -223,9 +236,10 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .isEqualTo(new Object[]{
                         "id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
+                        null,
                         null});
         assertThat(decoratedWrapper.getPartitionSpec().toString())
                 .isEqualTo("__partition_key='__NULL__'");
@@ -251,10 +265,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
     }
 
     @Test
@@ -270,6 +285,8 @@ public class ProtoDataColumnRecordDecoratorTest {
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         SinkConfig sinkConfig = Mockito.mock(SinkConfig.class);
         when(sinkConfig.getSinkConnectorSchemaMessageMode()).thenReturn(SinkConnectorSchemaMessageMode.LOG_MESSAGE);
         instantiateProtoDataColumnRecordDecorator(sinkConfig, maxComputeSinkConfig, recordDecorator, null, getMockedMessage());
@@ -290,10 +307,11 @@ public class ProtoDataColumnRecordDecoratorTest {
                 .extracting("values")
                 .isEqualTo(new Object[]{"id",
                         Arrays.asList(
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f)),
-                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f))
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_1", 100.2f, null)),
+                                new SimpleStruct(expectedArrayStructElementTypeInfo, Arrays.asList("name_2", 50f, null))
                         ),
-                        expectedLocalDateTime});
+                        expectedLocalDateTime,
+                        null});
         verify(recordDecorator, Mockito.times(1))
                 .decorate(Mockito.any(), Mockito.any());
     }

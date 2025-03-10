@@ -6,6 +6,7 @@ import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.schema.partition.PartitioningStrategy;
 import com.gotocompany.depot.maxcompute.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,6 @@ public class MaxComputeSchemaBuilder {
                 tableSchemaBuilder.build(),
                 metadataColumns.stream().collect(Collectors.toMap(Column::getName, Column::getTypeInfo))
         );
-
     }
 
     private List<Column> buildDataColumns(Descriptors.Descriptor descriptor) {
@@ -57,7 +57,8 @@ public class MaxComputeSchemaBuilder {
                     }
                     return !partitioningStrategy.shouldReplaceOriginalColumn();
                 })
-                .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeTypeInfo(fieldDescriptor)).build())
+                .map(fieldDescriptor -> Column.newBuilder(fieldDescriptor.getName(),
+                                protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(fieldDescriptor))).build())
                 .collect(Collectors.toList());
     }
 

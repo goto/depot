@@ -8,9 +8,11 @@ message MaxComputeRecord {
   string id = 1;
   repeated InnerRecord inner_record = 2;
   google.protobuf.Timestamp timestamp = 3;
+  string unset_string = 4;
 }
 
 message InnerRecord {
   string name = 1;
   float balance = 2;
+  string unset_string_nested = 3;
 }

@@ -24,8 +24,8 @@ public class PrimitiveProtobufMaxComputeConverter implements ProtobufMaxComputeC
     }
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
-        return this.typeInfoMap.get(fieldDescriptor.getType());
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
+        return this.typeInfoMap.get(protoPayload.getFieldDescriptor().getType());
     }
 
     @Override

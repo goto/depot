@@ -46,6 +46,8 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -86,6 +88,8 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -120,6 +124,8 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -158,6 +164,8 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,
@@ -196,6 +204,8 @@ public class MaxComputeSchemaCacheTest {
         MaxComputeClient maxComputeClient = Mockito.spy(MaxComputeClient.class);
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
         when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         MaxComputeSchemaCache maxComputeSchemaCache = new MaxComputeSchemaCache(
                 maxComputeSchemaBuilder,
                 sinkConfig,

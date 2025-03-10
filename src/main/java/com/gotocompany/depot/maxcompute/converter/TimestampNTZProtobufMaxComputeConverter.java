@@ -2,7 +2,6 @@ package com.gotocompany.depot.maxcompute.converter;
 
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
@@ -25,7 +24,7 @@ public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxCompu
     }
 
     @Override
-    public TypeInfo convertSingularTypeInfo(Descriptors.FieldDescriptor fieldDescriptor) {
+    public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.TIMESTAMP_NTZ;
     }
 

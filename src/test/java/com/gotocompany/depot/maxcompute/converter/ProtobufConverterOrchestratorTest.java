@@ -14,6 +14,7 @@ import com.google.protobuf.Value;
 import com.gotocompany.depot.TestMaxComputeTypeInfo;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
+import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -44,6 +45,8 @@ public class ProtobufConverterOrchestratorTest {
         when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:00", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP_NTZ);
+        when(maxComputeSinkConfig.getMaxNestedMessageDepth()).thenReturn(15);
+
         protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
     }
 
@@ -56,12 +59,12 @@ public class ProtobufConverterOrchestratorTest {
         String expectedDurationTypeInfoRepresentation = "STRUCT<seconds:BIGINT,nanos:BIGINT>";
         String expectedStructTypeInfoRepresentation = "STRING";
 
-        TypeInfo stringTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("string_field"));
-        TypeInfo messageTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("inner_field"));
-        TypeInfo repeatedTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("inner_list_field"));
-        TypeInfo timestampTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("timestamp_field"));
-        TypeInfo durationTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("duration_field"));
-        TypeInfo structTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("struct_field"));
+        TypeInfo stringTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field"), null, 0));
+        TypeInfo messageTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_field"), null, 0));
+        TypeInfo repeatedTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_list_field"), null, 0));
+        TypeInfo timestampTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("timestamp_field"), null, 0));
+        TypeInfo durationTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("duration_field"), null, 0));
+        TypeInfo structTypeInfo = protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("struct_field"), null, 0));
 
         assertEquals(expectedStringTypeInfoRepresentation, stringTypeInfo.toString());
         assertEquals(expectedMessageTypeRepresentation, messageTypeInfo.toString());
@@ -74,7 +77,7 @@ public class ProtobufConverterOrchestratorTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionForUnsupportedType() {
         Descriptors.FieldDescriptor unsupportedFieldDescriptor = descriptor.findFieldByName("empty_field");
-        protobufConverterOrchestrator.toMaxComputeTypeInfo(unsupportedFieldDescriptor);
+        protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(unsupportedFieldDescriptor, null, 0));
     }
 
     @Test
@@ -113,12 +116,13 @@ public class ProtobufConverterOrchestratorTest {
                 Collections.singletonList(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field"))));
         SimpleStruct expectedMessage = new SimpleStruct(messageTypeInfo, messageValues);
 
-        Object stringRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("string_field"), messagePayload.getField(descriptor.findFieldByName("string_field")));
-        Object messageRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("inner_field"), messagePayload.getField(descriptor.findFieldByName("inner_field")));
-        Object repeatedMessageRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("inner_list_field"), messagePayload.getField(descriptor.findFieldByName("inner_list_field")));
-        Object timestampRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("timestamp_field"), messagePayload.getField(descriptor.findFieldByName("timestamp_field")));
-        Object durationRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("duration_field"), messagePayload.getField(descriptor.findFieldByName("duration_field")));
-        Object structRecord = protobufConverterOrchestrator.toMaxComputeValue(descriptor.findFieldByName("struct_field"), messagePayload.getField(descriptor.findFieldByName("struct_field")));
+        Object stringRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("string_field"), messagePayload.getField(descriptor.findFieldByName("string_field")), 0));
+        Object messageRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("inner_field"), messagePayload.getField(descriptor.findFieldByName("inner_field")), 0));
+        Object repeatedMessageRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("inner_list_field"), messagePayload.getField(descriptor.findFieldByName("inner_list_field")), 0));
+        Object timestampRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("timestamp_field"), messagePayload.getField(descriptor.findFieldByName("timestamp_field")), 0));
+        Object durationRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("duration_field"), messagePayload.getField(descriptor.findFieldByName("duration_field")), 0));
+        Object structRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("struct_field"), messagePayload.getField(descriptor.findFieldByName("struct_field")), 0));
+
 
         assertEquals("string_field", stringRecord);
         assertEquals(LocalDateTime.ofEpochSecond(100, 0, ZoneOffset.UTC), timestampRecord);
@@ -130,7 +134,7 @@ public class ProtobufConverterOrchestratorTest {
 
     @Test
     public void shouldClearTheTypeInfoCache() throws NoSuchFieldException, IllegalAccessException {
-        protobufConverterOrchestrator.toMaxComputeTypeInfo(descriptor.findFieldByName("inner_list_field"));
+        protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_list_field"), null, 0));
         Field field = protobufConverterOrchestrator.getClass()
                 .getDeclaredField("maxComputeProtobufConverterCache");
         field.setAccessible(true);
