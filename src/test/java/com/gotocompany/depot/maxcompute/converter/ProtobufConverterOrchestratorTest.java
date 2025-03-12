@@ -1,6 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
-import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.data.ReorderableStruct;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -112,9 +112,9 @@ public class ProtobufConverterOrchestratorTest {
                 Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)),
                         TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING))))
         );
-        List<Object> messageValues = Arrays.asList("string_field", new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field")),
-                Collections.singletonList(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field"))));
-        SimpleStruct expectedMessage = new SimpleStruct(messageTypeInfo, messageValues);
+        List<Object> messageValues = Arrays.asList("string_field", new ReorderableStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field")),
+                Collections.singletonList(new ReorderableStruct(TypeInfoFactory.getStructTypeInfo(Collections.singletonList("string_field"), Collections.singletonList(TypeInfoFactory.STRING)), Collections.singletonList("inner_string_field"))));
+        com.aliyun.odps.data.Struct expectedMessage = new ReorderableStruct(messageTypeInfo, messageValues);
 
         Object stringRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("string_field"), messagePayload.getField(descriptor.findFieldByName("string_field")), 0));
         Object messageRecord = protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(descriptor.findFieldByName("inner_field"), messagePayload.getField(descriptor.findFieldByName("inner_field")), 0));
@@ -126,7 +126,7 @@ public class ProtobufConverterOrchestratorTest {
 
         assertEquals("string_field", stringRecord);
         assertEquals(LocalDateTime.ofEpochSecond(100, 0, ZoneOffset.UTC), timestampRecord);
-        assertEquals(new SimpleStruct(TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT)), Arrays.asList(100L, 0L)), durationRecord);
+        assertEquals(new ReorderableStruct(TypeInfoFactory.getStructTypeInfo(Arrays.asList("seconds", "nanos"), Arrays.asList(TypeInfoFactory.BIGINT, TypeInfoFactory.BIGINT)), Arrays.asList(100L, 0L)), durationRecord);
         assertEquals(expectedMessage, messageRecord);
         assertEquals(Collections.singletonList(expectedMessage), repeatedMessageRecord);
         assertEquals("{\"intField\":1.0,\"stringField\":\"String\"}", structRecord);

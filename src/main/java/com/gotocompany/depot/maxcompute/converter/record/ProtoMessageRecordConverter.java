@@ -1,7 +1,7 @@
 package com.gotocompany.depot.maxcompute.converter.record;
 
-import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
+import com.aliyun.odps.data.ReorderableRecord;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.InvalidMessageException;
@@ -40,7 +40,7 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
         RecordWrappers recordWrappers = new RecordWrappers();
         IntStream.range(0, messages.size())
                 .forEach(index -> {
-                    Record record = new ArrayRecord(maxComputeSchema.getColumns());
+                    Record record = new ReorderableRecord(maxComputeSchema.getTableSchema());
                     RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
