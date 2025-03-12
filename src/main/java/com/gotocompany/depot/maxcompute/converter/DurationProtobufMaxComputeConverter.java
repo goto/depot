@@ -1,6 +1,6 @@
 package com.gotocompany.depot.maxcompute.converter;
 
-import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.data.ReorderableStruct;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
@@ -29,7 +29,7 @@ public class DurationProtobufMaxComputeConverter implements ProtobufMaxComputeCo
     @Override
     public Object convertSingularPayload(ProtoPayload protoPayload) {
         List<Object> values = getValues((Message) protoPayload.getParsedObject());
-        return new SimpleStruct((StructTypeInfo) convertSingularTypeInfo(protoPayload), values);
+        return new ReorderableStruct((StructTypeInfo) convertSingularTypeInfo(protoPayload), values);
     }
 
     private static List<Object> getValues(Message durationMessage) {

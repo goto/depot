@@ -1,7 +1,7 @@
 package com.gotocompany.depot.maxcompute.record;
 
 import com.aliyun.odps.data.Record;
-import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.data.ReorderableStruct;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.aliyun.odps.utils.StringUtils;
@@ -75,7 +75,7 @@ public class ProtoMetadataColumnRecordDecorator extends RecordDecorator {
                     Object metadataValue = metadata.get(typeInfo.getFieldNames().get(index));
                     return metadataUtil.getValidMetadataValue(metadataTypePairs.get(typeInfo.getFieldNames().get(index)), metadataValue);
                 }).collect(Collectors.toList());
-        record.set(maxcomputeMetadataNamespace, new SimpleStruct(typeInfo, values));
+        record.set(maxcomputeMetadataNamespace, new ReorderableStruct(typeInfo, values));
     }
 
     private void appendMetadata(Record record, Message message) {
