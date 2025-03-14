@@ -29,8 +29,8 @@ public class SchemaDifferenceUtilsTest {
         TableSchema newTableSchema = TableSchema.builder()
                 .withColumn(Column.newBuilder("metadata_1", TypeInfoFactory.STRING).build())
                 .withColumn(Column.newBuilder("col1", TypeInfoFactory.STRING).build())
-                .withColumn(Column.newBuilder("col2", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.BOOLEAN)).build())
-                .withColumn(Column.newBuilder("col3", TypeInfoFactory.getStructTypeInfo(Arrays.asList("f1", "f2", "f3"),
+                .withColumn(Column.newBuilder("COL2", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.BOOLEAN)).build())
+                .withColumn(Column.newBuilder("col3", TypeInfoFactory.getStructTypeInfo(Arrays.asList("F1", "F2", "f3"),
                         Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.BIGINT, TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.STRING)))).build())
                 .withColumn(Column.newBuilder("metadata_2", TypeInfoFactory.STRING).build())
                 .withColumn(Column.newBuilder("col4", TypeInfoFactory.getArrayTypeInfo(TypeInfoFactory.getStructTypeInfo(Arrays.asList("f41", "f42"), Arrays.asList(TypeInfoFactory.INT, TypeInfoFactory.getStructTypeInfo(Arrays.asList("f421"), Arrays.asList(TypeInfoFactory.STRING)))))).build())
@@ -40,11 +40,11 @@ public class SchemaDifferenceUtilsTest {
                         .build())
                 .build();
         Set<String> expectedMetadataColumns = new HashSet<>(Arrays.asList(
-                "ALTER TABLE test_schema.test_table ADD COLUMN IF NOT EXISTS col3.f3 ARRAY<STRING>;",
-                "ALTER TABLE test_schema.test_table ADD COLUMN IF NOT EXISTS col4.element.f42 STRUCT<f421:STRING>;",
-                "ALTER TABLE test_schema.test_table ADD COLUMN IF NOT EXISTS col5 ARRAY<STRUCT<f51:INT>>;",
-                "ALTER TABLE test_schema.test_table ADD COLUMN IF NOT EXISTS col6 STRUCT<f61:STRING>;",
-                "ALTER TABLE test_schema.test_table ADD COLUMN IF NOT EXISTS metadata_2 STRING;"
+                "alter table test_schema.test_table add column if not exists col3.f3 array<string>;",
+                "alter table test_schema.test_table add column if not exists col4.element.f42 struct<f421:string>;",
+                "alter table test_schema.test_table add column if not exists col5 array<struct<f51:int>>;",
+                "alter table test_schema.test_table add column if not exists col6 struct<f61:string>;",
+                "alter table test_schema.test_table add column if not exists metadata_2 string;"
         ));
 
         Set<String> actualMetadataColumns = new HashSet<>(SchemaDifferenceUtils.getSchemaDifferenceSql(oldTableSchema, newTableSchema, "test_schema", "test_table"));
