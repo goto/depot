@@ -33,7 +33,7 @@ public class SchemaDifferenceUtils {
         List<MaxComputeColumnDetail> maxComputeColumnDetailDifference = getMaxComputeColumnDetailDifference(oldSchema, newSchema, tableName);
 
         return maxComputeColumnDetailDifference.stream()
-                .map(MaxComputeColumnDetail -> String.format(ALTER_TABLE_QUERY_TEMPLATE, schemaName, tableName, MaxComputeColumnDetail.getDDL()))
+                .map(MaxComputeColumnDetail -> String.format(ALTER_TABLE_QUERY_TEMPLATE, schemaName, tableName, MaxComputeColumnDetail.getDDL()).toLowerCase())
                 .collect(Collectors.toList());
     }
 
@@ -91,6 +91,6 @@ public class SchemaDifferenceUtils {
     }
 
     private static String getPathName(String prefix, String name, boolean isArrayElement) {
-        return StringUtils.isBlank(prefix) ? String.format("`%s`", name) : String.format("%s%s.`%s`", prefix, isArrayElement ? ".element" : "", name);
+        return StringUtils.isBlank(prefix) ? String.format("`%s`", name).toLowerCase() : String.format("%s%s.`%s`", prefix, isArrayElement ? ".element" : "", name).toLowerCase();
     }
 }
