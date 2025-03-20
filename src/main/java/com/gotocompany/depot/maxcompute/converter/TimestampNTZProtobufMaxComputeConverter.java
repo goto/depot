@@ -18,9 +18,11 @@ public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxCompu
     private static final String NANOS = "nanos";
 
     private final LocalDateTimeValidator localDateTimeValidator;
+    private final boolean isIgnoreNegativeSecondTimestampEnabled;
 
     public TimestampNTZProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.localDateTimeValidator = new LocalDateTimeValidator(maxComputeSinkConfig);
+        this.isIgnoreNegativeSecondTimestampEnabled = maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled();
     }
 
     @Override
@@ -32,6 +34,9 @@ public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxCompu
     public Object convertSingularPayload(ProtoPayload protoPayload) {
         Message message = (Message) protoPayload.getParsedObject();
         long seconds = (long) message.getField(message.getDescriptorForType().findFieldByName(SECONDS));
+        if (seconds < 0 && isIgnoreNegativeSecondTimestampEnabled) {
+            return null;
+        }
         int nanos = (int) message.getField(message.getDescriptorForType().findFieldByName(NANOS));
         return localDateTimeValidator.parseAndValidate(seconds, nanos, protoPayload.getFieldDescriptor().getName(), protoPayload.isRootLevel());
     }
