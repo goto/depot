@@ -1,6 +1,7 @@
 package com.gotocompany.depot.maxcompute.converter.record;
 
 import com.aliyun.odps.data.SimpleStruct;
+import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfoFactory;
 import com.google.protobuf.Descriptors;
@@ -12,6 +13,7 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.EmptyMessageException;
 import com.gotocompany.depot.exception.InvalidMessageException;
 import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
@@ -217,10 +219,62 @@ public class ProtoMessageRecordConverterTest {
     }
 
     @Test
+    public void shouldReturnRecordWrapperWithNonRetryableErrorWhenUnknownFieldExceptionIsThrown() throws IOException {
+        RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
+        com.google.protobuf.Message mockedMessage = getMockedMessage();
+        Mockito.doThrow(new SchemaMismatchException("Schema Mismatch", "v1")).when(recordDecorator)
+                .decorate(Mockito.any(), Mockito.any());
+        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        Message message = new Message(
+                null,
+                getMockedMessage().toByteArray(),
+                new Tuple<>("__message_timestamp", 123012311L),
+                new Tuple<>("__kafka_topic", "topic"),
+                new Tuple<>("__kafka_offset", 100L)
+        );
+
+        RecordWrappers recordWrappers = recordConverter.convert(Collections.singletonList(message));
+
+        assertThat(recordWrappers.getInvalidRecords()).size().isEqualTo(1);
+        RecordWrapper recordWrapper = recordWrappers.getInvalidRecords().get(0);
+        assertThat(recordWrapper.getIndex()).isEqualTo(0);
+        assertThat(recordWrapper.getRecord())
+                .isNull();
+        assertThat(recordWrapper.getErrorInfo())
+                .isEqualTo(new ErrorInfo(new UnknownFieldsException(mockedMessage), ErrorType.SINK_NON_RETRYABLE_ERROR));
+    }
+
+    @Test
     public void shouldReturnRecordWrapperWithInvalidMessageErrorWhenInvalidMessageExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
         String invalidMessage = "Invalid message";
         Mockito.doThrow(new InvalidMessageException(invalidMessage)).when(recordDecorator)
+                .decorate(Mockito.any(), Mockito.any());
+        ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        Message message = new Message(
+                null,
+                getMockedMessage().toByteArray(),
+                new Tuple<>("__message_timestamp", 123012311L),
+                new Tuple<>("__kafka_topic", "topic"),
+                new Tuple<>("__kafka_offset", 100L)
+        );
+
+        RecordWrappers recordWrappers = recordConverter.convert(Collections.singletonList(message));
+
+        assertThat(recordWrappers.getInvalidRecords()).size().isEqualTo(1);
+        RecordWrapper recordWrapper = recordWrappers.getInvalidRecords().get(0);
+        assertThat(recordWrapper.getIndex()).isEqualTo(0);
+        assertThat(recordWrapper.getRecord())
+                .isNull();
+        assertThat(recordWrapper.getErrorInfo())
+                .isEqualTo(new ErrorInfo(new InvalidMessageException(invalidMessage), ErrorType.INVALID_MESSAGE_ERROR));
+    }
+
+    @Test
+    public void shouldReturnRecordWrapperWithInvalidMessageErrorWhenInvalidEmptyMessageExceptionIsThrown() throws IOException {
+        RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
+        String invalidMessage = "Invalid message";
+        Mockito.doThrow(new EmptyMessageException()).when(recordDecorator)
                 .decorate(Mockito.any(), Mockito.any());
         ProtoMessageRecordConverter recordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
         Message message = new Message(
