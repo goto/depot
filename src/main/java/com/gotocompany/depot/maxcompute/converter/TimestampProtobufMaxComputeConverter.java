@@ -8,9 +8,6 @@ import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.util.LocalDateTimeValidator;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class TimestampProtobufMaxComputeConverter implements ProtobufMaxComputeConverter {
 
@@ -23,17 +20,6 @@ public class TimestampProtobufMaxComputeConverter implements ProtobufMaxComputeC
     public TimestampProtobufMaxComputeConverter(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.localDateTimeValidator = new LocalDateTimeValidator(maxComputeSinkConfig);
         this.isIgnoreNegativeSecondTimestampEnabled = maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled();
-    }
-
-    @Override
-    public Object convertPayload(ProtoPayload protoPayload) {
-        if (!protoPayload.getFieldDescriptor().isRepeated()) {
-            return convertSingularPayload(protoPayload);
-        }
-        return ((List<?>) protoPayload.getParsedObject()).stream()
-                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.getLevel())))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     @Override

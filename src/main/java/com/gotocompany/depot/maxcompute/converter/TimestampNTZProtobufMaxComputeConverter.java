@@ -7,10 +7,6 @@ import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.util.LocalDateTimeValidator;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 /**
  * Converts protobuf timestamp to LocalDateTime.
  * LocalDateTime is the java compatible type for TIMESTAMP_NTZ type used in MaxCompute.
@@ -32,17 +28,6 @@ public class TimestampNTZProtobufMaxComputeConverter implements ProtobufMaxCompu
     @Override
     public TypeInfo convertSingularTypeInfo(ProtoPayload protoPayload) {
         return TypeInfoFactory.TIMESTAMP_NTZ;
-    }
-
-    @Override
-    public Object convertPayload(ProtoPayload protoPayload) {
-        if (!protoPayload.getFieldDescriptor().isRepeated()) {
-            return convertSingularPayload(protoPayload);
-        }
-        return ((List<?>) protoPayload.getParsedObject()).stream()
-                .map(o -> convertSingularPayload(new ProtoPayload(protoPayload.getFieldDescriptor(), o, protoPayload.getLevel())))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 
     @Override
