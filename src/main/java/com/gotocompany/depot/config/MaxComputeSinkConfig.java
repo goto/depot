@@ -200,4 +200,7 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("15")
     int getMaxNestedMessageDepth();
 
+    @Key("SINK_MAXCOMPUTE_IGNORE_NEGATIVE_SECOND_TIMESTAMP")
+    @DefaultValue("true")
+    boolean isIgnoreNegativeSecondTimestampEnabled();
 }

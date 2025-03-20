@@ -44,6 +44,7 @@ public class TimestampProtobufMaxComputeConverterTest {
         when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
         when(maxComputeSinkConfig.getMaxComputeProtoTimestampToMaxcomputeType()).thenReturn(MaxComputeTimestampDataType.TIMESTAMP);
+        when(maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled()).thenReturn(false);
         timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
     }
 
@@ -340,4 +341,49 @@ public class TimestampProtobufMaxComputeConverterTest {
         assertThat(result).isEqualTo(expectedTimestamp);
     }
 
+    @Test
+    public void shouldConvertPayloadToNullWhenSecondsIsNegativeAndFlagIsTrue() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("1970-01-01T00:00:01", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
+        when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled()).thenReturn(true);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(-1000L)
+                .setNanos(2)
+                .build();
+
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), timestamp, 0));
+
+        assertThat(result).isNull();
+    }
+
+    @Test
+    public void shouldConvertPayloadToTimestampWhenSecondsIsNegativeAndFlagIsFalse() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("0001-01-01T00:00:01", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
+        when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled()).thenReturn(false);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(-1000L)
+                .setNanos(2)
+                .build();
+        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
+                -1000L, 2, ZoneOffset.UTC));
+
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), timestamp, 0));
+
+        assertThat(result).isEqualTo(expectedTimestamp);
+    }
 }
