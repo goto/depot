@@ -2,7 +2,6 @@ package com.gotocompany.depot.maxcompute.util;
 
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.exception.InvalidMessageException;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -11,7 +10,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.TemporalAmount;
 
-@Slf4j
 public class LocalDateTimeValidator {
 
     private static final long DAYS_IN_YEAR = 365L;
@@ -55,7 +53,6 @@ public class LocalDateTimeValidator {
         LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(seconds, nanos, zoneOffset);
         validateTimestampRange(localDateTime);
         validateTimestampPartitionKey(fieldName, localDateTime, isRootLevel);
-        log.info("Field name : {} Timestamp seconds: {} nanos: {} parsed to LocalDateTime: {}", fieldName, seconds, nanos, localDateTime);
         return localDateTime;
     }
 
