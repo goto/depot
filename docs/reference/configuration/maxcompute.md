@@ -371,3 +371,11 @@ Value set should be more than 0.
 * Example value: `15`
 * Type: `optional`
 * Default value: `15`
+
+## SINK_MAXCOMPUTE_IGNORE_NEGATIVE_SECOND_TIMESTAMP_ENABLED
+
+This configuration is to ignore the negative second timestamp. If it is enabled, the negative second timestamp will be set to null.
+
+* Example value: `false`
+* Type: `optional`
+* Default value: `true`
