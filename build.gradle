@@ -22,7 +22,6 @@ plugins {
 }
 
 group 'com.gotocompany'
-
 version '0.10.13'
 
 repositories {
