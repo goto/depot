@@ -2,8 +2,10 @@ package com.gotocompany.depot.maxcompute.converter.record;
 
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.ReorderableRecord;
+import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
+import com.gotocompany.depot.exception.EmptyMessageException;
 import com.gotocompany.depot.exception.InvalidMessageException;
 import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
@@ -44,6 +46,10 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
                     RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
+                    } catch (SchemaMismatchException e) {
+                        recordWrappers.addInvalidRecord(
+                                toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR))
+                        );
                     } catch (IOException e) {
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR))
@@ -52,9 +58,13 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR))
                         );
-                    } catch (InvalidMessageException e) {
+                    } catch (InvalidMessageException | EmptyMessageException e) {
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.INVALID_MESSAGE_ERROR))
+                        );
+                    } catch (Exception e) {
+                        recordWrappers.addInvalidRecord(
+                                toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.SINK_UNKNOWN_ERROR))
                         );
                     }
                 });
