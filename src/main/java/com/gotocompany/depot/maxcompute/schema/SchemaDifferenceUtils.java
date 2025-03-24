@@ -5,14 +5,10 @@ import com.aliyun.odps.type.ArrayTypeInfo;
 import com.aliyun.odps.type.StructTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import com.gotocompany.depot.maxcompute.model.MaxComputeColumnDetail;
+import com.gotocompany.depot.message.json.JsonParsedMessage;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.gotocompany.depot.maxcompute.util.TypeInfoUtils.isPrimitiveArrayType;
@@ -28,6 +24,13 @@ import static com.gotocompany.depot.maxcompute.util.TypeInfoUtils.isStructType;
 public class SchemaDifferenceUtils {
 
     private static final String ALTER_TABLE_QUERY_TEMPLATE = "ALTER TABLE %s.%s ADD COLUMN IF NOT EXISTS %s;";
+
+    public static List<String> getJsonSchemaDifferenceSql(JsonParsedMessage jsonParsedMessage, TableSchema existingSchema, String tableName) {
+        Set<String> inferredColumns = jsonParsedMessage.getFields().keySet().stream()
+                .map(SchemaField::getName).collect(Collectors.toSet());
+        Set<String> existingColumns = existingSchema.getColumns().stream()
+                .map(com.aliyun.odps.Column::getName).collect(Collectors.toSet());
+    }
 
     public static List<String> getSchemaDifferenceSql(TableSchema oldSchema, TableSchema newSchema, String schemaName, String tableName) {
         List<MaxComputeColumnDetail> maxComputeColumnDetailDifference = getMaxComputeColumnDetailDifference(oldSchema, newSchema, tableName);

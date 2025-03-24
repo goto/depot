@@ -2,13 +2,10 @@ package com.gotocompany.depot.config;
 
 import com.aliyun.odps.tunnel.io.CompressOption;
 import com.gotocompany.depot.common.TupleString;
-import com.gotocompany.depot.config.converter.ConfToListConverter;
-import com.gotocompany.depot.config.converter.KeyValuePairsToMapConverter;
-import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
-import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
-import com.gotocompany.depot.config.converter.ZoneIdConverter;
+import com.gotocompany.depot.config.converter.*;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
+import com.aliyun.odps.Column;
 
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -196,4 +193,9 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("true")
     boolean isNanoHandlingEnabled();
 
+    @DefaultValue("")
+    @Key("SINK_MAXCOMPUTE_DEFAULT_COLUMNS")
+    @ConverterClass(MaxComputeDefaultColumnConverter.class)
+    @Separator(",")
+    List<Column> getDefaultColumns();
 }

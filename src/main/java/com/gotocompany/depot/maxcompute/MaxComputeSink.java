@@ -4,6 +4,7 @@ import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.aliyun.odps.tunnel.TunnelException;
 import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.SinkResponse;
+import com.gotocompany.depot.config.enums.SinkConnectorSchemaDataType;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.NonRetryableException;
@@ -15,6 +16,7 @@ import com.gotocompany.depot.maxcompute.model.RecordWrappers;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.metrics.StatsDReporter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,7 @@ public class MaxComputeSink implements Sink {
     private final MessageRecordConverter messageRecordConverter;
     private final Instrumentation instrumentation;
     private final MaxComputeMetrics maxComputeMetrics;
+    private final SinkConfig config;
 
     public MaxComputeSink(InsertManager insertManager,
                           MessageRecordConverter messageRecordConverter,
@@ -57,6 +60,9 @@ public class MaxComputeSink implements Sink {
             sinkResponse.addErrors(recordWrappers.getValidRecords().stream().map(RecordWrapper::getIndex).collect(Collectors.toList()), new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR));
             instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                     String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, e.getClass().getSimpleName()));
+            if (config.getSinkConnectorSchemaDataType() == SinkConnectorSchemaDataType.JSON && e.getCause() instanceof SchemaMismatchException) {
+
+            }
             if (e.getCause() instanceof SchemaMismatchException) {
                 instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                         String.format(MaxComputeMetrics.MAXCOMPUTE_ERROR_TAG, SchemaMismatchException.class.getSimpleName()));
