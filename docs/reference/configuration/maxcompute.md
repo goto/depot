@@ -379,3 +379,8 @@ This configuration is to ignore the negative second timestamp. If it is enabled,
 * Example value: `false`
 * Type: `optional`
 * Default value: `true`
+
+## SINK_MAXCOMPUTE_ALLOW_SCHEMA_MISMATCH_ENABLED
+
+This configuration is to set whether schema mismatch restriction is enabled or not for StreamingSessionManager.
+Allow schema version mismatch to be inserted if set to true. If set to false, throws SchemaMismatchException when local schema mismatched with metadata server.
