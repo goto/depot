@@ -384,3 +384,7 @@ This configuration is to ignore the negative second timestamp. If it is enabled,
 
 This configuration is to set whether schema mismatch restriction is enabled or not for StreamingSessionManager.
 Allow schema version mismatch to be inserted if set to true. If set to false, throws SchemaMismatchException when local schema mismatched with metadata server.
+
+* Example value: `true`
+* Type: `optional`
+* Default value: `false`
