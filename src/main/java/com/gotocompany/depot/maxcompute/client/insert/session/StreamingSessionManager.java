@@ -123,7 +123,7 @@ public final class StreamingSessionManager {
 
     private static TableTunnel.StreamUploadSession.Builder getBaseStreamSessionBuilder(TableTunnel tableTunnel, MaxComputeSinkConfig maxComputeSinkConfig) {
         return tableTunnel.buildStreamUploadSession(maxComputeSinkConfig.getMaxComputeProjectId(), maxComputeSinkConfig.getMaxComputeTableName())
-                .allowSchemaMismatch(false)
+                .allowSchemaMismatch(maxComputeSinkConfig.isAllowSchemaMismatchEnabled())
                 .setSlotNum(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession());
     }
 

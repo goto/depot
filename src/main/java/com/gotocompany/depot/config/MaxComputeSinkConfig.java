@@ -203,4 +203,8 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_IGNORE_NEGATIVE_SECOND_TIMESTAMP_ENABLED")
     @DefaultValue("true")
     boolean isIgnoreNegativeSecondTimestampEnabled();
+
+    @Key("SINK_MAXCOMPUTE_ALLOW_SCHEMA_MISMATCH_ENABLED")
+    @DefaultValue("false")
+    boolean isAllowSchemaMismatchEnabled();
 }
