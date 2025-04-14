@@ -102,6 +102,7 @@ public final class StreamingSessionManager {
     private static TableTunnel.StreamUploadSession buildStreamSession(TableTunnel.StreamUploadSession.Builder streamUploadSessionBuilder,
                                                                       Instrumentation instrumentation,
                                                                       MaxComputeMetrics maxComputeMetrics) throws TunnelException {
+        log.info("Creating new streaming insert session for partition spec {}", streamUploadSessionBuilder.getPartitionSpec());
         Instant start = Instant.now();
         TableTunnel.StreamUploadSession streamUploadSession = streamUploadSessionBuilder.build();
         instrumentation.captureDurationSince(maxComputeMetrics.getMaxComputeStreamingInsertSessionInitializationLatency(), start);
