@@ -3,9 +3,9 @@ package com.gotocompany.depot.maxcompute.client.insert.session;
 import com.aliyun.odps.tunnel.TableTunnel;
 
 import com.aliyun.odps.tunnel.TunnelException;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
@@ -38,13 +38,9 @@ public final class StreamingSessionManager {
                                                                MaxComputeSinkConfig maxComputeSinkConfig,
                                                                Instrumentation instrumentation,
                                                                MaxComputeMetrics maxComputeMetrics) {
-        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
-            @Override
-            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
-                return buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig), instrumentation, maxComputeMetrics);
-            }
-        };
-        return new StreamingSessionManager(CacheBuilder.newBuilder()
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = partitionSpecKey -> buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig), instrumentation, maxComputeMetrics);
+        return new StreamingSessionManager(Caffeine.newBuilder()
+                .expireAfterAccess(maxComputeSinkConfig.getStreamingInsertSessionExpirationTimeAfterAccessDuration())
                 .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
                 .build(cacheLoader));
     }
@@ -66,16 +62,12 @@ public final class StreamingSessionManager {
                                                             MaxComputeSinkConfig maxComputeSinkConfig,
                                                             Instrumentation instrumentation,
                                                             MaxComputeMetrics maxComputeMetrics) {
-        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
-            @Override
-            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
-                return buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
-                                .setCreatePartition(true)
-                                .setPartitionSpec(partitionSpecKey),
-                        instrumentation, maxComputeMetrics);
-            }
-        };
-        return new StreamingSessionManager(CacheBuilder.newBuilder()
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = partitionSpecKey -> buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
+                        .setCreatePartition(true)
+                        .setPartitionSpec(partitionSpecKey),
+                instrumentation, maxComputeMetrics);
+        return new StreamingSessionManager(Caffeine.newBuilder()
+                .expireAfterAccess(maxComputeSinkConfig.getStreamingInsertSessionExpirationTimeAfterAccessDuration())
                 .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
                 .build(cacheLoader));
     }
@@ -89,7 +81,7 @@ public final class StreamingSessionManager {
      * @return StreamUploadSession
      */
     public TableTunnel.StreamUploadSession getSession(String partitionSpec) {
-        return sessionCache.getUnchecked(partitionSpec);
+        return sessionCache.get(partitionSpec);
     }
 
     /**

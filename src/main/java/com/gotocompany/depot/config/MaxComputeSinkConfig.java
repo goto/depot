@@ -3,6 +3,7 @@ package com.gotocompany.depot.config;
 import com.aliyun.odps.tunnel.io.CompressOption;
 import com.gotocompany.depot.common.TupleString;
 import com.gotocompany.depot.config.converter.ConfToListConverter;
+import com.gotocompany.depot.config.converter.DurationConverter;
 import com.gotocompany.depot.config.converter.KeyValuePairsToMapConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
@@ -11,6 +12,7 @@ import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
 
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -98,6 +100,11 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_MAXIMUM_SESSION_COUNT")
     @DefaultValue("2")
     int getStreamingInsertMaximumSessionCount();
+
+    @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_SESSION_EXPIRATION_TIME_AFTER_ACCESS_DURATION")
+    @ConverterClass(DurationConverter.class)
+    @DefaultValue("PT15M")
+    Duration getStreamingInsertSessionExpirationTimeAfterAccessDuration();
 
     @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_TUNNEL_SLOT_COUNT_PER_SESSION")
     @DefaultValue("1")
