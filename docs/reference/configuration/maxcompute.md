@@ -159,6 +159,15 @@ Least recently used session will be removed if the cache is full.
 * Type: `required`
 * Default value: `2`
 
+## SINK_MAXCOMPUTE_STREAMING_INSERT_SESSION_EXPIRATION_TIME_AFTER_ACCESS_DURATION
+
+Defines the duration where streaming session will be automatically removed from cache after the last access.
+Timer will be reset after each access. Config should be in ISO-8601 duration format.
+
+* Example value: `PT2H10M`
+* Type: `required`
+* Default value: `PT15M`
+
 # SINK_MAXCOMPUTE_STREAMING_INSERT_TUNNEL_SLOT_COUNT_PER_SESSION
 
 Contains the slot count per session for the streaming insert operation. This config will be used for setting the slot count per session for the streaming insert operation.

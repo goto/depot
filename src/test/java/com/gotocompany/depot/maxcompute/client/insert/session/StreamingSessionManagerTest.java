@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -91,6 +93,8 @@ public class StreamingSessionManagerTest {
                 .thenReturn("test_project");
         when(maxComputeSinkConfig.getMaxComputeTableName())
                 .thenReturn("test_table");
+        when(maxComputeSinkConfig.getStreamingInsertSessionExpirationTimeAfterAccessDuration())
+                .thenReturn(Duration.parse("PT15M"));
         when(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
                 .thenReturn(1);
         when(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession())
@@ -206,6 +210,8 @@ public class StreamingSessionManagerTest {
                 .thenReturn(1);
         when(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession())
                 .thenReturn(1L);
+        when(maxComputeSinkConfig.getStreamingInsertSessionExpirationTimeAfterAccessDuration())
+                .thenReturn(Duration.parse("PT15M"));
         StreamingSessionManager nonPartitionedStreamingSessionManager =
                 StreamingSessionManager.createNonPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
 
