@@ -29,6 +29,7 @@ public abstract class InsertManager {
     private final MaxComputeMetrics maxComputeMetrics;
     private final StreamingSessionManager streamingSessionManager;
     private final TableTunnel.FlushOption flushOption;
+    private final boolean isStreamingInsertSessionRefreshOnFailureEnabled;
 
     protected InsertManager(MaxComputeSinkConfig maxComputeSinkConfig, Instrumentation instrumentation,
                             MaxComputeMetrics maxComputeMetrics,
@@ -39,13 +40,15 @@ public abstract class InsertManager {
         this.streamingSessionManager = streamingSessionManager;
         this.flushOption = new TableTunnel.FlushOption()
                 .timeout(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeoutMs());
+        this.isStreamingInsertSessionRefreshOnFailureEnabled = maxComputeSinkConfig.isStreamingInsertSessionRefreshOnErrorEnabled();
     }
 
     /**
      * Insert records into MaxCompute.
+     *
      * @param recordWrappers list of records to insert
      * @throws TunnelException if there is an error with the tunnel service, typically due to network issues
-     * @throws IOException typically thrown when issues such as schema mismatch occur
+     * @throws IOException     typically thrown when issues such as schema mismatch occur
      */
     public abstract void insert(List<RecordWrapper> recordWrappers) throws TunnelException, IOException;
 
@@ -55,7 +58,7 @@ public abstract class InsertManager {
      *
      * @param streamUploadSession session for streaming insert
      * @return TableTunnel.StreamRecordPack
-     * @throws IOException typically thrown when issues such as schema mismatch occur
+     * @throws IOException     typically thrown when issues such as schema mismatch occur
      * @throws TunnelException if there is an error with the tunnel service, typically due to network issues
      */
     protected TableTunnel.StreamRecordPack newRecordPack(TableTunnel.StreamUploadSession streamUploadSession) throws IOException, TunnelException {
@@ -70,7 +73,7 @@ public abstract class InsertManager {
     /**
      * Instrument the insert operation.
      *
-     * @param start start time of the operation
+     * @param start       start time of the operation
      * @param flushResult result of the flush operation
      */
     private void instrument(Instant start, TableTunnel.FlushResult flushResult) {
@@ -89,9 +92,9 @@ public abstract class InsertManager {
      * When schema mismatch occurs, wrap the exception in a NonRetryableException. It is not possible to recover from schema mismatch.
      * When network partition occurs, refresh the schema and rethrow the exception.
      *
-     * @param recordPack recordPack to append the record to
+     * @param recordPack    recordPack to append the record to
      * @param recordWrapper record to append
-     * @param sessionKey key to identify the session, used for refreshing the schema
+     * @param sessionKey    key to identify the session, used for refreshing the schema
      * @throws IOException typically thrown when issues such as network partition occur
      */
     protected void appendRecord(TableTunnel.StreamRecordPack recordPack, RecordWrapper recordWrapper, String sessionKey) throws IOException {
@@ -101,8 +104,10 @@ public abstract class InsertManager {
             log.error("Record pack schema Mismatch", e);
             throw new NonRetryableException("Record pack schema Mismatch", e);
         } catch (IOException e) {
-            log.info("IOException occurs, refreshing the sessions", e);
-            streamingSessionManager.refreshAllSessions();
+            if (this.isStreamingInsertSessionRefreshOnFailureEnabled) {
+                log.info(String.format("IOException occurs, refreshing the sessions: %s", sessionKey), e);
+                streamingSessionManager.refreshSession(sessionKey);
+            }
             throw e;
         }
     }
@@ -115,7 +120,7 @@ public abstract class InsertManager {
      * @param recordPack recordPack to flush
      * @throws IOException typically thrown when issues such as network partition occur
      */
-    protected void flushRecordPack(TableTunnel.StreamRecordPack recordPack) throws IOException {
+    protected void flushRecordPack(TableTunnel.StreamRecordPack recordPack, String sessionKey) throws IOException {
         Instant start = Instant.now();
         try {
             TableTunnel.FlushResult flushResult = recordPack.flush(flushOption);
@@ -124,8 +129,10 @@ public abstract class InsertManager {
             log.error("Record pack schema Mismatch", e);
             throw new NonRetryableException("Record pack schema Mismatch", e);
         } catch (IOException e) {
-            log.info("TunnelException occurs, refreshing the sessions", e);
-            streamingSessionManager.refreshAllSessions();
+            if (this.isStreamingInsertSessionRefreshOnFailureEnabled) {
+                log.info("IOException occurs, refreshing the sessions", e);
+                streamingSessionManager.refreshSession(sessionKey);
+            }
             throw e;
         }
     }
