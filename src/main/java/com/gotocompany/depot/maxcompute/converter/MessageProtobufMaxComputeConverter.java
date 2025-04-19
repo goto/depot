@@ -71,6 +71,10 @@ public class MessageProtobufMaxComputeConverter implements ProtobufMaxComputeCon
                 .stream()
                 .filter(fd -> shouldIncludeField(protoPayload, fd))
                 .forEach(innerFieldDescriptor -> {
+                    if (dynamicMessage.getField(innerFieldDescriptor).toString().isEmpty()) {
+                        values.add(null);
+                        return;
+                    }
                     if (ProtoUtils.isNonRepeatedProtoMessage(innerFieldDescriptor) && !dynamicMessage.hasField(innerFieldDescriptor)) {
                         values.add(null);
                         return;
