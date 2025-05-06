@@ -45,7 +45,7 @@ public class PartitionedInsertManager extends InsertManager {
             for (RecordWrapper recordWrapper : entry.getValue()) {
                 super.appendRecord(recordPack, recordWrapper, recordWrapper.getPartitionSpec().toString());
             }
-            super.flushRecordPack(recordPack);
+            super.flushRecordPack(recordPack, entry.getKey());
         }
     }
 
