@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
@@ -381,6 +382,32 @@ public class TimestampProtobufMaxComputeConverterTest {
                 .build();
         java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
                 -1000L, 2, ZoneOffset.UTC));
+
+        Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), timestamp, 0));
+
+        assertThat(result).isEqualTo(expectedTimestamp);
+    }
+
+    @Test
+    public void shouldConvertPayloadToTimestampTruncatedToSelectedUnit() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.getZoneId()).thenReturn(ZoneId.of("UTC"));
+        when(maxComputeSinkConfig.getValidMinTimestamp()).thenReturn(LocalDateTime.parse("0001-01-01T00:00:01", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.getValidMaxTimestamp()).thenReturn(LocalDateTime.parse("9999-01-01T23:59:59", DateTimeFormatter.ISO_DATE_TIME));
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getTablePartitionKey()).thenReturn("timestamp_field");
+        when(maxComputeSinkConfig.getMaxPastYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.getMaxFutureYearEventTimeDifference()).thenReturn(999);
+        when(maxComputeSinkConfig.isIgnoreNegativeSecondTimestampEnabled()).thenReturn(false);
+        when(maxComputeSinkConfig.getTimestampTruncateMode()).thenReturn(ChronoUnit.MICROS);
+        timestampProtobufMaxComputeConverter = new TimestampProtobufMaxComputeConverter(maxComputeSinkConfig);
+        Timestamp timestamp = Timestamp.newBuilder()
+                .setSeconds(2500)
+                .setNanos(123123123)
+                .build();
+        java.sql.Timestamp expectedTimestamp = java.sql.Timestamp.valueOf(LocalDateTime.ofEpochSecond(
+                        timestamp.getSeconds(), timestamp.getNanos(), ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.MICROS));
 
         Object result = timestampProtobufMaxComputeConverter.convertSingularPayload(new ProtoPayload(descriptor.getFields().get(3), timestamp, 0));
 
