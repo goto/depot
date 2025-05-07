@@ -13,6 +13,7 @@ import org.aeonbits.owner.Config;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -207,4 +208,8 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_ALLOW_SCHEMA_MISMATCH_ENABLED")
     @DefaultValue("false")
     boolean isAllowSchemaMismatchEnabled();
+
+    @Key("SINK_MAXCOMPUTE_TIMESTAMP_TRUNCATE_MODE")
+    @DefaultValue("MICROS")
+    ChronoUnit getTimestampTruncateMode();
 }

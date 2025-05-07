@@ -8,7 +8,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import java.util.Objects;
 
 public class LocalDateTimeValidator {
 
@@ -25,6 +27,7 @@ public class LocalDateTimeValidator {
     private final int maxPastYearEventTimeDifference;
     private final int maxFutureYearEventTimeDifference;
     private final boolean isNanoHandlingEnabled;
+    private final ChronoUnit timestampTruncateMode;
 
     public LocalDateTimeValidator(MaxComputeSinkConfig maxComputeSinkConfig) {
         this.maxPastEventTimeDifference = Duration.ofDays(maxComputeSinkConfig.getMaxPastYearEventTimeDifference() * DAYS_IN_YEAR);
@@ -37,6 +40,7 @@ public class LocalDateTimeValidator {
         this.maxPastYearEventTimeDifference = maxComputeSinkConfig.getMaxPastYearEventTimeDifference();
         this.maxFutureYearEventTimeDifference = maxComputeSinkConfig.getMaxFutureYearEventTimeDifference();
         this.isNanoHandlingEnabled = maxComputeSinkConfig.isNanoHandlingEnabled();
+        this.timestampTruncateMode = maxComputeSinkConfig.getTimestampTruncateMode();
     }
 
     public LocalDateTime parseAndValidate(long seconds, int nanos, String fieldName, boolean isRootLevel) {
@@ -51,6 +55,9 @@ public class LocalDateTimeValidator {
         Instant instant = Instant.now();
         ZoneOffset zoneOffset = zoneId.getRules().getOffset(instant);
         LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(seconds, nanos, zoneOffset);
+        if (Objects.nonNull(this.timestampTruncateMode)) {
+            localDateTime = localDateTime.truncatedTo(this.timestampTruncateMode);
+        }
         validateTimestampRange(localDateTime);
         validateTimestampPartitionKey(fieldName, localDateTime, isRootLevel);
         return localDateTime;
