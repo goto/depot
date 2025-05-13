@@ -22,7 +22,7 @@ plugins {
 }
 
 group 'com.gotocompany'
-version '0.10.16'
+version '0.10.17'
 
 repositories {
     mavenLocal()
