@@ -9,7 +9,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,21 +38,26 @@ public class SchemaDifferenceUtilsTest {
                         .build())
                 .withColumn(Column.newBuilder("col6", TypeInfoFactory.getStructTypeInfo(Arrays.asList("f61"), Arrays.asList(TypeInfoFactory.STRING)))
                         .build())
+                .withColumn(Column.newBuilder("col7", TypeInfoFactory.getStructTypeInfo(Arrays.asList("order", "end"), Arrays.asList(
+                        TypeInfoFactory.getStructTypeInfo(Arrays.asList("f711", "f712"), Arrays.asList(TypeInfoFactory.STRING, TypeInfoFactory.INT)),
+                        TypeInfoFactory.STRING
+                ))).build())
                 .build();
         Set<String> expectedMetadataColumns = new HashSet<>(Arrays.asList(
-                "alter table test_schema.test_table add column if not exists col3.f3 array<string>;",
-                "alter table test_schema.test_table add column if not exists col4.element.f42 struct<f421:string>;",
-                "alter table test_schema.test_table add column if not exists col5 array<struct<f51:int>>;",
-                "alter table test_schema.test_table add column if not exists col6 struct<f61:string>;",
-                "alter table test_schema.test_table add column if not exists metadata_2 string;"
+                "alter table test_schema.test_table add column if not exists `col3`.`f3` array<string>;",
+                "alter table test_schema.test_table add column if not exists `col4`.element.`f42` struct<`f421`:string>;",
+                "alter table test_schema.test_table add column if not exists `col5` array<struct<`f51`:int>>;",
+                "alter table test_schema.test_table add column if not exists `col6` struct<`f61`:string>;",
+                "alter table test_schema.test_table add column if not exists `metadata_2` string;",
+                "alter table test_schema.test_table add column if not exists `col7` struct<`order`:struct<`f711`:string,`f712`:int>,`end`:string>;",
+                "alter table test_schema.test_table add column if not exists `col7`.`order`.`f711` string;",
+                "alter table test_schema.test_table add column if not exists `col7`.`order`.`f712` int;"
         ));
 
         Set<String> actualMetadataColumns = new HashSet<>(SchemaDifferenceUtils.getSchemaDifferenceSql(oldTableSchema, newTableSchema, "test_schema", "test_table"));
 
         assertEquals(actualMetadataColumns.size(), expectedMetadataColumns.size());
-        assertTrue(expectedMetadataColumns.containsAll(actualMetadataColumns.stream()
-                .map(s -> s.replace("`", ""))
-                .collect(Collectors.toSet())));
+        assertTrue(expectedMetadataColumns.containsAll(actualMetadataColumns));
     }
 
     @Test(expected = UnsupportedOperationException.class)

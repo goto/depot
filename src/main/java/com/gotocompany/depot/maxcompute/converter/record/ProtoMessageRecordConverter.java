@@ -15,6 +15,7 @@ import com.gotocompany.depot.maxcompute.record.RecordDecorator;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
 import com.gotocompany.depot.message.Message;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.stream.IntStream;
  * ProtoMessageRecordConverter converts a list of proto messages to RecordWrappers.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class ProtoMessageRecordConverter implements MessageRecordConverter {
 
     private final RecordDecorator recordDecorator;
@@ -47,22 +49,27 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
                     } catch (SchemaMismatchException e) {
+                        log.debug("Schema mismatch error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR))
                         );
                     } catch (IOException e) {
+                        log.debug("Deserialization error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.DESERIALIZATION_ERROR))
                         );
                     } catch (UnknownFieldsException e) {
+                        log.debug("Unknown field message error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.UNKNOWN_FIELDS_ERROR))
                         );
                     } catch (InvalidMessageException | EmptyMessageException e) {
+                        log.debug("Invalid message error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.INVALID_MESSAGE_ERROR))
                         );
                     } catch (Exception e) {
+                        log.debug("Unknown error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.SINK_UNKNOWN_ERROR))
                         );
