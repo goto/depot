@@ -53,7 +53,7 @@ public class MaxComputeProtobufConverterCache {
         if (isNull(typeInfo)) {
             ProtobufMaxComputeConverter protobufMaxComputeConverter = getConverter(protoPayload.getFieldDescriptor());
             typeInfo = protobufMaxComputeConverter.convertTypeInfo(protoPayload);
-            typeInfoCache.put(protoPayload.getFieldDescriptor().getFullName(), typeInfo);
+            typeInfoCache.put(getTypeInfoCacheKey(protoPayload), typeInfo);
         }
         return typeInfo;
     }
@@ -62,7 +62,7 @@ public class MaxComputeProtobufConverterCache {
         TypeInfo typeInfo = typeInfoCache.get(getTypeInfoCacheKey(protoPayload));
         if (isNull(typeInfo)) {
             typeInfo = supplier.get();
-            typeInfoCache.put(protoPayload.getFieldDescriptor().getFullName(), typeInfo);
+            typeInfoCache.put(getTypeInfoCacheKey(protoPayload), typeInfo);
         }
         return typeInfo;
     }
