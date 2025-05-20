@@ -89,6 +89,15 @@ Supported time units are `YEAR`, `MONTH`, `DAY`, `HOUR`. Configuration is case-s
 * Type: `required`
 * Default value: `DAYS`
 
+## SINK_MAXCOMPUTE_TIMESTAMP_TRUNCATE_MODE
+
+Contains the chrono unit for truncating the timestamp. This config will be used for truncating the timestamp.
+Values supported are NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, DAYS, WEEKS, MONTHS, YEARS.
+
+* Example value: `NANOS`
+* Type: `required`
+* Default value: `MICROS`
+
 ## SINK_MAXCOMPUTE_TABLE_PARTITION_COLUMN_NAME
 
 Contains the partition column name of the MaxCompute table. This could be the same as the partition key or different. This will reflect the column name in the MaxCompute table.

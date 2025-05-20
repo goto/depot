@@ -53,7 +53,7 @@ public class MaxComputeProtobufConverterCacheTest {
         TypeInfo typeInfo = maxComputeProtobufConverterCache.getOrCreateTypeInfo(new ProtoPayload(descriptor.findFieldByName("string_field")));
 
         assertEquals(1, typeInfoCache.size());
-        assertEquals(typeInfo, typeInfoCache.get(descriptor.findFieldByName("string_field").getFullName()));
+        assertEquals(typeInfo, typeInfoCache.get(String.format("%d_%s", 0, descriptor.findFieldByName("string_field").getFullName())));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class MaxComputeProtobufConverterCacheTest {
 
         assertEquals(1, typeInfoCache.size());
         verify(typeInfoCache, Mockito.times(0)).put(descriptor.findFieldByName("string_field").getFullName(), typeInfo);
-        assertEquals(typeInfo, typeInfoCache.get(descriptor.findFieldByName("string_field").getFullName()));
+        assertEquals(typeInfo, typeInfoCache.get(String.format("%d_%s", 0, descriptor.findFieldByName("string_field").getFullName())));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class MaxComputeProtobufConverterCacheTest {
                 () -> expectedTypeInfo);
 
         assertEquals(1, typeInfoCache.size());
-        assertEquals(typeInfo, typeInfoCache.get(descriptor.findFieldByName("inner_message_field").getFullName()));
+        assertEquals(typeInfo, typeInfoCache.get(String.format("%d_%s", 0, descriptor.findFieldByName("inner_message_field").getFullName())));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class MaxComputeProtobufConverterCacheTest {
                 () -> expectedTypeInfo);
 
         assertEquals(1, typeInfoCache.size());
-        assertEquals(typeInfo, typeInfoCache.get(descriptor.findFieldByName("inner_message_field").getFullName()));
+        assertEquals(typeInfo, typeInfoCache.get(String.format("%d_%s", 0, descriptor.findFieldByName("inner_message_field").getFullName())));
     }
 
     @Test

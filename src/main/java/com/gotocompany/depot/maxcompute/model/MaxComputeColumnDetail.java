@@ -1,5 +1,6 @@
 package com.gotocompany.depot.maxcompute.model;
 
+import com.aliyun.odps.type.NestedTypeInfo;
 import com.aliyun.odps.type.TypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +15,8 @@ public class MaxComputeColumnDetail {
     private boolean isArrayElement;
 
     public String getDDL() {
-        return String.format("%s %s", getFullName(), typeInfo.toString());
+        String typeInfoRepresentation = typeInfo instanceof NestedTypeInfo ? ((NestedTypeInfo) typeInfo).getTypeName(true) : typeInfo.toString();
+        return String.format("%s %s", getFullName(), typeInfoRepresentation);
     }
 
     public String getFullName() {

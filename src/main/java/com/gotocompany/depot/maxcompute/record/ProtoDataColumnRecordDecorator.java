@@ -98,6 +98,9 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                     if (fieldDescriptor.getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
                         return;
                     }
+                    if (protoMessage.getField(fieldDescriptor).toString().isEmpty()) {
+                        return;
+                    }
                     if (ProtoUtils.isNonRepeatedProtoMessage(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
                         return;
                     }
