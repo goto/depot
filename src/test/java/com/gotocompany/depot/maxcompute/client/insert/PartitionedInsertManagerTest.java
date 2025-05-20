@@ -232,6 +232,8 @@ public class PartitionedInsertManagerTest {
                 .thenReturn(1);
         when(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession())
                 .thenReturn(1L);
+        when(maxComputeSinkConfig.isStreamingInsertSessionRefreshOnErrorEnabled())
+                .thenReturn(true);
         RecordWrapper firstPartitionRecordWrapper = Mockito.mock(RecordWrapper.class);
         when(firstPartitionRecordWrapper.getPartitionSpec())
                 .thenReturn(new PartitionSpec("ds=1"));
@@ -255,7 +257,7 @@ public class PartitionedInsertManagerTest {
             partitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .refreshAllSessions();
+                    .refreshSession(Mockito.anyString());
             throw e;
         }
     }
@@ -440,6 +442,8 @@ public class PartitionedInsertManagerTest {
                 .thenReturn("project");
         when(maxComputeSinkConfig.getMaxComputeTableName())
                 .thenReturn("table");
+        when(maxComputeSinkConfig.isStreamingInsertSessionRefreshOnErrorEnabled())
+                .thenReturn(true);
         when(maxComputeSinkConfig.getMaxComputeRecordPackFlushTimeoutMs())
                 .thenReturn(1000L);
         when(maxComputeSinkConfig.isStreamingInsertCompressEnabled())
@@ -477,7 +481,7 @@ public class PartitionedInsertManagerTest {
             partitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .refreshAllSessions();
+                    .refreshSession(Mockito.anyString());
             throw e;
         }
     }

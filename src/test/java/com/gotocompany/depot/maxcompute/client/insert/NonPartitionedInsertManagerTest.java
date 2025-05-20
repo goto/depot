@@ -209,6 +209,8 @@ public class NonPartitionedInsertManagerTest {
                 .thenReturn(1);
         when(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession())
                 .thenReturn(1L);
+        when(maxComputeSinkConfig.isStreamingInsertSessionRefreshOnErrorEnabled())
+                .thenReturn(true);
         doNothing()
                 .when(instrumentation)
                 .captureCount(Mockito.anyString(), Mockito.anyLong());
@@ -229,7 +231,7 @@ public class NonPartitionedInsertManagerTest {
             nonPartitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .refreshAllSessions();
+                    .refreshSession(Mockito.any());
             throw e;
         }
     }
@@ -342,6 +344,8 @@ public class NonPartitionedInsertManagerTest {
                 .thenReturn(1);
         when(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession())
                 .thenReturn(1L);
+        when(maxComputeSinkConfig.isStreamingInsertSessionRefreshOnErrorEnabled())
+                .thenReturn(true);
         doNothing()
                 .when(instrumentation)
                 .captureCount(Mockito.anyString(), Mockito.anyLong());
@@ -362,7 +366,7 @@ public class NonPartitionedInsertManagerTest {
             nonPartitionedInsertManager.insert(recordWrappers);
         } catch (IOException e) {
             verify(streamingSessionManager, Mockito.times(1))
-                    .refreshAllSessions();
+                    .refreshSession(Mockito.any());
             throw e;
         }
     }
