@@ -105,6 +105,7 @@ public final class StreamingSessionManager {
     /**
      * Invalidate all the sessions in the cache.
      */
+    @Deprecated
     public void refreshAllSessions() {
         sessionCache.asMap()
                 .keySet()
