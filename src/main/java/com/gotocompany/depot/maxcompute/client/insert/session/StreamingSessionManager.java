@@ -98,6 +98,7 @@ public final class StreamingSessionManager {
      *
      * @param partitionSpec combination of partition spec
      */
+    @Deprecated
     public void refreshSession(String partitionSpec) {
         sessionCache.refresh(partitionSpec);
     }
