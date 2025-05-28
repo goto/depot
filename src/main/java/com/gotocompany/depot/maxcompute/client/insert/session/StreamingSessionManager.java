@@ -98,6 +98,7 @@ public final class StreamingSessionManager {
      *
      * @param partitionSpec combination of partition spec
      */
+    @Deprecated
     public void refreshSession(String partitionSpec) {
         sessionCache.refresh(partitionSpec);
     }
@@ -105,6 +106,7 @@ public final class StreamingSessionManager {
     /**
      * Invalidate all the sessions in the cache.
      */
+    @Deprecated
     public void refreshAllSessions() {
         sessionCache.asMap()
                 .keySet()
