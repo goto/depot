@@ -53,18 +53,24 @@ public class SchemaDifferenceUtils {
             if (Objects.isNull(oldMetadata)) { //handle new column / struct field
                 changedMetadata.add(entry.getValue());
                 if (isStructType(entry.getValue().getTypeInfo()) || isStructArrayType(entry.getValue().getTypeInfo())) {
-                    skipStructFields(entry, newMaxComputeColumnDetailIterator);
+                    StructTypeInfo structTypeInfo = isStructType(entry.getValue().getTypeInfo()) ? (StructTypeInfo) entry.getValue().getTypeInfo() : ((StructTypeInfo) ((ArrayTypeInfo) entry.getValue().getTypeInfo()).getElementTypeInfo());
+                    skipStructFields(structTypeInfo, newMaxComputeColumnDetailIterator);
                 }
             }
         }
         return changedMetadata;
     }
 
-    private static void skipStructFields(Map.Entry<String, MaxComputeColumnDetail> entry, Iterator<Map.Entry<String, MaxComputeColumnDetail>> newMaxComputeColumnDetailIterator) {
-        StructTypeInfo structTypeInfo = isStructType(entry.getValue().getTypeInfo()) ? (StructTypeInfo) entry.getValue().getTypeInfo()
-                : ((StructTypeInfo) ((ArrayTypeInfo) entry.getValue().getTypeInfo()).getElementTypeInfo());
+    private static void skipStructFields(StructTypeInfo structTypeInfo, Iterator<Map.Entry<String, MaxComputeColumnDetail>> newMaxComputeColumnDetailIterator) {
         for (int i = 0; i < structTypeInfo.getFieldCount(); i++) {
-            newMaxComputeColumnDetailIterator.next();
+            TypeInfo currentTypeInfo = structTypeInfo.getFieldTypeInfos().get(i);
+            if (isPrimitiveType(currentTypeInfo) || isPrimitiveArrayType(currentTypeInfo)) {
+                newMaxComputeColumnDetailIterator.next();
+            } else if (isStructType(currentTypeInfo) || isStructArrayType(currentTypeInfo)) {
+                newMaxComputeColumnDetailIterator.next();
+                StructTypeInfo currentStructTypeInfo = isStructType(currentTypeInfo) ? (StructTypeInfo) currentTypeInfo : ((StructTypeInfo) ((ArrayTypeInfo) currentTypeInfo).getElementTypeInfo());
+                skipStructFields(currentStructTypeInfo, newMaxComputeColumnDetailIterator);
+            }
         }
     }
 
