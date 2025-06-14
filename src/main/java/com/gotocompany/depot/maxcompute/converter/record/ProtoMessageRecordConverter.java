@@ -3,6 +3,7 @@ package com.gotocompany.depot.maxcompute.converter.record;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.ReorderableRecord;
 import com.aliyun.odps.exceptions.SchemaMismatchException;
+import com.aliyun.odps.exceptions.SchemaMismatchRuntimeException;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.EmptyMessageException;
@@ -48,7 +49,7 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
                     RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
-                    } catch (SchemaMismatchException e) {
+                    } catch (SchemaMismatchException | SchemaMismatchRuntimeException e) {
                         log.debug("Schema mismatch error while converting message to record", e);
                         recordWrappers.addInvalidRecord(
                                 toErrorRecordWrapper(recordWrapper, new ErrorInfo(e, ErrorType.SINK_NON_RETRYABLE_ERROR))
