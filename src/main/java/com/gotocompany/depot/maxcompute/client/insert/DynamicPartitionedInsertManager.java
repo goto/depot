@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DynamicPartitionedInsertManager extends InsertManager {
 
+    private static final String DYNAMIC_PARTITIONED_INSERT_MANAGER = "dynamic-partitioned";
+
     protected DynamicPartitionedInsertManager(MaxComputeSinkConfig maxComputeSinkConfig,
                                               Instrumentation instrumentation,
                                               MaxComputeMetrics maxComputeMetrics,
@@ -32,7 +34,7 @@ public class DynamicPartitionedInsertManager extends InsertManager {
         Map<String, List<RecordWrapper>> partitionSpecRecordWrapperMap = recordWrappers.stream()
                 .collect(Collectors.groupingBy(record -> record.getPartitionSpec().toString()));
         for (Map.Entry<String, List<RecordWrapper>> entry : partitionSpecRecordWrapperMap.entrySet()) {
-            TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(entry.getKey());
+            TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(DYNAMIC_PARTITIONED_INSERT_MANAGER);
             TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
             for (RecordWrapper recordWrapper : entry.getValue()) {
                 appendRecord(recordPack, recordWrapper, recordWrapper.getPartitionSpec().toString());
