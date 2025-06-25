@@ -27,10 +27,10 @@ public class InsertManagerFactory {
                                                     TableTunnel tableTunnel,
                                                     Instrumentation instrumentation,
                                                     MaxComputeMetrics maxComputeMetrics) {
-        if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DEFAULT.equals(maxComputeSinkConfig.getMaxComputeStreamingInsertPartitioningType())) {
+        if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DEFAULT.equals(maxComputeSinkConfig.getStreamingInsertPartitioningType())) {
             StreamingSessionManager partitionedStreamingSessionManager = StreamingSessionManager.createPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new PartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, partitionedStreamingSessionManager);
-        } else if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getMaxComputeStreamingInsertPartitioningType())) {
+        } else if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getStreamingInsertPartitioningType())) {
             StreamingSessionManager partitionedStreamingSessionManager = StreamingSessionManager.createDynamicPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new DynamicPartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, partitionedStreamingSessionManager);
         }

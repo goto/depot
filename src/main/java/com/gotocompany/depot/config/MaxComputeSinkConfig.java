@@ -63,7 +63,7 @@ public interface MaxComputeSinkConfig extends Config {
 
     @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_PARTITIONING_TYPE")
     @DefaultValue("DEFAULT")
-    StreamingInsertPartitioningType getMaxComputeStreamingInsertPartitioningType();
+    StreamingInsertPartitioningType getStreamingInsertPartitioningType();
 
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_KEY")
     String getTablePartitionKey();
