@@ -36,4 +36,16 @@ public class InsertManagerFactoryTest {
         assertTrue(insertManager instanceof NonPartitionedInsertManager);
     }
 
+    @Test
+    public void shouldCreateDynamicPartitionedInsertManager() {
+        MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
+        when(maxComputeSinkConfig.isTablePartitioningEnabled()).thenReturn(true);
+        when(maxComputeSinkConfig.getStreamingInsertPartitioningType()).thenReturn(StreamingInsertPartitioningType.DYNAMIC);
+
+        InsertManager insertManager = InsertManagerFactory.createInsertManager(maxComputeSinkConfig,
+                Mockito.mock(TableTunnel.class), Mockito.mock(Instrumentation.class), Mockito.mock(MaxComputeMetrics.class));
+
+        assertTrue(insertManager instanceof DynamicPartitionedInsertManager);
+    }
+
 }
