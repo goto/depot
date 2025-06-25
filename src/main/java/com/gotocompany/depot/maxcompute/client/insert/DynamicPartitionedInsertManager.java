@@ -36,7 +36,6 @@ public class DynamicPartitionedInsertManager extends InsertManager {
             TableTunnel.StreamUploadSession streamUploadSession = super.getStreamingSessionManager().getSession(entry.getKey());
             TableTunnel.StreamRecordPack recordPack = newRecordPack(streamUploadSession);
             for (RecordWrapper recordWrapper : entry.getValue()) {
-                ((PartitionRecord) recordWrapper.getRecord()).setPartition(recordWrapper.getPartitionSpec());
                 appendRecord(recordPack, recordWrapper, recordWrapper.getPartitionSpec().toString());
             }
             super.flushRecordPack(recordPack);
