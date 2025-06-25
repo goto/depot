@@ -33,8 +33,7 @@ public class InsertManagerFactory {
         } else if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getStreamingInsertPartitioningType())) {
             StreamingSessionManager partitionedStreamingSessionManager = StreamingSessionManager.createDynamicPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new DynamicPartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, partitionedStreamingSessionManager);
-        }
-        else {
+        } else {
             StreamingSessionManager nonPartitionedStreamingSessionManager = StreamingSessionManager.createNonPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new NonPartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, nonPartitionedStreamingSessionManager);
         }

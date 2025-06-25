@@ -3,7 +3,6 @@ package com.gotocompany.depot.maxcompute.client.insert;
 import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.aliyun.odps.tunnel.TableTunnel;
 import com.aliyun.odps.tunnel.TunnelException;
-import com.aliyun.odps.tunnel.impl.PartitionRecord;
 import com.aliyun.odps.tunnel.io.DynamicPartitionRecordPack;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.exception.NonRetryableException;
