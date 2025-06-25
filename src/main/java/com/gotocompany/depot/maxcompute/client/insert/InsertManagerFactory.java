@@ -3,7 +3,7 @@ package com.gotocompany.depot.maxcompute.client.insert;
 import com.aliyun.odps.tunnel.TableTunnel;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.maxcompute.client.insert.session.StreamingSessionManager;
-import com.gotocompany.depot.maxcompute.enumeration.MaxComputePartitioningType;
+import com.gotocompany.depot.maxcompute.enumeration.StreamingInsertPartitioningType;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
 
@@ -27,10 +27,10 @@ public class InsertManagerFactory {
                                                     TableTunnel tableTunnel,
                                                     Instrumentation instrumentation,
                                                     MaxComputeMetrics maxComputeMetrics) {
-        if (maxComputeSinkConfig.isTablePartitioningEnabled() && MaxComputePartitioningType.DEFAULT.equals(maxComputeSinkConfig.getMaxComputeTablePartitioningType())) {
+        if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DEFAULT.equals(maxComputeSinkConfig.getMaxComputeStreamingInsertPartitioningType())) {
             StreamingSessionManager partitionedStreamingSessionManager = StreamingSessionManager.createPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new PartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, partitionedStreamingSessionManager);
-        } else if (maxComputeSinkConfig.isTablePartitioningEnabled() && MaxComputePartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getMaxComputeTablePartitioningType())) {
+        } else if (maxComputeSinkConfig.isTablePartitioningEnabled() && StreamingInsertPartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getMaxComputeStreamingInsertPartitioningType())) {
             StreamingSessionManager partitionedStreamingSessionManager = StreamingSessionManager.createDynamicPartitioned(tableTunnel, maxComputeSinkConfig, instrumentation, maxComputeMetrics);
             return new DynamicPartitionedInsertManager(maxComputeSinkConfig, instrumentation, maxComputeMetrics, partitionedStreamingSessionManager);
         }

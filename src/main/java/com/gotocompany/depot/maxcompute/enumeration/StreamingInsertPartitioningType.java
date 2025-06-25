@@ -1,6 +1,6 @@
 package com.gotocompany.depot.maxcompute.enumeration;
 
-public enum MaxComputePartitioningType {
+public enum StreamingInsertPartitioningType {
     DEFAULT,
     DYNAMIC
 }

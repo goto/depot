@@ -7,6 +7,7 @@ import com.gotocompany.depot.config.SinkConfig;
 import com.gotocompany.depot.maxcompute.client.MaxComputeClient;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.converter.record.ProtoMessageRecordConverter;
+import com.gotocompany.depot.maxcompute.enumeration.StreamingInsertPartitioningType;
 import com.gotocompany.depot.maxcompute.record.RecordDecorator;
 import com.gotocompany.depot.maxcompute.record.RecordDecoratorFactory;
 import com.gotocompany.depot.maxcompute.schema.MaxComputeSchemaCache;
@@ -67,7 +68,8 @@ public class MaxComputeSinkFactory {
                 new RecordDecoratorFactory.RecordDecoratorConfig(protobufConverterOrchestrator, maxComputeSchemaCache, messageParser,
                         partitioningStrategy, maxComputeSinkConfig, sinkConfig, statsDReporter, maxComputeMetrics, metadataUtil)
         );
-        ProtoMessageRecordConverter protoMessageRecordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache);
+        ProtoMessageRecordConverter protoMessageRecordConverter = new ProtoMessageRecordConverter(recordDecorator, maxComputeSchemaCache,
+                StreamingInsertPartitioningType.DYNAMIC.equals(maxComputeSinkConfig.getMaxComputeStreamingInsertPartitioningType()));
         return new MaxComputeSink(maxComputeClient.createInsertManager(), protoMessageRecordConverter, statsDReporter, maxComputeMetrics);
     }
 
