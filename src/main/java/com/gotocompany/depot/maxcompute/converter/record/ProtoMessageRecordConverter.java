@@ -1,11 +1,9 @@
 package com.gotocompany.depot.maxcompute.converter.record;
 
-import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.ReorderableRecord;
 import com.aliyun.odps.exceptions.SchemaMismatchException;
 import com.aliyun.odps.exceptions.SchemaMismatchRuntimeException;
-import com.aliyun.odps.tunnel.impl.PartitionRecord;
 import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.EmptyMessageException;
@@ -33,7 +31,6 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
 
     private final RecordDecorator recordDecorator;
     private final MaxComputeSchemaCache maxComputeSchemaCache;
-    private final boolean dynamicPartitioningEnabled;
 
     /**
      * Converts a list of messages to RecordWrappers.
@@ -48,7 +45,7 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
         RecordWrappers recordWrappers = new RecordWrappers();
         IntStream.range(0, messages.size())
                 .forEach(index -> {
-                    Record record = buildRecord(maxComputeSchema.getTableSchema());
+                    Record record = new ReorderableRecord(maxComputeSchema.getTableSchema());
                     RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
@@ -84,13 +81,5 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
 
     private RecordWrapper toErrorRecordWrapper(RecordWrapper recordWrapper, ErrorInfo e) {
         return new RecordWrapper(null, recordWrapper.getIndex(), e, recordWrapper.getPartitionSpec());
-    }
-
-    private Record buildRecord(TableSchema tableSchema) {
-        if (dynamicPartitioningEnabled) {
-            return new PartitionRecord(tableSchema);
-        } else {
-            return new ReorderableRecord(tableSchema);
-        }
     }
 }
