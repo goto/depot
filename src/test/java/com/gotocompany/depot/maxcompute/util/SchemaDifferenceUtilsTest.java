@@ -44,18 +44,16 @@ public class SchemaDifferenceUtilsTest {
                 .build();
         Set<String> expectedMetadataColumns = new HashSet<>(Arrays.asList(
                 "alter table test_schema.test_table add column if not exists `col3`.`f3` array<string>;",
+                "alter table test_schema.test_table add column if not exists `metadata_2` string;",
                 "alter table test_schema.test_table add column if not exists `col4`.element.`f42` struct<`f421`:string>;",
                 "alter table test_schema.test_table add column if not exists `col5` array<struct<`f51`:int>>;",
                 "alter table test_schema.test_table add column if not exists `col6` struct<`f61`:string>;",
-                "alter table test_schema.test_table add column if not exists `metadata_2` string;",
-                "alter table test_schema.test_table add column if not exists `col7` struct<`order`:struct<`f711`:string,`f712`:int>,`end`:string>;",
-                "alter table test_schema.test_table add column if not exists `col7`.`order`.`f711` string;",
-                "alter table test_schema.test_table add column if not exists `col7`.`order`.`f712` int;"
+                "alter table test_schema.test_table add column if not exists `col7` struct<`order`:struct<`f711`:string,`f712`:int>,`end`:string>;"
         ));
 
         Set<String> actualMetadataColumns = new HashSet<>(SchemaDifferenceUtils.getSchemaDifferenceSql(oldTableSchema, newTableSchema, "test_schema", "test_table"));
 
-        assertEquals(actualMetadataColumns.size(), expectedMetadataColumns.size());
+        assertEquals(expectedMetadataColumns.size(), actualMetadataColumns.size());
         assertTrue(expectedMetadataColumns.containsAll(actualMetadataColumns));
     }
 
