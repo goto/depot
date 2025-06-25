@@ -80,6 +80,24 @@ public final class StreamingSessionManager {
                 .build(cacheLoader));
     }
 
+    public static StreamingSessionManager createDynamicPartitioned(TableTunnel tableTunnel,
+                                                                   MaxComputeSinkConfig maxComputeSinkConfig,
+                                                                   Instrumentation instrumentation,
+                                                                   MaxComputeMetrics maxComputeMetrics) {
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
+            @Override
+            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
+                return buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
+                                .setCreatePartition(true)
+                                .setDynamicPartition(true),
+                        instrumentation, maxComputeMetrics);
+            }
+        };
+        return new StreamingSessionManager(CacheBuilder.newBuilder()
+                .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
+                .build(cacheLoader));
+    }
+
     /**
      * Get the session for the given cache key.
      * If the session is not present in the cache, a new session is created and returned.
