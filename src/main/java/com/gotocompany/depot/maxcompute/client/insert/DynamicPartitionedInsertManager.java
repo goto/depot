@@ -49,7 +49,7 @@ public class DynamicPartitionedInsertManager extends InsertManager {
             DynamicPartitionRecordPack dynamicPartitionRecordPack = (DynamicPartitionRecordPack) recordPack;
             dynamicPartitionRecordPack.append(
                     recordWrapper.getRecord(),
-                    recordWrapper.getPartitionSpec().toString()
+                    recordWrapper.getPartitionSpec().toString(false, false)
             );
         } catch (SchemaMismatchException e) {
             log.error("Record pack schema Mismatch", e);
