@@ -77,12 +77,12 @@ public class DdlManager {
 
     private void updateTable(TableSchema tableSchema, String projectName, String datasetName, String tableName) {
         log.info("Updating table: {} schema:{}", tableName, tableSchema);
-        Instant start = Instant.now();
         TableSchema oldSchema = this.odps.tables().get(projectName, datasetName, tableName)
                 .getSchema();
         checkPartitionPrecondition(oldSchema);
         Deque<String> schemaDifferenceSql = new LinkedList<>(SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, tableSchema, datasetName, tableName));
         RetryUtils.executeWithRetry(() -> {
+                    Instant start = Instant.now();
                     while (!schemaDifferenceSql.isEmpty()) {
                         String sql = schemaDifferenceSql.peekFirst();
                         Instance instance = execute(sql);
