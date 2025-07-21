@@ -42,7 +42,7 @@ public class NonPartitionedInsertManager extends InsertManager {
         for (RecordWrapper recordWrapper : recordWrappers) {
             super.appendRecord(recordPack, recordWrapper, NON_PARTITIONED);
         }
-        super.flushRecordPack(recordPack, NON_PARTITIONED);
+        super.flushRecordPack(recordPack);
     }
 
 }
