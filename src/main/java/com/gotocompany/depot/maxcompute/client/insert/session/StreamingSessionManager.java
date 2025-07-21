@@ -3,12 +3,13 @@ package com.gotocompany.depot.maxcompute.client.insert.session;
 import com.aliyun.odps.tunnel.TableTunnel;
 
 import com.aliyun.odps.tunnel.TunnelException;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 
@@ -17,6 +18,7 @@ import java.time.Instant;
  * Streaming Insert Sessions are reused when the partition spec is the same.
  * Streaming sessions are created by TableTunnel service. Read more about it here: <a href="https://www.alibabacloud.com/help/en/maxcompute/user-guide/tabletunnel">Alibaba MaxCompute Table Tunnel</a>
  */
+@Slf4j
 public final class StreamingSessionManager {
 
     private final LoadingCache<String, TableTunnel.StreamUploadSession> sessionCache;
@@ -38,15 +40,8 @@ public final class StreamingSessionManager {
                                                                MaxComputeSinkConfig maxComputeSinkConfig,
                                                                Instrumentation instrumentation,
                                                                MaxComputeMetrics maxComputeMetrics) {
-        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
-            @Override
-            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
-                return buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig), instrumentation, maxComputeMetrics);
-            }
-        };
-        return new StreamingSessionManager(CacheBuilder.newBuilder()
-                .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
-                .build(cacheLoader));
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = partitionSpecKey -> buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig), instrumentation, maxComputeMetrics);
+        return buildCache(maxComputeSinkConfig, cacheLoader);
     }
 
     /**
@@ -66,18 +61,11 @@ public final class StreamingSessionManager {
                                                             MaxComputeSinkConfig maxComputeSinkConfig,
                                                             Instrumentation instrumentation,
                                                             MaxComputeMetrics maxComputeMetrics) {
-        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
-            @Override
-            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
-                return buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
-                                .setCreatePartition(true)
-                                .setPartitionSpec(partitionSpecKey),
-                        instrumentation, maxComputeMetrics);
-            }
-        };
-        return new StreamingSessionManager(CacheBuilder.newBuilder()
-                .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
-                .build(cacheLoader));
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = partitionSpecKey -> buildStreamSession(getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
+                        .setCreatePartition(true)
+                        .setPartitionSpec(partitionSpecKey),
+                instrumentation, maxComputeMetrics);
+        return buildCache(maxComputeSinkConfig, cacheLoader);
     }
 
     /**
@@ -89,7 +77,7 @@ public final class StreamingSessionManager {
      * @return StreamUploadSession
      */
     public TableTunnel.StreamUploadSession getSession(String partitionSpec) {
-        return sessionCache.getUnchecked(partitionSpec);
+        return sessionCache.get(partitionSpec);
     }
 
     /**
@@ -116,6 +104,7 @@ public final class StreamingSessionManager {
     private static TableTunnel.StreamUploadSession buildStreamSession(TableTunnel.StreamUploadSession.Builder streamUploadSessionBuilder,
                                                                       Instrumentation instrumentation,
                                                                       MaxComputeMetrics maxComputeMetrics) throws TunnelException {
+        log.info("Creating new streaming insert session for partition spec {}", streamUploadSessionBuilder.getPartitionSpec());
         Instant start = Instant.now();
         TableTunnel.StreamUploadSession streamUploadSession = streamUploadSessionBuilder.build();
         instrumentation.captureDurationSince(maxComputeMetrics.getMaxComputeStreamingInsertSessionInitializationLatency(), start);
@@ -127,6 +116,14 @@ public final class StreamingSessionManager {
         return tableTunnel.buildStreamUploadSession(maxComputeSinkConfig.getMaxComputeProjectId(), maxComputeSinkConfig.getMaxComputeTableName())
                 .allowSchemaMismatch(maxComputeSinkConfig.isAllowSchemaMismatchEnabled())
                 .setSlotNum(maxComputeSinkConfig.getStreamingInsertTunnelSlotCountPerSession());
+    }
+
+    private static StreamingSessionManager buildCache(MaxComputeSinkConfig maxComputeSinkConfig, CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader) {
+        return new StreamingSessionManager(Caffeine.newBuilder()
+                .expireAfterAccess(maxComputeSinkConfig.getStreamingInsertSessionExpirationTimeAfterAccessDuration())
+                .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
+                .evictionListener((key, value, cause) -> log.info("Evicting session for partition spec {} due to {}", key, cause))
+                .build(cacheLoader));
     }
 
 }

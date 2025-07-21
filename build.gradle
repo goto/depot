@@ -22,7 +22,7 @@ plugins {
 }
 
 group 'com.gotocompany'
-version '0.10.20'
+version '0.10.21'
 
 repositories {
     mavenLocal()
@@ -60,7 +60,7 @@ dependencies {
     implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.8.0'
     implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.1'
     implementation group: 'joda-time', name: 'joda-time', version: '2.10.2'
-    implementation('com.google.guava:guava:32.0.1-jre') { force = true }
+    implementation('com.github.ben-manes.caffeine:caffeine:2.9.3')
     testImplementation group: 'junit', name: 'junit', version: '4.13.1'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
