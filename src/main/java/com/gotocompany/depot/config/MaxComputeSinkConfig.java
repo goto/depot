@@ -102,10 +102,6 @@ public interface MaxComputeSinkConfig extends Config {
     @DefaultValue("2")
     int getStreamingInsertMaximumSessionCount();
 
-    @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_SESSION_REFRESH_ON_ERROR_ENABLED")
-    @DefaultValue("false")
-    boolean isStreamingInsertSessionRefreshOnErrorEnabled();
-
     @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_SESSION_EXPIRATION_TIME_AFTER_ACCESS_DURATION")
     @ConverterClass(DurationConverter.class)
     @DefaultValue("PT15M")
