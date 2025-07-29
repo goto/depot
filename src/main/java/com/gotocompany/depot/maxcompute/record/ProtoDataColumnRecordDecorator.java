@@ -124,7 +124,7 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         if (partitioningStrategy != null && partitioningStrategy instanceof TimestampPartitioningStrategy) {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
-        if(partitionSpec!= null && partitionSpec.isEmpty()){
+        if(partitionSpec != null && partitionSpec.get(partitioningStrategy.getOriginalPartitionColumnName()) == null) {
             instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeMissingPartitionRecrodsMetric(),
                     String.format(MaxComputeMetrics.MAXCOMPUTE_UNKNOWN_FIELD_VALIDATION_TYPE_TAG, "missing_partition"));
         }
