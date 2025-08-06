@@ -54,4 +54,7 @@ public class MaxComputeMetrics extends SinkMetrics {
         return String.format("%s%s%s%s", getApplicationPrefix(), SINK_PREFIX, MAXCOMPUTE_SINK_PREFIX, "streaming_insert_session_initialization_latency_milliseconds");
     }
 
+    public String getMaxComputeMissingPartitionRecrodsMetric() {
+        return String.format("%s%s%s%s", getApplicationPrefix(), SINK_PREFIX, MAXCOMPUTE_SINK_PREFIX, "missing_partition_records_total");
+    }
 }
