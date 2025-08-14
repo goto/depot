@@ -29,13 +29,7 @@ jobs:
         with:
           distribution: adopt
           java-version: 8
-      - name: Publish depot
-        run: |
-          printf "$GPG_SIGNING_KEY" | base64 --decode > private.key
-          ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -Psigning.keyId=${GPG_SIGNING_KEY_ID} -Psigning.password=${GPG_SIGNING_PASSWORD} -Psigning.secretKeyRingFile=private.key --console=verbose
+      - name: Publish package
+        run: ./gradlew publish
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_SIGNING_KEY_ID: ${{ secrets.GPG_SIGNING_KEY_ID }}
-          GPG_SIGNING_PASSWORD: ${{ secrets.GPG_SIGNING_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
