@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -115,42 +116,20 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
     }
 
     private @Nullable PartitionSpec getPartitionSpec(RecordWrapper recordWrapper, com.google.protobuf.Message protoMessage) {
-        if (partitioningStrategy == null) {
-            return null;
-        }
         PartitionSpec partitionSpec = null;
-        String originalPartitionColumnName = partitioningStrategy.getOriginalPartitionColumnName();
-        Descriptors.FieldDescriptor partitionFieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(originalPartitionColumnName);
-        Object object = null;
-        if (partitionFieldDescriptor != null && protoMessage.hasField(partitionFieldDescriptor)) {
-            object = protoMessage.getField(partitionFieldDescriptor);
-        }
-        if (isPartitionValueNullOrEmpty(object)) {
-            instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeMissingPartitionRecrodsMetric(),
-                    String.format(MaxComputeMetrics.MAXCOMPUTE_UNKNOWN_FIELD_VALIDATION_TYPE_TAG, originalPartitionColumnName));
-        }
-
-        if (partitioningStrategy instanceof DefaultPartitioningStrategy) {
+        if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {
+            Descriptors.FieldDescriptor partitionFieldDescriptor = protoMessage.getDescriptorForType().findFieldByName(partitioningStrategy.getOriginalPartitionColumnName());
+            Object object = protoMessage.hasField(partitionFieldDescriptor) ? protoMessage.getField(protoMessage.getDescriptorForType().findFieldByName(partitioningStrategy.getOriginalPartitionColumnName())) : null;
             partitionSpec = partitioningStrategy.getPartitionSpec(object);
-        } else if (partitioningStrategy instanceof TimestampPartitioningStrategy) {
+        }
+        if (partitioningStrategy != null && partitioningStrategy instanceof TimestampPartitioningStrategy) {
             partitionSpec = partitioningStrategy.getPartitionSpec(recordWrapper.getRecord());
         }
-
+        if (partitionSpec != null && (partitionSpec.get(partitioningStrategy.getOriginalPartitionColumnName()) == null || Objects.equals(partitionSpec.get(partitioningStrategy.getOriginalPartitionColumnName()), "__NULL__"))) {
+            instrumentation.incrementCounter(maxComputeMetrics.getMaxComputeMissingPartitionRecrodsMetric(),
+                    String.format(MaxComputeMetrics.MAXCOMPUTE_UNKNOWN_FIELD_VALIDATION_TYPE_TAG, "missing_partition"));
+        }
         return partitionSpec;
     }
-    /**
-     * Checks if the partition value is null or empty.
-     *
-     * @param value the partition value to check
-     * @return true if the value is null or empty, false otherwise
-     */
-    private boolean isPartitionValueNullOrEmpty(Object value) {
-        if (value == null) {
-            return true;
-        }
-        if (value instanceof String) {
-            return ((String) value).isEmpty();
-        }
-        return false;
-    }
+
 }
