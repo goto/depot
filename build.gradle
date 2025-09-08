@@ -191,7 +191,6 @@ signing {
     }
 }
 
-
 jacocoTestCoverageVerification {
     afterEvaluate {
         getClassDirectories().setFrom(classDirectories.files.collect {
