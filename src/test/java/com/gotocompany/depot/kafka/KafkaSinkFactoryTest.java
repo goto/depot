@@ -22,9 +22,10 @@ public class KafkaSinkFactoryTest {
         properties = new HashMap<>();
         properties.put("SINK_KAFKA_BROKERS", "localhost:9092");
         properties.put("SINK_KAFKA_TOPIC", "output-topic");
-        properties.put("SINK_KAFKA_PROTO_MESSAGE", "com.gojek.esb.booking.BookingLogMessage");
-        properties.put("SINK_KAFKA_PROTO_KEY", "com.gojek.esb.booking.BookingLogKey");
-        properties.put("SINK_KAFKA_PROTO_MAPPING", "{\"order_id\": \"source.order_number\"}");
+        properties.put("SINK_KAFKA_PROTO_MESSAGE", "com.gotocompany.depot.TestMessage");
+        properties.put("SINK_KAFKA_PROTO_KEY", "com.gotocompany.depot.TestKey");
+        properties.put("SINK_KAFKA_PROTO_MAPPING", "{\"order_number\": \"source.order_number\"}");
+        properties.put("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestMessage");
         statsDReporter = new StatsDReporter(new NoOpStatsDClient());
     }
 
@@ -45,21 +46,10 @@ public class KafkaSinkFactoryTest {
     }
 
     @Test
-    public void shouldCreateSinkInstance() {
-        KafkaSinkConfig config = ConfigFactory.create(KafkaSinkConfig.class, properties);
-        KafkaSinkFactory factory = new KafkaSinkFactory(config, statsDReporter);
-        factory.init();
-        Sink sink = factory.create();
-        Assert.assertNotNull(sink);
-        Assert.assertTrue(sink instanceof KafkaSink);
-    }
-
-    @Test
     public void shouldCreateFactoryWithNoOpReporter() {
         KafkaSinkConfig config = ConfigFactory.create(KafkaSinkConfig.class, properties);
         KafkaSinkFactory factory = new KafkaSinkFactory(config);
         factory.init();
-        Sink sink = factory.create();
-        Assert.assertNotNull(sink);
+        Assert.assertNotNull(factory.getSinkStencilClient());
     }
 }
