@@ -30,6 +30,12 @@ repositories {
 
 configurations.configureEach { exclude group: 'com.google.guava', module: 'listenablefuture' }
 
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability('org.lz4:lz4-pure-java') {
+        select('at.yawk.lz4:lz4-java:0')
+    }
+}
+
 dependencies {
     implementation group: 'com.google.protobuf', name: 'protobuf-java', version: '3.25.0'
     implementation group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.13.0'
@@ -61,7 +67,7 @@ dependencies {
     implementation group: 'joda-time', name: 'joda-time', version: '2.10.2'
     implementation('com.google.guava:guava:32.0.1-jre') { force = true }
     implementation 'dev.cel:cel:0.5.2'
-    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.5.1'
+    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.9.2'
     testImplementation group: 'junit', name: 'junit', version: '4.13.1'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
