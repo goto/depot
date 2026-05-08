@@ -127,6 +127,7 @@ public class DdlManager {
                 maxComputeMetrics.getMaxComputeOperationTotalMetric(),
                 String.format(MaxComputeMetrics.MAXCOMPUTE_TABLE_TAG, maxComputeSinkConfig.getMaxComputeTableName()),
                 String.format(MaxComputeMetrics.MAXCOMPUTE_PROJECT_TAG, maxComputeSinkConfig.getMaxComputeProjectId()),
+                String.format(MaxComputeMetrics.MAXCOMPUTE_SCHEMA_TAG, maxComputeSinkConfig.getMaxComputeSchema()),
                 String.format(MaxComputeMetrics.MAXCOMPUTE_API_TAG, type)
         );
         instrumentation.captureDurationSince(
@@ -134,6 +135,7 @@ public class DdlManager {
                 startTime,
                 String.format(MaxComputeMetrics.MAXCOMPUTE_TABLE_TAG, maxComputeSinkConfig.getMaxComputeTableName()),
                 String.format(MaxComputeMetrics.MAXCOMPUTE_PROJECT_TAG, maxComputeSinkConfig.getMaxComputeProjectId()),
+                String.format(MaxComputeMetrics.MAXCOMPUTE_SCHEMA_TAG, maxComputeSinkConfig.getMaxComputeSchema()),
                 String.format(MaxComputeMetrics.MAXCOMPUTE_API_TAG, type)
         );
     }
