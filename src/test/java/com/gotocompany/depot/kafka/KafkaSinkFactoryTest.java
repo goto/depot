@@ -1,6 +1,5 @@
 package com.gotocompany.depot.kafka;
 
-import com.gotocompany.depot.Sink;
 import com.gotocompany.depot.config.KafkaSinkConfig;
 import com.gotocompany.depot.metrics.StatsDReporter;
 import com.timgroup.statsd.NoOpStatsDClient;

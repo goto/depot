@@ -3,8 +3,6 @@ package com.gotocompany.depot.kafka;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.config.KafkaSinkConfig;
-import com.gotocompany.depot.error.ErrorInfo;
-import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.stencil.client.StencilClient;
 import dev.cel.common.CelAbstractSyntaxTree;
