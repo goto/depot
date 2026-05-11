@@ -20,26 +20,38 @@ public class KafkaSinkFactory {
     private StencilClient sourceStencilClient;
     private KafkaProtoMappingEngine mappingEngine;
 
-    public KafkaSinkFactory(KafkaSinkConfig sinkConfig, StatsDReporter statsDReporter, Map<String, String> envVars) {
+    public KafkaSinkFactory(KafkaSinkConfig sinkConfig,
+                            StatsDReporter statsDReporter,
+                            StencilClient sourceStencilClient,
+                            Map<String, String> envVars) {
         this.sinkConfig = sinkConfig;
         this.statsDReporter = statsDReporter;
+        this.sourceStencilClient = sourceStencilClient;
         this.envVars = envVars;
     }
 
+    public KafkaSinkFactory(KafkaSinkConfig sinkConfig, StatsDReporter statsDReporter, Map<String, String> envVars) {
+        this(sinkConfig, statsDReporter, null, envVars);
+    }
+
     public KafkaSinkFactory(KafkaSinkConfig sinkConfig, StatsDReporter statsDReporter) {
-        this(sinkConfig, statsDReporter, null);
+        this(sinkConfig, statsDReporter, null, null);
     }
 
     public KafkaSinkFactory(KafkaSinkConfig sinkConfig) {
-        this(sinkConfig, new StatsDReporter(new NoOpStatsDClient()), null);
+        this(sinkConfig, new StatsDReporter(new NoOpStatsDClient()), null, null);
     }
 
     public void init() {
         Instrumentation instrumentation = new Instrumentation(statsDReporter, KafkaSinkFactory.class);
         instrumentation.logInfo("Initializing Kafka Sink Factory");
 
-        // Initialize source stencil client (for parsing incoming messages)
-        this.sourceStencilClient = StencilClientFactory.getClient();
+        if (this.sourceStencilClient == null) {
+            this.sourceStencilClient = StencilClientFactory.getClient();
+            instrumentation.logInfo("Source Stencil client not injected; falling back to classpath stencil client");
+        } else {
+            instrumentation.logInfo("Source Stencil client injected by caller");
+        }
 
         // Initialize sink stencil client (for output proto schema)
         String sinkStencilUrls = sinkConfig.getSinkKafkaSchemaRegistryStencilUrls();
