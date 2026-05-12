@@ -21,7 +21,7 @@ plugins {
 }
 
 group 'com.gotocompany'
-version 'v0.10.22-beta.2'
+version '0.10.22-beta.3'
 
 repositories {
     mavenLocal()
