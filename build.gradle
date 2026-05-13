@@ -60,6 +60,8 @@ dependencies {
     implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.1'
     implementation group: 'joda-time', name: 'joda-time', version: '2.10.2'
     implementation('com.google.guava:guava:32.0.1-jre') { force = true }
+    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '2.4.0'
+    implementation 'dev.cel:cel:0.5.2'
     testImplementation group: 'junit', name: 'junit', version: '4.13.1'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.26.3'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
