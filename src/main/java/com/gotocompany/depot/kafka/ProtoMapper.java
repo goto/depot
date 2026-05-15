@@ -20,22 +20,22 @@ import java.util.Map;
 @Slf4j
 public class ProtoMapper {
 
+    private static final String SOURCE_VAR_NAME = "source";
+
     private final Map<String, CelRuntime.Program> compiledPrograms;
     private final Descriptors.Descriptor sinkDescriptor;
-    private final String sourceVariableName;
 
     public ProtoMapper(
             Descriptors.Descriptor sourceDescriptor,
             Descriptors.Descriptor sinkDescriptor,
             String mappingJson) {
         this.sinkDescriptor = sinkDescriptor;
-        this.sourceVariableName = sourceDescriptor.getFullName();
 
         CelCompiler compiler = CelCompilerFactory.standardCelCompilerBuilder()
                 .setStandardMacros(CelStandardMacro.STANDARD_MACROS)
                 .addMessageTypes(sourceDescriptor)
                 .addMessageTypes(sinkDescriptor)
-                .addVar(sourceVariableName, StructTypeReference.create(sourceDescriptor.getFullName()))
+                .addVar(SOURCE_VAR_NAME, StructTypeReference.create(sourceDescriptor.getFullName()))
                 .build();
 
         CelRuntime runtime = CelRuntimeFactory.standardCelRuntimeBuilder()
@@ -64,7 +64,7 @@ public class ProtoMapper {
     public DynamicMessage map(DynamicMessage sourceMessage) throws CelEvaluationException {
         DynamicMessage.Builder builder = DynamicMessage.newBuilder(sinkDescriptor);
         Map<String, Object> bindings = new HashMap<>();
-        bindings.put(sourceVariableName, sourceMessage);
+        bindings.put(SOURCE_VAR_NAME, sourceMessage);
 
         for (Map.Entry<String, CelRuntime.Program> entry : compiledPrograms.entrySet()) {
             String outputFieldName = entry.getKey();

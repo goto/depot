@@ -27,7 +27,7 @@ public class ProtoMapperTest {
         Descriptors.Descriptor sinkDesc = stencilClient.get(
                 "com.gotocompany.depot.TestMessage");
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestBookingLogMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
         TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
@@ -47,7 +47,7 @@ public class ProtoMapperTest {
         Descriptors.Descriptor sinkDesc = stencilClient.get(
                 "com.gotocompany.depot.TestMessage");
 
-        String mapping = "{\"order_number\": \"string(com.gotocompany.depot.TestBookingLogMessage.cancel_reason_id)\"}";
+        String mapping = "{\"order_number\": \"string(source.cancel_reason_id)\"}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
         TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
@@ -67,7 +67,7 @@ public class ProtoMapperTest {
         Descriptors.Descriptor sinkDesc = stencilClient.get(
                 "com.gotocompany.depot.TestMessage");
 
-        String mapping = "{\"order_number\": \"\\\"prefix-\\\" + com.gotocompany.depot.TestBookingLogMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"\\\"prefix-\\\" + source.order_number\"}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
         TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
@@ -87,7 +87,7 @@ public class ProtoMapperTest {
         Descriptors.Descriptor sinkDesc = stencilClient.get(
                 "com.gotocompany.depot.TestMessage");
 
-        String mapping = "{\"order_number\": \"string(com.gotocompany.depot.TestBookingLogMessage.driver_pickup_location.latitude)\"}";
+        String mapping = "{\"order_number\": \"string(source.driver_pickup_location.latitude)\"}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
         TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
@@ -109,7 +109,7 @@ public class ProtoMapperTest {
         Descriptors.Descriptor sinkDesc = stencilClient.get(
                 "com.gotocompany.depot.TestMessage");
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestBookingLogMessage.order_number == \\\"active\\\" ? \\\"running\\\" : \\\"stopped\\\"\"}";
+        String mapping = "{\"order_number\": \"source.order_number == \\\"active\\\" ? \\\"running\\\" : \\\"stopped\\\"\"}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
         TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
@@ -159,8 +159,8 @@ public class ProtoMapperTest {
                 "com.gotocompany.depot.TestMessage");
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestBookingLogMessage.order_number\","
-                + "\"order_url\": \"com.gotocompany.depot.TestBookingLogMessage.order_url\""
+                + "\"order_number\": \"source.order_number\","
+                + "\"order_url\": \"source.order_url\""
                 + "}";
         ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
 
