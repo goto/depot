@@ -44,8 +44,8 @@ public class KafkaSinkTest {
                 "com.gotocompany.depot.TestMessage");
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestBookingLogMessage.order_number\","
-                + "\"order_url\": \"com.gotocompany.depot.TestBookingLogMessage.order_url\""
+                + "\"order_number\": \"source.order_number\","
+                + "\"order_url\": \"source.order_url\""
                 + "}";
 
         ProtoMapper valueMapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);

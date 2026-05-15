@@ -47,6 +47,12 @@ public class ProtoMapper {
         this.compiledPrograms = new HashMap<>();
 
         for (String outputField : mapping.keySet()) {
+            if (sinkDescriptor.findFieldByName(outputField) == null) {
+                log.warn("Output field '{}' not found in sink proto '{}', skipping mapping. "
+                                + "Field will use the proto default value.",
+                        outputField, sinkDescriptor.getFullName());
+                continue;
+            }
             String celExpression = mapping.getString(outputField);
             try {
                 CelAbstractSyntaxTree ast = compiler.compile(celExpression).getAst();
@@ -58,7 +64,8 @@ public class ProtoMapper {
                                 + "': " + celExpression + ". Error: " + e.getMessage(), e);
             }
         }
-        log.info("Compiled {} CEL mapping expressions successfully", compiledPrograms.size());
+        log.info("Compiled {} CEL mapping expressions successfully for sink proto '{}'",
+                compiledPrograms.size(), sinkDescriptor.getFullName());
     }
 
     public DynamicMessage map(DynamicMessage sourceMessage) throws CelEvaluationException {
@@ -69,13 +76,7 @@ public class ProtoMapper {
         for (Map.Entry<String, CelRuntime.Program> entry : compiledPrograms.entrySet()) {
             String outputFieldName = entry.getKey();
             CelRuntime.Program program = entry.getValue();
-
             Descriptors.FieldDescriptor fieldDescriptor = sinkDescriptor.findFieldByName(outputFieldName);
-            if (fieldDescriptor == null) {
-                throw new CelEvaluationException(
-                        "Output field '" + outputFieldName + "' not found in sink proto "
-                                + sinkDescriptor.getFullName());
-            }
 
             Object result = program.eval(bindings);
             if (result != null) {

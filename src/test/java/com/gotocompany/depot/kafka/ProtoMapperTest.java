@@ -152,6 +152,31 @@ public class ProtoMapperTest {
     }
 
     @Test
+    public void shouldSkipMappingForFieldNotInSinkProto() throws Exception {
+        Descriptors.Descriptor sourceDesc = stencilClient.get(
+                "com.gotocompany.depot.TestBookingLogMessage");
+        Descriptors.Descriptor sinkDesc = stencilClient.get(
+                "com.gotocompany.depot.TestMessage");
+
+        String mapping = "{"
+                + "\"order_number\": \"source.order_number\","
+                + "\"app_version\": \"\\\"v1.0\\\"\""
+                + "}";
+        ProtoMapper mapper = new ProtoMapper(sourceDesc, sinkDesc, mapping);
+
+        TestBookingLogMessage source = TestBookingLogMessage.newBuilder()
+                .setOrderNumber("ORD-XYZ")
+                .build();
+        DynamicMessage sourceMsg = DynamicMessage.parseFrom(sourceDesc, source.toByteArray());
+
+        DynamicMessage result = mapper.map(sourceMsg);
+        Assert.assertEquals("ORD-XYZ",
+                result.getField(sinkDesc.findFieldByName("order_number")));
+        Assert.assertEquals("",
+                result.getField(sinkDesc.findFieldByName("order_url")));
+    }
+
+    @Test
     public void shouldMapMultipleFields() throws Exception {
         Descriptors.Descriptor sourceDesc = stencilClient.get(
                 "com.gotocompany.depot.TestBookingLogMessage");
