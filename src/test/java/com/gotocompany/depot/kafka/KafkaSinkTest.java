@@ -20,23 +20,19 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.apache.kafka.common.errors.NetworkException;
-import org.apache.kafka.common.errors.NotLeaderOrFollowerException;
+import org.apache.kafka.common.errors.NotLeaderForPartitionException;
 import org.apache.kafka.common.errors.TimeoutException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -170,7 +166,7 @@ public class KafkaSinkTest {
 
         when(mappingFunction.map(any(DynamicMessage.class))).thenReturn(mapped);
         CompletableFuture<RecordMetadata> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new ExecutionException(new NetworkException("connection reset")));
+        failedFuture.completeExceptionally(new NetworkException("connection reset"));
         when(producer.send(any())).thenReturn(failedFuture);
 
         List<Message> messages = new ArrayList<>();
@@ -191,7 +187,7 @@ public class KafkaSinkTest {
 
         when(mappingFunction.map(any(DynamicMessage.class))).thenReturn(mapped);
         CompletableFuture<RecordMetadata> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new ExecutionException(new TimeoutException("request timed out")));
+        failedFuture.completeExceptionally(new TimeoutException("request timed out"));
         when(producer.send(any())).thenReturn(failedFuture);
 
         List<Message> messages = new ArrayList<>();
@@ -212,7 +208,7 @@ public class KafkaSinkTest {
 
         when(mappingFunction.map(any(DynamicMessage.class))).thenReturn(mapped);
         CompletableFuture<RecordMetadata> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new ExecutionException(new NotLeaderOrFollowerException("not leader")));
+        failedFuture.completeExceptionally(new NotLeaderForPartitionException("not leader"));
         when(producer.send(any())).thenReturn(failedFuture);
 
         List<Message> messages = new ArrayList<>();

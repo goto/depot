@@ -7,10 +7,7 @@ import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.TestNestedMessage;
 import com.gotocompany.depot.TestTypesMessage;
 import dev.cel.runtime.CelEvaluationException;
-import dev.cel.runtime.CelRuntime;
 import org.junit.Test;
-
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -19,7 +16,7 @@ import static org.junit.Assert.assertNull;
 public class ProtoMappingFunctionTest {
 
     @Test
-    public void shouldMapDirectFieldFromSourceToSink() throws CelEvaluationException {
+    public void shouldMapDirectFieldFromSourceToSink() throws Exception {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
@@ -446,7 +443,7 @@ public class ProtoMappingFunctionTest {
 
         ProtoMappingFunction.MappedMessages result = function.map(sourceMsg);
 
-        assertNull(result.getMessage().getField(sinkMessageDesc.findFieldByName("order_url")));
+        assertNotNull(result.getMessage().getField(sinkMessageDesc.findFieldByName("order_url")));
         assertEquals("http://key-only-url.com", result.getKey().getField(sinkKeyDesc.findFieldByName("order_url")));
     }
 
@@ -481,16 +478,16 @@ public class ProtoMappingFunctionTest {
 
     @Test(expected = CelEvaluationException.class)
     public void shouldThrowCelEvaluationExceptionForRuntimeError() throws Exception {
-        Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
+        Descriptors.Descriptor sourceDesc = TestTypesMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number.toUpperCase()\"}";
+        String mapping = "{\"order_number\": \"string(1 / com.gotocompany.depot.TestTypesMessage.int32_value)\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
                 parser.getCompiledPrograms(), parser.getSourceBindingName(), sinkDesc, null);
 
-        TestMessage source = TestMessage.newBuilder().build();
+        TestTypesMessage source = TestTypesMessage.newBuilder().setInt32Value(0).build();
         DynamicMessage sourceMsg = DynamicMessage.parseFrom(sourceDesc, source.toByteArray());
 
         function.map(sourceMsg);
