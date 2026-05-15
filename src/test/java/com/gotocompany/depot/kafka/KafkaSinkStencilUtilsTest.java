@@ -1,7 +1,6 @@
 package com.gotocompany.depot.kafka;
 
 import com.gotocompany.depot.config.KafkaSinkConfig;
-import com.gotocompany.stencil.cache.SchemaRefreshStrategy;
 import com.gotocompany.stencil.config.StencilConfig;
 import com.timgroup.statsd.NoOpStatsDClient;
 import org.aeonbits.owner.ConfigFactory;
