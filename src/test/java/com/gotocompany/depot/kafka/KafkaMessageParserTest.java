@@ -1,11 +1,7 @@
 package com.gotocompany.depot.kafka;
 
-import com.google.protobuf.DynamicMessage;
-import com.gotocompany.depot.TestBookingLogMessage;
-import com.gotocompany.depot.TestServiceType;
 import com.gotocompany.stencil.StencilClientFactory;
 import com.gotocompany.stencil.client.StencilClient;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
