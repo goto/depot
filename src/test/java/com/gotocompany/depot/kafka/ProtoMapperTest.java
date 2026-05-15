@@ -4,8 +4,6 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.TestBookingLogMessage;
 import com.gotocompany.depot.TestLocation;
-import com.gotocompany.depot.TestMessage;
-import com.gotocompany.depot.TestServiceType;
 import com.gotocompany.stencil.StencilClientFactory;
 import com.gotocompany.stencil.client.StencilClient;
 import dev.cel.runtime.CelEvaluationException;
