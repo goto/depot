@@ -1,10 +1,8 @@
 package com.gotocompany.depot.kafka;
 
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.DynamicMessage;
 import com.gotocompany.depot.SinkResponse;
 import com.gotocompany.depot.TestBookingLogMessage;
-import com.gotocompany.depot.TestMessage;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.message.Message;
 import com.gotocompany.stencil.StencilClientFactory;
