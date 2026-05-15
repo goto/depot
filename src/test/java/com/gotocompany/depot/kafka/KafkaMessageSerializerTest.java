@@ -1,7 +1,6 @@
 package com.gotocompany.depot.kafka;
 
 import com.google.protobuf.DynamicMessage;
-import com.gotocompany.depot.TestMessage;
 import com.gotocompany.stencil.StencilClientFactory;
 import com.gotocompany.stencil.client.StencilClient;
 import org.junit.Assert;
