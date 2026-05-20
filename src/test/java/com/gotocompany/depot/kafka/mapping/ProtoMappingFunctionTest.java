@@ -20,7 +20,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -42,9 +42,9 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\","
-                + "\"order_url\": \"com.gotocompany.depot.TestMessage.order_url\","
-                + "\"order_details\": \"com.gotocompany.depot.TestMessage.order_details\""
+                + "\"order_number\": \"source.order_number\","
+                + "\"order_url\": \"source.order_url\","
+                + "\"order_details\": \"source.order_details\""
                 + "}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -72,7 +72,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkKeyDesc = TestKey.getDescriptor();
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\""
+                + "\"order_number\": \"source.order_number\""
                 + "}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -113,7 +113,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"com.gotocompany.depot.TestMessage.order_number + '-' + com.gotocompany.depot.TestMessage.order_url\"}";
+        String mapping = "{\"order_details\": \"source.order_number + '-' + source.order_url\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -135,8 +135,8 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"com.gotocompany.depot.TestMessage.order_number == '' "
-                + "? 'empty' : com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_details\": \"source.order_number == '' "
+                + "? 'empty' : source.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -155,8 +155,8 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"com.gotocompany.depot.TestMessage.order_number == '' "
-                + "? 'empty' : com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_details\": \"source.order_number == '' "
+                + "? 'empty' : source.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -175,7 +175,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -194,7 +194,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestNestedMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestNestedMessage.single_message.order_number\"}";
+        String mapping = "{\"order_number\": \"source.single_message.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -236,7 +236,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -256,7 +256,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkMessageDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkKeyDesc = TestKey.getDescriptor();
 
-        String mapping = "{\"order_url\": \"com.gotocompany.depot.TestMessage.order_url\"}";
+        String mapping = "{\"order_url\": \"source.order_url\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -276,7 +276,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"com.gotocompany.depot.TestMessage.order_number.startsWith('PRE') "
+        String mapping = "{\"order_details\": \"source.order_number.startsWith('PRE') "
                 + "? 'prefixed' : 'unprefixed'\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -296,7 +296,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"com.gotocompany.depot.TestMessage.order_number.endsWith('-TEST') "
+        String mapping = "{\"order_details\": \"source.order_number.endsWith('-TEST') "
                 + "? 'has-suffix' : 'no-suffix'\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -316,7 +316,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestNestedMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_url\": \"com.gotocompany.depot.TestNestedMessage.single_message.order_url\"}";
+        String mapping = "{\"order_url\": \"source.single_message.order_url\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -344,9 +344,9 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\","
+                + "\"order_number\": \"source.order_number\","
                 + "\"order_url\": \"'http://static.url'\","
-                + "\"order_details\": \"com.gotocompany.depot.TestMessage.order_number + '-details'\""
+                + "\"order_details\": \"source.order_number + '-details'\""
                 + "}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -372,7 +372,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestTypesMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestTypesMessage.int32_value > 50 "
+        String mapping = "{\"order_number\": \"source.int32_value > 50 "
                 + "? 'high' : 'low'\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -392,7 +392,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestTypesMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestTypesMessage.int32_value > 50 "
+        String mapping = "{\"order_number\": \"source.int32_value > 50 "
                 + "? 'high' : 'low'\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -412,7 +412,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestTypesMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"string(com.gotocompany.depot.TestTypesMessage.int32_value * 2 + 100)\"}";
+        String mapping = "{\"order_number\": \"string(source.int32_value * 2 + 100)\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -432,7 +432,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkMessageDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkKeyDesc = TestKey.getDescriptor();
 
-        String mapping = "{\"order_url\": \"com.gotocompany.depot.TestMessage.order_url\"}";
+        String mapping = "{\"order_url\": \"source.order_url\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -454,8 +454,8 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkKeyDesc = TestKey.getDescriptor();
 
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\","
-                + "\"order_url\": \"com.gotocompany.depot.TestMessage.order_url\""
+                + "\"order_number\": \"source.order_number\","
+                + "\"order_url\": \"source.order_url\""
                 + "}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
@@ -481,7 +481,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestTypesMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_number\": \"string(1 / com.gotocompany.depot.TestTypesMessage.int32_value)\"}";
+        String mapping = "{\"order_number\": \"string(1 / source.int32_value)\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -498,7 +498,7 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sourceDesc = TestMessage.getDescriptor();
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
-        String mapping = "{\"order_details\": \"string(com.gotocompany.depot.TestMessage.order_number.size())\"}";
+        String mapping = "{\"order_details\": \"string(source.order_number.size())\"}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 
         ProtoMappingFunction function = new ProtoMappingFunction(
@@ -518,9 +518,9 @@ public class ProtoMappingFunctionTest {
         Descriptors.Descriptor sinkDesc = TestMessage.getDescriptor();
 
         String mapping = "{"
-                + "\"order_number\": \"string(com.gotocompany.depot.TestTypesMessage.int32_value)\","
-                + "\"order_url\": \"string(com.gotocompany.depot.TestTypesMessage.int64_value)\","
-                + "\"order_details\": \"string(com.gotocompany.depot.TestTypesMessage.float_value)\""
+                + "\"order_number\": \"string(source.int32_value)\","
+                + "\"order_url\": \"string(source.int64_value)\","
+                + "\"order_details\": \"string(source.float_value)\""
                 + "}";
         ProtoMappingParser parser = new ProtoMappingParser(mapping, sourceDesc);
 

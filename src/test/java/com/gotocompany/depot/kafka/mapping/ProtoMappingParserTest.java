@@ -18,7 +18,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileDirectFieldAccessExpression() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -31,9 +31,9 @@ public class ProtoMappingParserTest {
     public void shouldCompileMultipleFieldMappings() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
         String mapping = "{"
-                + "\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\","
-                + "\"order_url\": \"com.gotocompany.depot.TestMessage.order_url\","
-                + "\"order_details\": \"com.gotocompany.depot.TestMessage.order_details\""
+                + "\"order_number\": \"source.order_number\","
+                + "\"order_url\": \"source.order_url\","
+                + "\"order_details\": \"source.order_details\""
                 + "}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
@@ -48,7 +48,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileStringConcatenationExpression() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number + '-suffix'\"}";
+        String mapping = "{\"order_number\": \"source.order_number + '-suffix'\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -69,8 +69,8 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileTernaryExpression() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number == '' "
-                + "? 'default' : com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number == '' "
+                + "? 'default' : source.order_number\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -80,8 +80,8 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileHasPresenceCheckExpression() {
         Descriptors.Descriptor descriptor = TestNestedMessage.getDescriptor();
-        String mapping = "{\"nested_id\": \"has(com.gotocompany.depot.TestNestedMessage.single_message) "
-                + "? com.gotocompany.depot.TestNestedMessage.nested_id : 'missing'\"}";
+        String mapping = "{\"nested_id\": \"has(source.single_message) "
+                + "? source.nested_id : 'missing'\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -91,7 +91,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileNestedFieldAccessExpression() {
         Descriptors.Descriptor descriptor = TestNestedMessage.getDescriptor();
-        String mapping = "{\"nested_id\": \"com.gotocompany.depot.TestNestedMessage.single_message.order_number\"}";
+        String mapping = "{\"nested_id\": \"source.single_message.order_number\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -101,7 +101,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileSizeExpression() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"string(com.gotocompany.depot.TestMessage.order_number.size())\"}";
+        String mapping = "{\"order_number\": \"string(source.order_number.size())\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -109,23 +109,23 @@ public class ProtoMappingParserTest {
     }
 
     @Test
-    public void shouldSetSourceBindingNameToFullProtoName() {
+    public void shouldSetSourceBindingNameToSourceConstant() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}";
+        String mapping = "{\"order_number\": \"source.order_number\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
-        assertEquals("com.gotocompany.depot.TestMessage", parser.getSourceBindingName());
+        assertEquals("source", parser.getSourceBindingName());
     }
 
     @Test
     public void shouldSetSourceBindingNameForNestedMessageDescriptor() {
         Descriptors.Descriptor descriptor = TestNestedMessage.getDescriptor();
-        String mapping = "{\"nested_id\": \"com.gotocompany.depot.TestNestedMessage.nested_id\"}";
+        String mapping = "{\"nested_id\": \"source.nested_id\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
-        assertEquals("com.gotocompany.depot.TestNestedMessage", parser.getSourceBindingName());
+        assertEquals("source", parser.getSourceBindingName());
     }
 
     @Test
@@ -149,7 +149,7 @@ public class ProtoMappingParserTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnUnknownFieldReference() {
         Descriptors.Descriptor descriptor = TestMessage.getDescriptor();
-        String mapping = "{\"order_number\": \"com.gotocompany.depot.TestMessage.nonexistent_field\"}";
+        String mapping = "{\"order_number\": \"source.nonexistent_field\"}";
 
         new ProtoMappingParser(mapping, descriptor);
     }
@@ -165,7 +165,7 @@ public class ProtoMappingParserTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnTypeMismatchExpression() {
         Descriptors.Descriptor descriptor = TestTypesMessage.getDescriptor();
-        String mapping = "{\"string_value\": \"com.gotocompany.depot.TestTypesMessage.int32_value + com.gotocompany.depot.TestTypesMessage.string_value\"}";
+        String mapping = "{\"string_value\": \"source.int32_value + source.string_value\"}";
 
         new ProtoMappingParser(mapping, descriptor);
     }
@@ -173,7 +173,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileBooleanExpression() {
         Descriptors.Descriptor descriptor = TestTypesMessage.getDescriptor();
-        String mapping = "{\"bool_value\": \"com.gotocompany.depot.TestTypesMessage.int32_value > 10\"}";
+        String mapping = "{\"bool_value\": \"source.int32_value > 10\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -183,7 +183,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileArithmeticExpression() {
         Descriptors.Descriptor descriptor = TestTypesMessage.getDescriptor();
-        String mapping = "{\"int32_value\": \"com.gotocompany.depot.TestTypesMessage.int32_value + 100\"}";
+        String mapping = "{\"int32_value\": \"source.int32_value + 100\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -193,7 +193,7 @@ public class ProtoMappingParserTest {
     @Test
     public void shouldCompileWithIntToStringConversion() {
         Descriptors.Descriptor descriptor = TestTypesMessage.getDescriptor();
-        String mapping = "{\"string_value\": \"string(com.gotocompany.depot.TestTypesMessage.uint32_value)\"}";
+        String mapping = "{\"string_value\": \"string(source.uint32_value)\"}";
 
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
@@ -208,7 +208,7 @@ public class ProtoMappingParserTest {
         ProtoMappingParser parser = new ProtoMappingParser(mapping, descriptor);
 
         assertTrue(parser.getCompiledPrograms().isEmpty());
-        assertEquals("com.gotocompany.depot.TestMessage", parser.getSourceBindingName());
+        assertEquals("source", parser.getSourceBindingName());
     }
 
 }

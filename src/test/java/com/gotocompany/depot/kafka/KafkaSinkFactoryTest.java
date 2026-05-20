@@ -94,7 +94,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkKafkaProtoKey()).thenReturn("");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn(
-                "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}");
+                "{\"order_number\": \"source.order_number\"}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
@@ -121,7 +121,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkKafkaProtoKey()).thenReturn("");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn(
-                "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}");
+                "{\"order_number\": \"source.order_number\"}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
@@ -148,7 +148,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkKafkaProtoKey()).thenReturn("com.gotocompany.depot.TestKey");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn(
-                "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}");
+                "{\"order_number\": \"source.order_number\"}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("com.gotocompany.depot.TestKey");
@@ -175,7 +175,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkKafkaProtoKey()).thenReturn("");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn(
-                "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}");
+                "{\"order_number\": \"source.order_number\"}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(true);
         when(kafkaSinkConfig.getSchemaRegistryStencilUrls()).thenReturn("http://sr:8081");
         when(kafkaSinkConfig.getSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
@@ -199,7 +199,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkKafkaProtoKey()).thenReturn("");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn(
-                "{\"order_number\": \"com.gotocompany.depot.TestMessage.order_number\"}");
+                "{\"order_number\": \"source.order_number\"}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");

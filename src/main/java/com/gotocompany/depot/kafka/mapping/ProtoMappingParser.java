@@ -15,11 +15,13 @@ import java.util.Map;
 
 public class ProtoMappingParser {
 
+    private static final String SOURCE_BINDING_NAME = "source";
+
     private final Map<String, CelRuntime.Program> compiledPrograms;
     private final String sourceBindingName;
 
     public ProtoMappingParser(String mappingJson, Descriptors.Descriptor sourceDescriptor) {
-        this.sourceBindingName = sourceDescriptor.getFullName();
+        this.sourceBindingName = SOURCE_BINDING_NAME;
         this.compiledPrograms = compile(mappingJson, sourceDescriptor);
     }
 
