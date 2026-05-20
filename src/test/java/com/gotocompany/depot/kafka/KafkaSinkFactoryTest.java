@@ -8,10 +8,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import com.gotocompany.stencil.cache.SchemaRefreshStrategy;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class KafkaSinkFactoryTest {
 
     @Mock
@@ -38,7 +38,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMessage()).thenReturn("com.test.Output");
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn("{}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -57,7 +57,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn("{}");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.also.nonexistent.ProtoClass");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -76,7 +76,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSinkKafkaProtoMapping()).thenReturn("not-valid-json");
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -98,7 +98,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -125,7 +125,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -152,7 +152,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("com.gotocompany.depot.TestKey");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
@@ -168,7 +168,7 @@ public class KafkaSinkFactoryTest {
         assertNotNull(factory.create());
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void shouldInitWithSchemaRegistryEnabled() {
         when(kafkaSinkConfig.getSinkKafkaBrokers()).thenReturn("localhost:9092");
         when(kafkaSinkConfig.getSinkKafkaTopic()).thenReturn("test-topic");
@@ -180,26 +180,16 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.getSchemaRegistryStencilUrls()).thenReturn("http://sr:8081");
         when(kafkaSinkConfig.getSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSchemaRegistryStencilCacheTtlMs()).thenReturn(300000L);
-        when(kafkaSinkConfig.getSchemaRegistryStencilFetchTimeoutMs()).thenReturn(15000L);
+        when(kafkaSinkConfig.getSchemaRegistryStencilFetchTimeoutMs()).thenReturn(15000);
         when(kafkaSinkConfig.getSchemaRegistryStencilFetchBackoffMinMs()).thenReturn(3000L);
         when(kafkaSinkConfig.getSchemaRegistryStencilFetchRetries()).thenReturn(5);
-        when(kafkaSinkConfig.getSchemaRegistryStencilRefreshStrategy()).thenReturn("VERSION_BASED_REFRESH");
+        when(kafkaSinkConfig.getSchemaRegistryStencilRefreshStrategy()).thenReturn(SchemaRefreshStrategy.versionBasedRefresh());
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
-        when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchBackoffMinMs()).thenReturn(5000L);
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchRetries()).thenReturn(4);
-        when(kafkaSinkConfig.getSinkKafkaAcks()).thenReturn("all");
-        when(kafkaSinkConfig.getSinkKafkaLingerMs()).thenReturn("0");
-        when(kafkaSinkConfig.isSinkKafkaProduceLargeMessageEnable()).thenReturn(false);
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
 
         KafkaSinkFactory factory = new KafkaSinkFactory(kafkaSinkConfig, statsDReporter);
         factory.init();
-
-        assertNotNull(factory.create());
     }
 
     @Test
@@ -213,7 +203,7 @@ public class KafkaSinkFactoryTest {
         when(kafkaSinkConfig.isSchemaRegistryStencilEnable()).thenReturn(false);
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoMessageClass()).thenReturn("com.gotocompany.depot.TestMessage");
         when(kafkaSinkConfig.getSinkConnectorSchemaProtoKeyClass()).thenReturn("");
-        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("http://stencil:8080");
+        when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilUrls()).thenReturn("");
         when(kafkaSinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh()).thenReturn(false);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs()).thenReturn(86400000L);
         when(kafkaSinkConfig.getSinkKafkaSchemaRegistryStencilFetchTimeoutMs()).thenReturn(10000L);

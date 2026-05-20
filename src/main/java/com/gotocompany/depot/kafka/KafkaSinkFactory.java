@@ -19,6 +19,8 @@ import java.util.Properties;
 
 public class KafkaSinkFactory {
 
+    private static final int MAX_REQUEST_SIZE = 20971520;
+
     private final KafkaSinkConfig sinkConfig;
     private final StatsDReporter statsDReporter;
 
@@ -92,7 +94,7 @@ public class KafkaSinkFactory {
         props.put(ProducerConfig.LINGER_MS_CONFIG, sinkConfig.getSinkKafkaLingerMs());
 
         if (sinkConfig.isSinkKafkaProduceLargeMessageEnable()) {
-            props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 20971520);
+            props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, MAX_REQUEST_SIZE);
             props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
         }
 
@@ -115,6 +117,10 @@ public class KafkaSinkFactory {
     }
 
     private StencilClient buildSinkStencilClient() {
+        String sinkStencilUrls = sinkConfig.getSinkKafkaSchemaRegistryStencilUrls();
+        if (sinkStencilUrls == null || sinkStencilUrls.isEmpty()) {
+            return StencilClientFactory.getClient();
+        }
         StencilConfig stencilConfig = StencilConfig.builder()
                 .cacheAutoRefresh(sinkConfig.isSinkKafkaSchemaRegistryStencilCacheAutoRefresh())
                 .cacheTtlMs(sinkConfig.getSinkKafkaSchemaRegistryStencilCacheTtlMs())
@@ -122,6 +128,6 @@ public class KafkaSinkFactory {
                 .fetchBackoffMinMs(sinkConfig.getSinkKafkaSchemaRegistryStencilFetchBackoffMinMs())
                 .fetchRetries((int) sinkConfig.getSinkKafkaSchemaRegistryStencilFetchRetries())
                 .build();
-        return StencilClientFactory.getClient(sinkConfig.getSinkKafkaSchemaRegistryStencilUrls(), stencilConfig);
+        return StencilClientFactory.getClient(sinkStencilUrls, stencilConfig);
     }
 }

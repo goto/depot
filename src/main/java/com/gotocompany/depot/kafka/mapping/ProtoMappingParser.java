@@ -5,6 +5,7 @@ import dev.cel.common.CelAbstractSyntaxTree;
 import dev.cel.common.types.StructTypeReference;
 import dev.cel.compiler.CelCompiler;
 import dev.cel.compiler.CelCompilerFactory;
+import dev.cel.parser.CelStandardMacro;
 import dev.cel.runtime.CelRuntime;
 import dev.cel.runtime.CelRuntimeFactory;
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ public class ProtoMappingParser {
         Map<String, CelRuntime.Program> programs = new HashMap<>();
 
         CelCompiler compiler = CelCompilerFactory.standardCelCompilerBuilder()
+                .setStandardMacros(CelStandardMacro.STANDARD_MACROS)
                 .addMessageTypes(sourceDescriptor)
                 .addVar(sourceBindingName, StructTypeReference.create(sourceDescriptor.getFullName()))
                 .build();
