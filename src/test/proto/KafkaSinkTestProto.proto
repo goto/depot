@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package com.gotocompany.depot.kafka.test;
+
+option java_multiple_files = true;
+option java_package = "com.gotocompany.depot.kafka.test";
+option java_outer_classname = "KafkaSinkTestProto";
+
+message KafkaSourceStatus {
+  string last_status = 1;
+}
+
+message KafkaSourceMessage {
+  int32 order_number = 1;
+  string account_go_id = 2;
+  KafkaSourceStatus status = 3;
+  repeated int32 order_list = 4;
+  string current_status = 5;
+}
+
+message KafkaSinkKey {
+  string key_order_id = 1;
+}
+
+message KafkaSinkMessage {
+  string order_id = 1;
+  string user_id = 2;
+  string approval_status = 3;
+  int32 service_area_id = 4;
+}
