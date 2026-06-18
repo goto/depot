@@ -15,11 +15,11 @@ import redis.clients.jedis.Pipeline;
  * One message after conversion for the Redis sink, pairing a writable entry with its bookkeeping.
  *
  * <p>A record is the unit the {@link com.gotocompany.depot.redis.RedisSink} works with. Successfully
- * parsed messages carry a non-null {@link RedisEntry} and are marked {@link #isValid() valid}, while
+ * parsed messages carry a non-null {@link RedisEntry} and are marked {@code valid}, while
  * messages that failed to parse carry a {@code null} entry, a populated {@link ErrorInfo} and are
- * marked invalid. The {@link #getIndex() index} ties the record back to the position of its source
+ * marked invalid. The {@code index} ties the record back to the position of its source
  * message in the batch so that errors can be reported against the right message, and the
- * {@link #getMetadata() metadata} provides a human-readable description used in logs.</p>
+ * {@code metadata} provides a human-readable description used in logs.</p>
  *
  * <p>The two {@code send} overloads simply delegate to the wrapped {@link RedisEntry} and are intended
  * to be called only for valid records.</p>

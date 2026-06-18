@@ -68,7 +68,7 @@ public class RedisSink implements Sink {
      * Converts a batch of messages into Redis records and writes the valid ones to Redis.
      *
      * <p>The supplied messages are first converted with the configured {@link RedisParser}. The
-     * resulting records are partitioned by {@link RedisRecord#isValid()}: invalid records (those that
+     * resulting records are partitioned by {@code RedisRecord#isValid()}: invalid records (those that
      * failed to parse) contribute their {@link ErrorInfo} to the response immediately, while valid
      * records are forwarded to {@link #send(List)}. Any errors returned for the valid records are
      * merged into the same response, and a successful write of a non-empty batch is logged.</p>
