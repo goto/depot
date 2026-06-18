@@ -10,8 +10,33 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
+/**
+ * Factory helpers for building Apache {@link CloseableHttpClient} instances used by Depot's HTTP
+ * sink.
+ *
+ * <p>{@code HttpClientUtils} centralizes the construction of a connection-pooled HTTP client whose
+ * timeouts and pool size are taken from an {@link HttpClientConfig}. When OAuth2 is enabled in
+ * configuration, the resulting client is additionally wired with an {@link OAuth2Credential}
+ * interceptor that attaches and refreshes bearer tokens automatically.
+ */
 public class HttpClientUtils {
 
+    /**
+     * Builds a connection-pooled Apache HTTP client configured from the supplied settings.
+     *
+     * <p>The socket, connection-request and connect timeouts are all set to the configured request
+     * timeout, and the connection pool's total and per-route maxima are set to the configured maximum
+     * connection count. When {@link HttpClientConfig#isHttpOAuth2Enable()} is {@code true}, an
+     * {@link OAuth2Credential} built from the configured client credentials, scope and token endpoint
+     * is registered as request and response interceptors so outbound requests carry a valid bearer
+     * token.
+     *
+     * @param config         the HTTP client configuration supplying timeouts, pool size and OAuth2
+     *                       settings
+     * @param statsDReporter the reporter used to instrument the OAuth2 credential when OAuth2 is
+     *                       enabled
+     * @return a newly built, ready-to-use {@link CloseableHttpClient}
+     */
     public static CloseableHttpClient newHttpClient(HttpClientConfig config, StatsDReporter statsDReporter) {
         Integer maxHttpConnections = config.getHttpMaxConnections();
         RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(config.getHttpRequestTimeoutMs())

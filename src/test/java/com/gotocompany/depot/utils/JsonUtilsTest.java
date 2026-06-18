@@ -11,15 +11,39 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link JsonUtils#getJsonObject(SinkConfig, byte[])}, covering JSON parsing under both
+ * string-mode settings.
+ *
+ * <p>The class runs with {@link MockitoJUnitRunner}, which injects a mock {@link SinkConfig} whose
+ * string-mode flag is stubbed per test by {@link #setSinkConfigs(boolean)}. When string mode is
+ * enabled every top-level value must be coerced to a string and nested objects are rejected; when it
+ * is disabled the payload is parsed unchanged, including nested objects.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class JsonUtilsTest {
+    /**
+     * Mock sink configuration whose JSON string-mode flag is stubbed per scenario.
+     */
     @Mock
     private SinkConfig sinkConfig;
 
+    /**
+     * Stubs the mock {@link SinkConfig} to report the given JSON string-mode setting.
+     *
+     * @param stringModeEnabled the value returned by
+     *                          {@link SinkConfig#getSinkConnectorSchemaJsonParserStringModeEnabled()}
+     */
     void setSinkConfigs(boolean stringModeEnabled) {
         when(sinkConfig.getSinkConnectorSchemaJsonParserStringModeEnabled()).thenReturn(stringModeEnabled);
     }
 
+    /**
+     * Verifies that a flat JSON of string values parses unchanged when string mode is enabled.
+     *
+     * <p>With string mode on, parses a payload whose values are all strings and asserts the result is
+     * similar to the original object, confirming already-string values are preserved.
+     */
     @Test
     public void shouldParseSimpleJsonWhenStringModeEnabled() {
         setSinkConfigs(true);
@@ -33,6 +57,13 @@ public class JsonUtilsTest {
         Assert.assertTrue(parsedJson.similar(expectedJson));
     }
 
+    /**
+     * Verifies that scalar values are coerced to strings when string mode is enabled.
+     *
+     * <p>Parses a payload containing an integer, a double and a boolean, and asserts each top-level
+     * value is converted to its string form (for example {@code 100} becomes {@code "100"} and
+     * {@code true} becomes {@code "true"}).
+     */
     @Test
     public void shouldCastAllTypeToStringWhenStringModeEnabled() {
         setSinkConfigs(true);
@@ -51,6 +82,14 @@ public class JsonUtilsTest {
         Assert.assertTrue(parsedJson.similar(stringJson));
     }
 
+    /**
+     * Verifies that a nested object is rejected when string mode is enabled.
+     *
+     * <p>Parses a payload whose value is itself a JSON object and asserts an
+     * {@link UnsupportedOperationException} carrying the message
+     * {@code "nested json structure not supported yet"} is thrown, since nested structures cannot be
+     * flattened to strings.
+     */
     @Test
     public void shouldThrowExceptionForNestedJsonWhenStringModeEnabled() {
         setSinkConfigs(true);
@@ -68,6 +107,12 @@ public class JsonUtilsTest {
         assertEquals("nested json structure not supported yet", exception.getMessage());
     }
 
+    /**
+     * Verifies that a flat JSON parses with its native value types when string mode is disabled.
+     *
+     * <p>With string mode off, parses a payload containing an integer, a double and a boolean and
+     * asserts the result is similar to the original object, confirming values keep their JSON types.
+     */
     @Test
     public void shouldParseSimpleJsonWhenStringModeDisabled() {
         setSinkConfigs(false);
@@ -81,6 +126,12 @@ public class JsonUtilsTest {
         Assert.assertTrue(parsedJson.similar(expectedJson));
     }
 
+    /**
+     * Verifies that nested objects are preserved when string mode is disabled.
+     *
+     * <p>With string mode off, parses a payload containing a nested object and asserts the result is
+     * similar to the original, confirming nested structures are retained rather than rejected.
+     */
     @Test
     public void shouldParseNestedJsonWhenStringModeDisabled() {
         setSinkConfigs(false);

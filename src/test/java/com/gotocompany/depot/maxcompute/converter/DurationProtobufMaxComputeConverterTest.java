@@ -15,13 +15,46 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Unit tests for {@link DurationProtobufMaxComputeConverter}, which maps the well-known Protobuf
+ * {@code google.protobuf.Duration} type onto a MaxCompute struct.
+ *
+ * <p>A duration is represented in MaxCompute as a {@code STRUCT<seconds:BIGINT,nanos:BIGINT>}. The suite uses
+ * the {@code TestRoot} and {@code TestRootRepeated} descriptors from the generated
+ * {@code TestMaxComputeTypeInfo} fixtures to drive the converter, and asserts on both the derived
+ * {@link TypeInfo} and the converted struct values for singular and repeated duration fields. Each test uses a
+ * real converter instance with no mocking.</p>
+ */
 public class DurationProtobufMaxComputeConverterTest {
 
+    /**
+     * Index of the singular {@code duration_field} within the {@code TestRoot} descriptor.
+     */
     private static final int DURATION_INDEX = 5;
+
+    /**
+     * Descriptor of the {@code TestRoot} fixture message, used to resolve the singular duration field.
+     */
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
+
+    /**
+     * The converter under test.
+     */
     private final DurationProtobufMaxComputeConverter durationProtobufMaxComputeConverter = new DurationProtobufMaxComputeConverter();
+
+    /**
+     * Descriptor of the {@code TestRootRepeated} fixture message, used to resolve the repeated duration field.
+     */
     private final Descriptors.Descriptor repeatedDescriptor = TestMaxComputeTypeInfo.TestRootRepeated.getDescriptor();
 
+    /**
+     * Verifies that the converter derives a {@code STRUCT<seconds:BIGINT,nanos:BIGINT>} type for a duration
+     * field.
+     *
+     * <p>Resolves the duration field descriptor and asserts that
+     * {@link DurationProtobufMaxComputeConverter#convertTypeInfo(ProtoPayload)} produces a struct type whose
+     * type name is {@code STRUCT<seconds:BIGINT,nanos:BIGINT>}.</p>
+     */
     @Test
     public void shouldConvertToStruct() {
         Descriptors.FieldDescriptor fieldDescriptor = descriptor.getFields().get(DURATION_INDEX);
@@ -31,6 +64,14 @@ public class DurationProtobufMaxComputeConverterTest {
         assertEquals("STRUCT<seconds:BIGINT,nanos:BIGINT>", typeInfo.getTypeName());
     }
 
+    /**
+     * Verifies that a singular duration value is converted to a MaxCompute struct.
+     *
+     * <p>Builds a {@code TestRoot} message carrying a duration of one second and one nanosecond, converts the
+     * field via {@link DurationProtobufMaxComputeConverter#convertPayload(ProtoPayload)}, and asserts the
+     * result is a {@code ReorderableStruct} with type {@code STRUCT<seconds:BIGINT,nanos:BIGINT>} and values
+     * {@code [1L, 1L]}.</p>
+     */
     @Test
     public void shouldConvertDurationPayloadToStruct() {
         Duration duration = Duration.newBuilder()
@@ -51,6 +92,14 @@ public class DurationProtobufMaxComputeConverterTest {
                 .containsExactly(TypeInfoFactory.getStructTypeInfo(expectedFieldNames, expectedTypeInfos), values);
     }
 
+    /**
+     * Verifies that a repeated duration field is converted to a list of MaxCompute structs.
+     *
+     * <p>Builds a {@code TestRootRepeated} message with two durations, converts the repeated field via
+     * {@link DurationProtobufMaxComputeConverter#convertPayload(ProtoPayload)}, and asserts the result is a
+     * two-element {@link java.util.List} whose entries are {@code ReorderableStruct}s holding the values
+     * {@code [1L, 1L]} and {@code [2L, 2L]} respectively.</p>
+     */
     @Test
     public void shouldConvertRepeatedDurationPayloadToStructList() {
         Duration duration1 = Duration.newBuilder()

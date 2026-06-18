@@ -21,21 +21,56 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link RedisListEntry}, the {@link RedisEntry} that writes a value to a Redis list
+ * via {@code LPUSH} and optionally applies a TTL to the key.
+ *
+ * <p>The tests run under {@link MockitoJUnitRunner} with a mocked {@link Instrumentation} and mocked
+ * Jedis {@link Pipeline} and {@link JedisCluster} targets. They cover both the cluster and standalone
+ * execution paths across a no-op TTL ({@link NoRedisTtl}) and a duration TTL ({@link DurationTtl}),
+ * asserting the combined status message, the debug logging of the written key and value, and the
+ * failure handling when a {@link JedisException} is raised by the command or the TTL call. One test
+ * also covers the {@link RedisListEntry#toString()} representation.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RedisListEntryTest {
+    /**
+     * Mocked instrumentation used to verify the debug logging of each write.
+     */
     @Mock
     private Instrumentation instrumentation;
+    /**
+     * Mocked standalone pipeline used to capture the queued commands.
+     */
     @Mock
     private Pipeline pipeline;
+    /**
+     * Mocked cluster connection used to capture the executed commands.
+     */
     @Mock
     private JedisCluster jedisCluster;
+    /**
+     * Instance under test, created in {@link #setup()} for key {@code "test-key"} and value
+     * {@code "test-value"}.
+     */
     private RedisListEntry redisListEntry;
 
+    /**
+     * Creates the {@link RedisListEntry} under test for key {@code "test-key"} and value
+     * {@code "test-value"}, wired with the mocked {@link Instrumentation}.
+     */
     @Before
     public void setup() {
         redisListEntry = new RedisListEntry("test-key", "test-value", instrumentation);
     }
 
+    /**
+     * Verifies a successful cluster write with no TTL.
+     *
+     * <p>Given the cluster {@code LPUSH} returning {@code 9} and a {@link NoRedisTtl}, when the entry
+     * is sent to the cluster, then the response is not failed, the key and value are logged once at
+     * debug level, and the message is {@code "LPUSH: 9, TTL: NoOp"}.</p>
+     */
     @Test
     public void shouldSentToRedisForCluster() {
         when(jedisCluster.lpush("test-key", "test-value")).thenReturn(9L);
@@ -45,6 +80,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: NoOp", clusterResponse.getMessage());
     }
 
+    /**
+     * Verifies a successful cluster write whose duration TTL is applied.
+     *
+     * <p>Given the cluster {@code LPUSH} returning {@code 9} and {@code EXPIRE} returning {@code 1}
+     * for a {@link DurationTtl} of {@code 1000}, when the entry is sent to the cluster, then the
+     * response is not failed and the message is {@code "LPUSH: 9, TTL: UPDATED"}.</p>
+     */
     @Test
     public void shouldSentToRedisForClusterWithTTL() {
         when(jedisCluster.lpush("test-key", "test-value")).thenReturn(9L);
@@ -55,6 +97,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: UPDATED", clusterResponse.getMessage());
     }
 
+    /**
+     * Verifies a successful cluster write whose duration TTL is not applied.
+     *
+     * <p>Given the cluster {@code LPUSH} returning {@code 9} and {@code EXPIRE} returning {@code 0}
+     * for a {@link DurationTtl} of {@code 1000}, when the entry is sent to the cluster, then the
+     * response is not failed and the message is {@code "LPUSH: 9, TTL: NOT UPDATED"}.</p>
+     */
     @Test
     public void shouldSentToRedisForClusterWithTTLNotUpdated() {
         when(jedisCluster.lpush("test-key", "test-value")).thenReturn(9L);
@@ -65,6 +114,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: NOT UPDATED", clusterResponse.getMessage());
     }
 
+    /**
+     * Verifies that a {@link JedisException} from the cluster command is reported as a failure.
+     *
+     * <p>Given the cluster {@code LPUSH} throwing a {@link JedisException} of
+     * {@code "jedis error occurred"}, when the entry is sent to the cluster, then the response is
+     * failed and the message is {@code "jedis error occurred"}.</p>
+     */
     @Test
     public void shouldReportFailedForJedisExceptionForCluster() {
         when(jedisCluster.lpush("test-key", "test-value")).thenThrow(new JedisException("jedis error occurred"));
@@ -73,6 +129,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("jedis error occurred", clusterResponse.getMessage());
     }
 
+    /**
+     * Verifies that a {@link JedisException} from the cluster TTL call is reported as a failure.
+     *
+     * <p>Given the cluster {@code LPUSH} succeeding but {@code EXPIRE} throwing a {@link JedisException}
+     * for a {@link DurationTtl} of {@code 1000}, when the entry is sent to the cluster, then the
+     * response is failed and the message is {@code "jedis error occurred"}.</p>
+     */
     @Test
     public void shouldReportFailedForJedisExceptionFromTTLForCluster() {
         when(jedisCluster.lpush("test-key", "test-value")).thenReturn(9L);
@@ -82,6 +145,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("jedis error occurred", clusterResponse.getMessage());
     }
 
+    /**
+     * Verifies the human-readable representation of the entry.
+     *
+     * <p>Given the entry for key {@code "test-key"} and value {@code "test-value"}, when
+     * {@link RedisListEntry#toString()} is called, then it returns
+     * {@code "RedisListEntry: Key test-key, Value test-value"}.</p>
+     */
     @Test
     public void shouldGetEntryToString() {
         String expected = "RedisListEntry: Key test-key, Value test-value";
@@ -89,6 +159,14 @@ public class RedisListEntryTest {
     }
 
 
+    /**
+     * Verifies a successful standalone write with no TTL.
+     *
+     * <p>Given the pipelined {@code LPUSH} resolving to {@code 9} and a {@link NoRedisTtl}, when the
+     * entry is sent through the pipeline and the deferred response is processed, then it is not failed,
+     * the key and value are logged once at debug level, and the message is
+     * {@code "LPUSH: 9, TTL: NoOp"}.</p>
+     */
     @Test
     public void shouldSentToRedisForStandAlone() {
         Response r = Mockito.mock(Response.class);
@@ -101,6 +179,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: NoOp", standaloneResponse.getMessage());
     }
 
+    /**
+     * Verifies a successful standalone write whose duration TTL is applied.
+     *
+     * <p>Given the pipelined {@code LPUSH} resolving to {@code 9} and {@code EXPIRE} to {@code 1} for a
+     * {@link DurationTtl} of {@code 1000}, when the entry is sent through the pipeline and processed,
+     * then it is not failed and the message is {@code "LPUSH: 9, TTL: UPDATED"}.</p>
+     */
     @Test
     public void shouldSentToRedisForStandaloneWithTTL() {
         Response r = Mockito.mock(Response.class);
@@ -116,6 +201,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: UPDATED", standaloneResponse.getMessage());
     }
 
+    /**
+     * Verifies a successful standalone write whose duration TTL is not applied.
+     *
+     * <p>Given the pipelined {@code LPUSH} resolving to {@code 9} and {@code EXPIRE} to {@code 0} for a
+     * {@link DurationTtl} of {@code 1000}, when the entry is sent through the pipeline and processed,
+     * then it is not failed and the message is {@code "LPUSH: 9, TTL: NOT UPDATED"}.</p>
+     */
     @Test
     public void shouldSentToRedisForStandaloneWithTTLNotUpdated() {
         Response r = Mockito.mock(Response.class);
@@ -131,6 +223,13 @@ public class RedisListEntryTest {
         Assert.assertEquals("LPUSH: 9, TTL: NOT UPDATED", standaloneResponse.getMessage());
     }
 
+    /**
+     * Verifies that a {@link JedisException} from the pipelined command is reported as a failure.
+     *
+     * <p>Given the pipelined {@code LPUSH} whose deferred result throws a {@link JedisException} of
+     * {@code "jedis error occurred"}, when the entry is sent through the pipeline and processed, then
+     * the response is failed and the message is {@code "jedis error occurred"}.</p>
+     */
     @Test
     public void shouldReportFailedForJedisExceptionForStandalone() {
         Response r = Mockito.mock(Response.class);
@@ -142,6 +241,14 @@ public class RedisListEntryTest {
         Assert.assertEquals("jedis error occurred", standaloneResponse.getMessage());
     }
 
+    /**
+     * Verifies that a {@link JedisException} from the pipelined TTL call is reported as a failure.
+     *
+     * <p>Given the pipelined {@code LPUSH} resolving to {@code 9} but the deferred {@code EXPIRE}
+     * throwing a {@link JedisException} for a {@link DurationTtl} of {@code 1000}, when the entry is
+     * sent through the pipeline and processed, then the response is failed and the message is
+     * {@code "jedis error occurred"}.</p>
+     */
     @Test
     public void shouldReportFailedForJedisExceptionFromTTLForStandalone() {
         Response r = Mockito.mock(Response.class);

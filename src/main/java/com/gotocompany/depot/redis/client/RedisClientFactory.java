@@ -18,11 +18,32 @@ import java.util.HashSet;
 
 /**
  * Redis client factory.
+ *
+ * <p>Based on {@link RedisSinkConfig#getSinkRedisDeploymentType()} it returns either a
+ * {@link RedisClusterClient} backed by a {@link JedisCluster} spanning the configured nodes, or a
+ * {@link RedisStandaloneClient} connected to a single host. The shared {@link RedisTtl} strategy is
+ * resolved once via {@link RedisTTLFactory} and passed to the cluster client.</p>
  */
 public class RedisClientFactory {
 
+    /**
+     * Separator used to split the configured comma-delimited list of Redis cluster node urls.
+     */
     private static final String DELIMITER = ",";
 
+    /**
+     * Creates the {@link RedisClient} matching the configured deployment type.
+     *
+     * <p>When {@link RedisSinkConfig#getSinkRedisDeploymentType()} is
+     * {@link RedisSinkDeploymentType#CLUSTER} a {@link RedisClusterClient} is built (see
+     * {@link #getRedisClusterClient(RedisTtl, RedisSinkConfig, StatsDReporter)}); otherwise a
+     * {@link RedisStandaloneClient} is returned. The TTL strategy shared by the client is resolved
+     * from the configuration via {@link RedisTTLFactory#getTTl(RedisSinkConfig)}.</p>
+     *
+     * @param redisSinkConfig the Redis sink configuration
+     * @param statsDReporter the reporter used to build the client's {@link Instrumentation}
+     * @return a standalone or cluster {@link RedisClient} depending on the configured deployment type
+     */
     public static RedisClient getClient(RedisSinkConfig redisSinkConfig, StatsDReporter statsDReporter) {
         RedisSinkDeploymentType redisSinkDeploymentType = redisSinkConfig.getSinkRedisDeploymentType();
         RedisTtl redisTTL = RedisTTLFactory.getTTl(redisSinkConfig);
@@ -32,6 +53,24 @@ public class RedisClientFactory {
     }
 
 
+    /**
+     * Builds a {@link RedisClusterClient} from the configured cluster node urls.
+     *
+     * <p>The comma-separated {@link RedisSinkConfig#getSinkRedisUrls()} value is split on
+     * {@link #DELIMITER}, each entry is trimmed and parsed into a {@link HostAndPort}, and the
+     * resulting set of nodes is used to construct a {@link JedisCluster} with the client configuration
+     * from {@link RedisSinkUtils#getJedisConfig(RedisSinkConfig)}, the configured maximum number of
+     * attempts and a default connection pool. The cluster client shares the supplied {@link RedisTtl}
+     * strategy.</p>
+     *
+     * @param redisTTL the TTL strategy applied to keys written through the cluster client
+     * @param redisSinkConfig the Redis sink configuration providing the node urls and connection
+     *     settings
+     * @param statsDReporter the reporter used to build the client's {@link Instrumentation}
+     * @return a configured {@link RedisClusterClient}
+     * @throws ConfigurationException if any of the configured urls cannot be parsed into a host and
+     *     port
+     */
     private static RedisClusterClient getRedisClusterClient(RedisTtl redisTTL, RedisSinkConfig redisSinkConfig, StatsDReporter statsDReporter) {
         String[] redisUrls = redisSinkConfig.getSinkRedisUrls().split(DELIMITER);
         HashSet<HostAndPort> nodes = new HashSet<>();

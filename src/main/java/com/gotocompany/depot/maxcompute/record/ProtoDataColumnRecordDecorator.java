@@ -28,22 +28,99 @@ import java.util.Optional;
 /**
  * Decorator to convert protobuf message to maxcompute record.
  * Populates the data column and partition column.
+ *
+ * <p>For each message this decorator parses the configured Protobuf class, optionally validates it
+ * for unknown fields, and copies every populated top-level field into the record using the
+ * {@link ProtobufConverterOrchestrator}. The field that backs a replacing partition column (when the
+ * partitioning strategy replaces the original column) is skipped, and empty or unset message/string
+ * fields are left out. Finally it resolves the record's {@link PartitionSpec} from the configured
+ * {@link PartitioningStrategy}.</p>
+ *
+ * <p>As the terminal link in the decorator chain it is typically created first and then optionally
+ * wrapped by a {@link ProtoMetadataColumnRecordDecorator}. Unknown-field validation latency and
+ * missing-partition occurrences are instrumented through {@link MaxComputeMetrics}.</p>
+ *
+ * @see RecordDecorator
+ * @see RecordDecoratorFactory
  */
 public class ProtoDataColumnRecordDecorator extends RecordDecorator {
 
+    /**
+     * Converts Protobuf field values into the corresponding MaxCompute column values.
+     */
     private final ProtobufConverterOrchestrator protobufConverterOrchestrator;
+    /**
+     * Parser used to decode the raw Depot message into a Protobuf message before conversion.
+     */
     private final MessageParser protoMessageParser;
+    /**
+     * Strategy that supplies the partition column and resolves per-record partition specifications,
+     * or {@code null} when partitioning is disabled.
+     */
     private final PartitioningStrategy partitioningStrategy;
+    /**
+     * Indicates whether the key or the log message carries the schema, controlling how the message is
+     * parsed.
+     */
     private final SinkConnectorSchemaMessageMode sinkConnectorSchemaMessageMode;
+    /**
+     * Name of the original Protobuf field used as the partition key, or {@code null} when there is no
+     * partitioning strategy.
+     */
     private final String partitionFieldName;
+    /**
+     * Whether the partition column replaces the original field, in which case that field is not also
+     * written as a data column.
+     */
     private final boolean shouldReplaceOriginalColumn;
+    /**
+     * Fully-qualified Protobuf class name used to parse the message, selected from configuration based
+     * on the schema message mode.
+     */
     private final String schemaClass;
+    /**
+     * Strategy describing how unknown Protobuf fields are detected during validation.
+     */
     private final ProtoUnknownFieldValidationType protoUnknownFieldValidationType;
+    /**
+     * Instrumentation handle used to emit latency and counter metrics for this decorator.
+     */
     private final Instrumentation instrumentation;
+    /**
+     * Holder of MaxCompute metric names and tags referenced when recording metrics.
+     */
     private final MaxComputeMetrics maxComputeMetrics;
+    /**
+     * When {@code true}, unknown-field validation is skipped and unknown fields are tolerated.
+     */
     private final boolean sinkConnectorSchemaProtoAllowUnknownFieldsEnable;
+    /**
+     * When {@code true}, the duration of unknown-field validation is measured and reported.
+     */
     private final boolean sinkConnectorSchemaProtoUnknownFieldsValidationInstrumentationEnable;
 
+    /**
+     * Creates a data-column decorator wired with the converters, parser, and configuration it needs
+     * to populate records.
+     *
+     * <p>The constructor derives several cached values from the configuration: the schema message
+     * mode, the original partition field name and whether it should be replaced (both obtained from
+     * the partitioning strategy when present), the Protobuf schema class, the unknown-field
+     * validation type, and the unknown-field handling flags. It also creates the {@link Instrumentation}
+     * used for metrics.</p>
+     *
+     * @param decorator the next decorator in the chain, or {@code null} if this decorator terminates
+     *        the chain
+     * @param protobufConverterOrchestrator orchestrator used to convert Protobuf field values into
+     *        MaxCompute column values
+     * @param messageParser parser used to decode the raw message into a Protobuf message
+     * @param sinkConfig sink configuration providing the schema message mode, Protobuf schema classes,
+     *        and unknown-field handling flags
+     * @param partitioningStrategy strategy used to derive the partition specification, or {@code null}
+     *        when the table is not partitioned
+     * @param statsDReporter reporter backing the {@link Instrumentation} used for metrics
+     * @param maxComputeMetrics holder of MaxCompute metric names and tags
+     */
     public ProtoDataColumnRecordDecorator(RecordDecorator decorator,
                                           ProtobufConverterOrchestrator protobufConverterOrchestrator,
                                           MessageParser messageParser,
@@ -73,6 +150,15 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
 
     /**
      * Converts protobuf message to maxcompute record, populating the data column and partition column.
+     *
+     * <p>The message is first parsed into a Protobuf message using the configured schema class and
+     * message mode. Unless unknown fields are explicitly allowed, the parsed message is validated for
+     * unknown fields; when validation instrumentation is enabled the validation latency is recorded.
+     * Each populated top-level field is then written to the record, except: the original partition
+     * field when the partitioning strategy replaces it, fields whose string representation is empty,
+     * and non-repeated message or string fields that are not actually set. Field values are converted
+     * via the {@link ProtobufConverterOrchestrator}. Finally the partition specification is resolved
+     * from the message and record.</p>
      *
      * @param recordWrapper record template to be populated
      * @param message protobuf raw message
@@ -115,6 +201,20 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);
     }
 
+    /**
+     * Resolves the {@link PartitionSpec} for the record according to the active partitioning strategy.
+     *
+     * <p>For a {@link DefaultPartitioningStrategy} the spec is derived from the value of the original
+     * partition field in the Protobuf message (or {@code null} when the field is unset). For a
+     * {@link TimestampPartitioningStrategy} the spec is generated from the already-populated record.
+     * If the resolved partition value is absent or equal to the default {@code __NULL__} placeholder,
+     * a missing-partition counter is incremented through {@link MaxComputeMetrics}.</p>
+     *
+     * @param recordWrapper the wrapper whose record is used by timestamp-based partitioning
+     * @param protoMessage the parsed Protobuf message used by value-based partitioning
+     * @return the resolved partition specification, or {@code null} when no partitioning strategy is
+     *         configured or none applies
+     */
     private @Nullable PartitionSpec getPartitionSpec(RecordWrapper recordWrapper, com.google.protobuf.Message protoMessage) {
         PartitionSpec partitionSpec = null;
         if (partitioningStrategy != null && partitioningStrategy instanceof DefaultPartitioningStrategy) {

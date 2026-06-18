@@ -17,8 +17,19 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Unit tests for {@link BigqueryFields#generateBigquerySchema}, which converts a tree of
+ * {@link ProtoField}s into a list of BigQuery {@link Field}s.
+ *
+ * <p>The tests build {@link ProtoField} trees with {@link TestProtoUtil} and assert that the produced
+ * BigQuery fields have the expected names, modes ({@code NULLABLE} or {@code REPEATED}) and types.
+ * This includes the mapping of every integer Protobuf type to {@code INTEGER}, recursive handling of
+ * nested and multi-nested messages, and the special handling of the well-known timestamp, struct,
+ * duration and date types.</p>
+ */
 public class BigqueryFieldsTest {
 
+    /** Maps the simple Protobuf scalar types to their expected BigQuery {@link LegacySQLTypeName}. */
     private final Map<DescriptorProtos.FieldDescriptorProto.Type, LegacySQLTypeName> expectedType = new HashMap<DescriptorProtos.FieldDescriptorProto.Type, LegacySQLTypeName>() {{
         put(DescriptorProtos.FieldDescriptorProto.Type.TYPE_BYTES, LegacySQLTypeName.BYTES);
         put(DescriptorProtos.FieldDescriptorProto.Type.TYPE_STRING, LegacySQLTypeName.STRING);
@@ -28,6 +39,13 @@ public class BigqueryFieldsTest {
         put(DescriptorProtos.FieldDescriptorProto.Type.TYPE_FLOAT, LegacySQLTypeName.FLOAT);
     }};
 
+    /**
+     * Verifies that a flat set of scalar fields converts to nullable BigQuery fields of matching type.
+     *
+     * <p>Given six scalar proto fields (bytes, string, bool, enum, double and float), when the schema
+     * is generated, then each BigQuery field is {@code NULLABLE}, keeps its name and maps to the
+     * expected type from {@code expectedType}.</p>
+     */
     @Test
     public void shouldTestConvertToSchemaSuccessful() {
         List<ProtoField> nestedBQFields = new ArrayList<>();
@@ -49,6 +67,13 @@ public class BigqueryFieldsTest {
                 });
     }
 
+    /**
+     * Verifies that every Protobuf integer type maps to a nullable BigQuery {@code INTEGER}.
+     *
+     * <p>Given proto fields for all ten integer variants (int64/uint64/int32/uint32, the fixed and
+     * sfixed forms and the sint forms), when the schema is generated, then each field is
+     * {@code NULLABLE}, keeps its name and maps to {@link LegacySQLTypeName#INTEGER}.</p>
+     */
     @Test
     public void shouldTestShouldConvertIntegerDataTypes() {
         List<DescriptorProtos.FieldDescriptorProto.Type> allIntTypes = new ArrayList<DescriptorProtos.FieldDescriptorProto.Type>() {{
@@ -80,6 +105,13 @@ public class BigqueryFieldsTest {
     }
 
 
+    /**
+     * Verifies that a single level of message nesting becomes a BigQuery record with sub-fields.
+     *
+     * <p>Given a message field with two nested string fields alongside a top-level scalar, when the
+     * schema is generated, then the scalar maps to a string field and the message maps to a
+     * {@link LegacySQLTypeName#RECORD} carrying the two nested string sub-fields.</p>
+     */
     @Test
     public void shouldTestShouldConvertNestedField() {
         List<ProtoField> nestedBQFields = new ArrayList<>();
@@ -111,6 +143,13 @@ public class BigqueryFieldsTest {
     }
 
 
+    /**
+     * Verifies recursive conversion of multiple levels of message nesting.
+     *
+     * <p>Given a message containing further message fields that each embed the same two nested string
+     * fields, when the schema is generated, then the nested records preserve their sub-field counts at
+     * every level and the deepest fields convert as expected.</p>
+     */
     @Test
     public void shouldTestShouldConvertMultiNestedFields() {
         List<ProtoField> nestedBQFields = new ArrayList<ProtoField>() {{
@@ -168,6 +207,12 @@ public class BigqueryFieldsTest {
         assertMultipleFields(nestedBQFields, fields.get(1).getSubFields().get(3).getSubFields());
     }
 
+    /**
+     * Verifies that the well-known timestamp message maps to a BigQuery {@code TIMESTAMP}.
+     *
+     * <p>Given a single timestamp-typed message field, when the schema is generated, then the field is
+     * a {@code NULLABLE} {@link LegacySQLTypeName#TIMESTAMP}.</p>
+     */
     @Test
     public void shouldTestConvertToSchemaForTimestamp() {
         ProtoField protoField = TestProtoUtil.createProtoField(new ArrayList<ProtoField>() {{
@@ -184,6 +229,14 @@ public class BigqueryFieldsTest {
     }
 
 
+    /**
+     * Verifies conversion of the special struct, bytes, duration and date types.
+     *
+     * <p>Given a struct field, a bytes field and the well-known duration and date messages, when the
+     * schema is generated, then the struct maps to {@link LegacySQLTypeName#STRING}, the bytes to
+     * {@link LegacySQLTypeName#BYTES}, and the duration and date each to a
+     * {@link LegacySQLTypeName#RECORD} with their respective integer sub-fields.</p>
+     */
     @Test
     public void shouldTestConvertToSchemaForSpecialFields() {
         ProtoField protoField = TestProtoUtil.createProtoField(new ArrayList<ProtoField>() {{
@@ -252,6 +305,12 @@ public class BigqueryFieldsTest {
         assertBqField("day", LegacySQLTypeName.INTEGER, Field.Mode.NULLABLE, fields.get(3).getSubFields().get(2));
     }
 
+    /**
+     * Verifies that repeated scalar fields map to repeated BigQuery columns.
+     *
+     * <p>Given a repeated int32 field and a repeated string field, when the schema is generated, then
+     * each maps to a {@link Field.Mode#REPEATED} column of the corresponding type.</p>
+     */
     @Test
     public void shouldTestConvertToSchemaForRepeatedFields() {
         ProtoField protoField = TestProtoUtil.createProtoField(new ArrayList<ProtoField>() {{
@@ -271,6 +330,13 @@ public class BigqueryFieldsTest {
         assertBqField(protoField.getFields().get(1).getName(), LegacySQLTypeName.STRING, Field.Mode.REPEATED, fields.get(1));
     }
 
+    /**
+     * Asserts that each BigQuery field matches the name, type and {@code NULLABLE} mode of the
+     * corresponding proto field.
+     *
+     * @param pfields  the expected proto fields, in order
+     * @param bqFields the produced BigQuery fields to verify against {@code pfields}
+     */
     public void assertMultipleFields(List<ProtoField> pfields, List<Field> bqFields) {
         IntStream.range(0, bqFields.size())
                 .forEach(index -> {
@@ -278,6 +344,14 @@ public class BigqueryFieldsTest {
                 });
     }
 
+    /**
+     * Asserts that a BigQuery field has the expected name, type and mode.
+     *
+     * @param name  the expected field name
+     * @param ftype the expected BigQuery type
+     * @param mode  the expected field mode
+     * @param bqf   the BigQuery field under assertion
+     */
     public void assertBqField(String name, LegacySQLTypeName ftype, Field.Mode mode, Field bqf) {
         assertEquals(mode, bqf.getMode());
         assertEquals(name, bqf.getName());

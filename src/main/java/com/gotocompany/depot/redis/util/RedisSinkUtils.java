@@ -13,7 +13,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+/**
+ * Static helpers shared across the Redis sink for error mapping and client configuration.
+ *
+ * <p>It translates per-record responses and connection-level failures into the {@link ErrorInfo} map
+ * keyed by message index that the sink reports, and builds the {@link DefaultJedisClientConfig} used
+ * to open Jedis connections from the sink configuration.</p>
+ */
 public class RedisSinkUtils {
+    /**
+     * Maps the failed responses of a batch to per-message errors.
+     *
+     * <p>The {@code responses} list is iterated positionally against {@code redisRecords}; for every
+     * response whose {@link RedisResponse#isFailed()} is {@code true} the matching record is logged
+     * and an {@link ErrorInfo} of type {@link ErrorType#DEFAULT_ERROR} (wrapping the response message)
+     * is stored under the record's index. Successful responses contribute nothing.</p>
+     *
+     * @param redisRecords the records that were sent, aligned by position with {@code responses}
+     * @param responses the per-record responses returned by the client
+     * @param instrumentation the instrumentation used to log each failure
+     * @return a map from message index to {@link ErrorInfo} for each failed response; empty when all
+     *     responses succeeded
+     */
     public static Map<Long, ErrorInfo> getErrorsFromResponse(List<RedisRecord> redisRecords, List<RedisResponse> responses, Instrumentation instrumentation) {
         Map<Long, ErrorInfo> errors = new HashMap<>();
         IntStream.range(0, responses.size()).forEach(
@@ -30,6 +51,18 @@ public class RedisSinkUtils {
         return errors;
     }
 
+    /**
+     * Marks every record of a batch as failed with a non-retryable error.
+     *
+     * <p>Used when the client throws before producing per-record responses (for example a connection
+     * failure). Each record is logged and associated with an {@link ErrorInfo} of type
+     * {@link ErrorType#SINK_NON_RETRYABLE_ERROR} wrapping the exception's message.</p>
+     *
+     * @param redisRecords the records that could not be written
+     * @param e the exception that caused the whole batch to fail
+     * @param instrumentation the instrumentation used to log each failure
+     * @return a map from message index to a non-retryable {@link ErrorInfo} for every record
+     */
     public static Map<Long, ErrorInfo> getNonRetryableErrors(List<RedisRecord> redisRecords, RuntimeException e, Instrumentation instrumentation) {
         Map<Long, ErrorInfo> errors = new HashMap<>();
         for (RedisRecord record : redisRecords) {
@@ -42,6 +75,15 @@ public class RedisSinkUtils {
     }
 
 
+    /**
+     * Builds the Jedis client configuration from the sink configuration.
+     *
+     * <p>Applies the configured connection and socket timeouts and the authentication username and
+     * password to a {@link DefaultJedisClientConfig}.</p>
+     *
+     * @param config the Redis sink configuration
+     * @return a {@link DefaultJedisClientConfig} carrying the configured timeouts and credentials
+     */
     public static DefaultJedisClientConfig getJedisConfig(RedisSinkConfig config) {
         return DefaultJedisClientConfig.builder()
                 .connectionTimeoutMillis(config.getSinkRedisConnectionTimeoutMs())

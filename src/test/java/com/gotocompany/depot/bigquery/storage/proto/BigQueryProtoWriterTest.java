@@ -19,13 +19,36 @@ import org.mockito.Mockito;
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Unit tests for {@link BigQueryProtoWriter}, the BigQuery Storage Write API stream-writer wrapper.
+ *
+ * <p>The fixture builds the writer through {@link BigQueryWriterFactory} with a mocked
+ * {@link BigQueryWriteClient}, {@link CredentialsProvider} and {@link StreamWriter}, stubbing the
+ * write stream to return a fixed {@link TableSchema}. The tests assert that {@code init} derives the
+ * protobuf descriptor from the table schema, that {@code appendAndGet} forwards rows to the stream
+ * writer, that {@code checkAndRefreshConnection} recreates the writer when the schema changes or the
+ * writer is closed, and that the appropriate operation, latency and payload-size metrics are
+ * emitted.</p>
+ */
 public class BigQueryProtoWriterTest {
+    /** Mocked Storage Write API stream writer wrapped by the writer under test. */
     private final StreamWriter writer = Mockito.mock(StreamWriter.class);
+    /** Mocked instrumentation used to verify metrics and logging. */
     private final Instrumentation instrumentation = Mockito.mock(Instrumentation.class);
+    /** Mocked sink configuration supplying project, dataset and table identifiers. */
     private final BigQuerySinkConfig config = Mockito.mock(BigQuerySinkConfig.class);
+    /** Mocked metrics provider supplying operation, latency and payload metric names. */
     private final BigQueryMetrics metrics = Mockito.mock(BigQueryMetrics.class);
+    /** Writer under test, created via {@link BigQueryWriterFactory} and initialized in {@link #setup()}. */
     private BigQueryProtoWriter bigQueryWriter;
 
+    /**
+     * Builds and initializes the writer under test against a mocked stream and a two-field schema.
+     *
+     * <p>Stubs the configuration and metrics, wires a {@link BigQueryProtoStream} around the mocked
+     * {@link StreamWriter}, returns a {@link TableSchema} with a nullable string and a repeated int64
+     * field from the write stream, and calls {@code init} on the created writer.</p>
+     */
     @Before
     public void setup() {
         Mockito.when(config.getSinkConnectorSchemaDataType()).thenReturn(SinkConnectorSchemaDataType.PROTOBUF);
@@ -56,6 +79,12 @@ public class BigQueryProtoWriterTest {
         bigQueryWriter.init();
     }
 
+    /**
+     * Verifies that initialization derives the descriptor from the table schema.
+     *
+     * <p>After {@code init}, asserts that the stream writer is exposed and the descriptor's fields
+     * match the schema: a non-repeated string {@code field1} and a repeated int64 {@code field2}.</p>
+     */
     @Test
     public void shouldInitStreamWriter() {
         Descriptors.Descriptor descriptor = bigQueryWriter.getDescriptor();
@@ -68,6 +97,15 @@ public class BigQueryProtoWriterTest {
         Assert.assertTrue(descriptor.getFields().get(1).isRepeated());
     }
 
+    /**
+     * Verifies that appending a payload forwards the rows and returns the response.
+     *
+     * <p>Given a payload wrapping {@link ProtoRows} and a stream writer whose append future resolves to
+     * a response, when {@code appendAndGet} runs, then the returned response is the one produced by the
+     * stream writer.</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldAppendAndGet() throws Exception {
         ProtoRows rows = Mockito.mock(ProtoRows.class);
@@ -81,6 +119,17 @@ public class BigQueryProtoWriterTest {
         Assert.assertEquals(apiResponse, appendRowsResponse);
     }
 
+    /**
+     * Verifies that the stream writer is recreated when an updated schema is detected.
+     *
+     * <p>Given an updated three-field {@link TableSchema} reported by the writer, when
+     * {@code checkAndRefreshConnection} then {@code appendAndGet} run, then the previous writer is
+     * closed, the new descriptor exposes all three fields, the response is returned and the
+     * schema-update log message is emitted.</p>
+     *
+     * @throws ExecutionException   if resolving the append future fails
+     * @throws InterruptedException if waiting on the append future is interrupted
+     */
     @Test
     public void shouldRecreateStreamWriter() throws ExecutionException, InterruptedException {
         //check previous schema
@@ -131,6 +180,15 @@ public class BigQueryProtoWriterTest {
         Mockito.verify(instrumentation, Mockito.times(1)).logInfo("Updated table schema detected, recreating stream writer");
     }
 
+    /**
+     * Verifies that append operations emit the stream-writer-append metrics.
+     *
+     * <p>Given a successful append, when {@code appendAndGet} runs, then the operation counter and the
+     * latency timer are each recorded once with the table, dataset, project and
+     * {@code STREAM_WRITER_APPEND} API tags.</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldCaptureMetricsForStreamWriterAppend() throws Exception {
         ProtoRows rows = Mockito.mock(ProtoRows.class);
@@ -163,6 +221,15 @@ public class BigQueryProtoWriterTest {
                 Mockito.eq(apiTag));
     }
 
+    /**
+     * Verifies that the writer is created once when no updated schema is available.
+     *
+     * <p>Given no updated schema reported, when {@code appendAndGet} runs, then no schema-update log is
+     * emitted and the {@code STREAM_WRITER_CREATED} operation counter and latency timer are each
+     * recorded once (from {@code init}).</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldCaptureMetricsForStreamWriterCreatedOnceWhenUpdatedSchemaIsNotAvailable() throws Exception {
         ProtoRows rows = Mockito.mock(ProtoRows.class);
@@ -195,6 +262,16 @@ public class BigQueryProtoWriterTest {
                 Mockito.eq(apiTag));
     }
 
+    /**
+     * Verifies that the writer is created twice when an updated schema triggers recreation.
+     *
+     * <p>Given an updated schema reported, when {@code checkAndRefreshConnection} then
+     * {@code appendAndGet} run, then the schema-update log is emitted once and the
+     * {@code STREAM_WRITER_CREATED} operation counter and latency timer are each recorded twice (init
+     * plus recreation).</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldCaptureMetricsForStreamWriterCreatedTwiceWhenUpdatedSchemaIsAvailable() throws Exception {
         TableSchema newSchema = TableSchema.newBuilder()
@@ -247,6 +324,15 @@ public class BigQueryProtoWriterTest {
                 Mockito.eq(apiTag));
     }
 
+    /**
+     * Verifies that closing the old writer during recreation emits the closed metric.
+     *
+     * <p>Given an updated schema reported, when {@code checkAndRefreshConnection} then
+     * {@code appendAndGet} run, then the schema-update log is emitted once and the
+     * {@code STREAM_WRITER_CLOSED} operation counter and latency timer are each recorded once.</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldCaptureMetricsForStreamWriterClosedWhenUpdatedSchemaIsAvailable() throws Exception {
         TableSchema newSchema = TableSchema.newBuilder()
@@ -299,6 +385,14 @@ public class BigQueryProtoWriterTest {
                 Mockito.eq(apiTag));
     }
 
+    /**
+     * Verifies that appending records the BigQuery payload-size metric.
+     *
+     * <p>Given a successful append, when {@code appendAndGet} runs, then the payload-size count is
+     * captured once with the table, dataset and project tags.</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldCaptureBigqueryPayloadSizeMetrics() throws Exception {
         ProtoRows rows = Mockito.mock(ProtoRows.class);
@@ -322,6 +416,15 @@ public class BigQueryProtoWriterTest {
                 Mockito.eq(projectId));
     }
 
+    /**
+     * Verifies that a closed stream writer is recreated on connection refresh.
+     *
+     * <p>Given the stream writer reporting itself as closed, when {@code checkAndRefreshConnection}
+     * then {@code appendAndGet} run, then the {@code STREAM_WRITER_CREATED} operation counter and
+     * latency timer are each recorded twice (once for {@code init} and once for the recreation).</p>
+     *
+     * @throws Exception if the append future cannot be resolved
+     */
     @Test
     public void shouldRecreateUnRecoverableStreamWriter() throws Exception {
         Mockito.when(writer.isClosed()).thenReturn(true);

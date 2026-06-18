@@ -21,23 +21,69 @@ import com.gotocompany.depot.utils.MessageConfigUtils;
 
 import java.io.IOException;
 
+/**
+ * Factory that builds and wires a {@link BigTableSink}.
+ *
+ * <p>Construction follows Depot's two-phase pattern. The factory is created from a
+ * {@link BigTableSinkConfig} and a {@link StatsDReporter}; {@link #init()} then establishes the
+ * Bigtable connection and assembles the schema, client, parser and metrics, validating the target
+ * table's schema in the process; finally {@link #create()} returns a ready {@link Sink}. Any failure
+ * during {@link #init()} is surfaced as a {@link ConfigurationException}.</p>
+ *
+ * @see BigTableSink
+ * @see BigTableClient
+ */
 public class BigTableSinkFactory {
+    /** Bigtable sink configuration (project, instance, table, credentials and mappings). */
     private final BigTableSinkConfig sinkConfig;
+    /** Reporter used to build instrumentation and the message parser. */
     private final StatsDReporter statsDReporter;
+    /** Client created by {@link #init()} and shared with the created sink. */
     private BigTableClient bigTableClient;
+    /** Record parser created by {@link #init()} and shared with the created sink. */
     private BigTableRecordParser bigTableRecordParser;
+    /** Bigtable metric names and tags created by {@link #init()}. */
     private BigTableMetrics bigtableMetrics;
 
+    /**
+     * Creates a factory from Bigtable configuration and a metrics reporter.
+     *
+     * @param sinkConfig the Bigtable sink configuration
+     * @param statsDReporter the reporter used for metrics and to build the message parser
+     */
     public BigTableSinkFactory(BigTableSinkConfig sinkConfig, StatsDReporter statsDReporter) {
         this.sinkConfig = sinkConfig;
         this.statsDReporter = statsDReporter;
     }
 
+    /**
+     * Creates a factory that emits no metrics, using a no-op StatsD client.
+     *
+     * <p>Delegates to {@link #BigTableSinkFactory(BigTableSinkConfig, StatsDReporter)} with a
+     * {@link StatsDReporter} backed by a {@link com.timgroup.statsd.NoOpStatsDClient}.</p>
+     *
+     * @param sinkConfig the Bigtable sink configuration
+     */
     public BigTableSinkFactory(BigTableSinkConfig sinkConfig) {
         this(sinkConfig, new StatsDReporter(new NoOpStatsDClient()));
     }
 
 
+    /**
+     * Establishes the Bigtable connection and assembles the sink's collaborators.
+     *
+     * <p>Logs the effective Bigtable configuration, then builds the {@link BigTableSchema} from the
+     * configured column-family mapping, the {@link BigTableMetrics}, and the {@link BigTableClient}.
+     * The target table's schema is validated via {@link BigTableClient#validateBigTableSchema()} so a
+     * missing table or missing column families fail fast. It then resolves the schema message mode and
+     * the {@link MessageParser}, compiles the row-key {@link Template} into a
+     * {@link BigTableRowKeyParser}, and constructs the {@link BigTableRecordParser}. Must be called once
+     * before {@link #create()}.</p>
+     *
+     * @throws ConfigurationException if the Bigtable connection cannot be created or the row-key
+     *     template is invalid, wrapping the underlying {@link java.io.IOException} or
+     *     {@link InvalidTemplateException}
+     */
     public void init() {
         try {
             Instrumentation instrumentation = new Instrumentation(statsDReporter, BigTableSinkFactory.class);
@@ -72,6 +118,15 @@ public class BigTableSinkFactory {
         }
     }
 
+    /**
+     * Builds a new {@link BigTableSink} from the collaborators assembled by {@link #init()}.
+     *
+     * <p>Each returned sink gets its own {@link Instrumentation} bound to {@link BigTableSink} and
+     * shares the client, parser and metrics created during {@link #init()}, which must have been called
+     * first.</p>
+     *
+     * @return a ready-to-use {@link Sink} that writes records to Bigtable
+     */
     public Sink create() {
         return new BigTableSink(
                 bigTableClient,

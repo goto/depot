@@ -17,21 +17,72 @@ import com.gotocompany.depot.utils.MessageConfigUtils;
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.gotocompany.depot.Sink;
 
+/**
+ * Factory that wires together and builds {@link RedisSink} instances from a {@link RedisSinkConfig}.
+ *
+ * <p>The factory is constructed once, and {@link #init()} is called a single time to validate the
+ * configuration and build the shared, reusable {@link RedisParser} (the message parser plus the
+ * data-type specific {@link RedisEntryParser}). {@link #create()} is then invoked once per worker to
+ * produce a ready-to-use {@link Sink}; each call builds a fresh, non-thread-safe {@link RedisClient}
+ * so that every worker owns an independent Jedis connection.</p>
+ *
+ * @see RedisSink
+ * @see RedisClientFactory
+ * @see RedisEntryParserFactory
+ */
 public class RedisSinkFactory {
+    /**
+     * Configuration describing the Redis deployment, key template, data type and TTL settings.
+     */
     private final RedisSinkConfig sinkConfig;
+    /**
+     * Reporter used to build {@link Instrumentation} for the factory, sink and client.
+     */
     private final StatsDReporter statsDReporter;
+    /**
+     * Shared parser built once by {@link #init()} and reused by every {@link RedisSink} created.
+     */
     private RedisParser redisParser;
 
+    /**
+     * Creates a factory that emits metrics through the supplied reporter.
+     *
+     * @param sinkConfig the Redis sink configuration
+     * @param statsDReporter the StatsD reporter used for instrumentation
+     */
     public RedisSinkFactory(RedisSinkConfig sinkConfig, StatsDReporter statsDReporter) {
         this.sinkConfig = sinkConfig;
         this.statsDReporter = statsDReporter;
     }
 
+    /**
+     * Creates a factory that discards all metrics.
+     *
+     * <p>Instrumentation is backed by a {@link NoOpStatsDClient}, so every metric emission is silently
+     * dropped. This overload is convenient for tests or deployments that do not collect StatsD
+     * metrics.</p>
+     *
+     * @param sinkConfig the Redis sink configuration
+     */
     public RedisSinkFactory(RedisSinkConfig sinkConfig) {
         this.sinkConfig = sinkConfig;
         this.statsDReporter = new StatsDReporter(new NoOpStatsDClient());
     }
 
+    /**
+     * Validates the configuration and builds the reusable {@link RedisParser} shared by every sink.
+     *
+     * <p>The method logs a summary of the resolved Redis configuration (urls, key template, data
+     * type, deployment type and TTL settings), augmented with the field configuration specific to the
+     * configured data type ({@code LIST}, {@code KEYVALUE} or {@code HASHSET}). It then builds the
+     * {@link MessageParser} via {@link MessageParserFactory}, resolves the message mode and schema
+     * with {@link MessageConfigUtils}, creates the data-type specific {@link RedisEntryParser} through
+     * {@link RedisEntryParserFactory}, and combines them into the {@link RedisParser} stored on this
+     * factory.</p>
+     *
+     * @throws IllegalArgumentException if any exception occurs while building the parser; the original
+     *     exception is preserved as the cause
+     */
     public void init() {
         try {
             Instrumentation instrumentation = new Instrumentation(statsDReporter, RedisSinkFactory.class);
@@ -69,6 +120,11 @@ public class RedisSinkFactory {
 
     /**
      * We create redis client for each create call, because it's not thread safe.
+     *
+     * <p>A new {@link RedisClient} is created for every call because the underlying Jedis client is
+     * not thread safe; each returned sink therefore owns an independent connection. The client is
+     * initialised via {@link RedisClient#init()} before being wrapped, together with the shared
+     * {@link RedisParser} built in {@link #init()}, into a new {@link RedisSink}.</p>
      *
      * @return RedisSink
      */

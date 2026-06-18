@@ -54,17 +54,76 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link ProtoMessageRecordConverter}, which turns a batch of {@link Message}s into
+ * {@link RecordWrappers}, separating successfully converted records from invalid ones.
+ *
+ * <p>The converter delegates each message to a {@link RecordDecorator} chain and classifies any failure into
+ * an {@link ErrorInfo} with the appropriate {@link ErrorType}. {@link #setup()} wires up a realistic chain
+ * (data and metadata decorators, a schema built by {@link MaxComputeSchemaBuilder}, and a partitioning
+ * strategy) over a Mockito-mocked {@link MaxComputeSinkConfig} that enables metadata columns, timestamp
+ * partitioning, and {@code TIMESTAMP_NTZ} timestamps.</p>
+ *
+ * <p>The happy-path test asserts the full set of values placed on the resulting record (metadata columns plus
+ * the converted payload, including a nested struct list). The remaining tests substitute a mocked
+ * {@link RecordDecorator} that throws a specific exception and assert the corresponding {@link ErrorType}
+ * classification: {@code DESERIALIZATION_ERROR}, {@code UNKNOWN_FIELDS_ERROR}, {@code SINK_NON_RETRYABLE_ERROR},
+ * and {@code INVALID_MESSAGE_ERROR}.</p>
+ */
 public class ProtoMessageRecordConverterTest {
 
+    /**
+     * Descriptor of the {@code MaxComputeRecord} fixture message that the converter is built around.
+     */
     private final Descriptors.Descriptor descriptor = TestMaxComputeRecord.MaxComputeRecord.getDescriptor();
+
+    /**
+     * Mocked sink configuration controlling metadata columns, partitioning, and timestamp handling.
+     */
     private MaxComputeSinkConfig maxComputeSinkConfig;
+
+    /**
+     * Real orchestrator that maps the message's Protobuf fields to MaxCompute types and values.
+     */
     private ProtobufConverterOrchestrator protobufConverterOrchestrator;
+
+    /**
+     * Mocked Protobuf message parser stubbed to return the sample parsed message.
+     */
     private ProtoMessageParser protoMessageParser;
+
+    /**
+     * Real schema builder that derives the MaxCompute schema for the record descriptor.
+     */
     private MaxComputeSchemaBuilder maxComputeSchemaBuilder;
+
+    /**
+     * Mocked sink configuration used for metrics and the schema-message-mode lookup.
+     */
     private SinkConfig sinkConfig;
+
+    /**
+     * Mocked schema cache stubbed to return the schema built in {@link #setup()}.
+     */
     private MaxComputeSchemaCache maxComputeSchemaCache;
+
+    /**
+     * The converter under test, assembled over the decorator chain in {@link #setup()}.
+     */
     private ProtoMessageRecordConverter protoMessageRecordConverter;
 
+    /**
+     * Wires up the converter under test and its supporting collaborators.
+     *
+     * <p>Stubs a {@link MaxComputeSinkConfig} that enables metadata columns (message timestamp, Kafka topic,
+     * and Kafka offset), timestamp partitioning on the {@code timestamp} field, a UTC zone, a permissive
+     * valid-timestamp range, and {@code TIMESTAMP_NTZ} timestamps. Builds a real
+     * {@link ProtobufConverterOrchestrator}, partitioning strategy, and {@link MaxComputeSchemaBuilder}, stubs
+     * the {@link MaxComputeSchemaCache} to return the built schema, and assembles the data and metadata
+     * {@link RecordDecorator}s that back the {@link ProtoMessageRecordConverter}.</p>
+     *
+     * @throws IOException if building the schema or parsing the mocked message fails
+     */
     @Before
     public void setup() throws IOException {
         maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
@@ -117,6 +176,15 @@ public class ProtoMessageRecordConverterTest {
         protoMessageRecordConverter = new ProtoMessageRecordConverter(metadataColumnRecordDecorator, maxComputeSchemaCache);
     }
 
+    /**
+     * Verifies that a valid message is converted into a single valid record wrapper.
+     *
+     * <p>Builds a {@link Message} with metadata tuples (message timestamp, Kafka topic, and Kafka offset) and
+     * the mocked payload, converts it with {@link ProtoMessageRecordConverter#convert(java.util.List)}, and
+     * asserts there is exactly one valid record at index {@code 0} with no error. Checks that the record's
+     * values contain the expected partition timestamp, topic, offset, id, the nested inner-record struct list,
+     * and the payload timestamp.</p>
+     */
     @Test
     public void shouldConvertMessageToRecordWrapper() {
         Message message = new Message(
@@ -167,6 +235,15 @@ public class ProtoMessageRecordConverterTest {
         assertThat(recordWrapper.getErrorInfo()).isNull();
     }
 
+    /**
+     * Verifies that an {@link IOException} from the decorator yields a deserialization error.
+     *
+     * <p>Replaces the decorator with a mock that throws {@link IOException} during decoration, converts a
+     * single message, and asserts there is one invalid record at index {@code 0} with a {@code null} record and
+     * an {@link ErrorInfo} of type {@code DESERIALIZATION_ERROR}.</p>
+     *
+     * @throws IOException if stubbing the decorator's {@code decorate} method requires it
+     */
     @Test
     public void shouldReturnRecordWrapperWithDeserializationErrorWhenIOExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
@@ -192,6 +269,15 @@ public class ProtoMessageRecordConverterTest {
                 .isEqualTo(new ErrorInfo(new IOException(), ErrorType.DESERIALIZATION_ERROR));
     }
 
+    /**
+     * Verifies that an {@link UnknownFieldsException} from the decorator yields an unknown-fields error.
+     *
+     * <p>Replaces the decorator with a mock that throws {@link UnknownFieldsException} during decoration,
+     * converts a single message, and asserts there is one invalid record at index {@code 0} with a
+     * {@code null} record and an {@link ErrorInfo} of type {@code UNKNOWN_FIELDS_ERROR}.</p>
+     *
+     * @throws IOException if stubbing the decorator's {@code decorate} method requires it
+     */
     @Test
     public void shouldReturnRecordWrapperWithUnknownFieldsErrorWhenUnknownFieldExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
@@ -218,6 +304,15 @@ public class ProtoMessageRecordConverterTest {
                 .isEqualTo(new ErrorInfo(new UnknownFieldsException(mockedMessage), ErrorType.UNKNOWN_FIELDS_ERROR));
     }
 
+    /**
+     * Verifies that a {@link SchemaMismatchException} from the decorator yields a non-retryable error.
+     *
+     * <p>Replaces the decorator with a mock that throws a {@link SchemaMismatchException} during decoration,
+     * converts a single message, and asserts there is one invalid record at index {@code 0} with a
+     * {@code null} record and an {@link ErrorInfo} of type {@code SINK_NON_RETRYABLE_ERROR}.</p>
+     *
+     * @throws IOException if stubbing the decorator's {@code decorate} method requires it
+     */
     @Test
     public void shouldReturnRecordWrapperWithNonRetryableErrorWhenUnknownFieldExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
@@ -244,6 +339,15 @@ public class ProtoMessageRecordConverterTest {
                 .isEqualTo(new ErrorInfo(new UnknownFieldsException(mockedMessage), ErrorType.SINK_NON_RETRYABLE_ERROR));
     }
 
+    /**
+     * Verifies that an {@link InvalidMessageException} from the decorator yields an invalid-message error.
+     *
+     * <p>Replaces the decorator with a mock that throws {@link InvalidMessageException} during decoration,
+     * converts a single message, and asserts there is one invalid record at index {@code 0} with a
+     * {@code null} record and an {@link ErrorInfo} of type {@code INVALID_MESSAGE_ERROR}.</p>
+     *
+     * @throws IOException if stubbing the decorator's {@code decorate} method requires it
+     */
     @Test
     public void shouldReturnRecordWrapperWithInvalidMessageErrorWhenInvalidMessageExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
@@ -270,6 +374,15 @@ public class ProtoMessageRecordConverterTest {
                 .isEqualTo(new ErrorInfo(new InvalidMessageException(invalidMessage), ErrorType.INVALID_MESSAGE_ERROR));
     }
 
+    /**
+     * Verifies that an {@link EmptyMessageException} from the decorator yields an invalid-message error.
+     *
+     * <p>Replaces the decorator with a mock that throws {@link EmptyMessageException} during decoration,
+     * converts a single message, and asserts there is one invalid record at index {@code 0} with a
+     * {@code null} record and an {@link ErrorInfo} of type {@code INVALID_MESSAGE_ERROR}.</p>
+     *
+     * @throws IOException if stubbing the decorator's {@code decorate} method requires it
+     */
     @Test
     public void shouldReturnRecordWrapperWithInvalidMessageErrorWhenInvalidEmptyMessageExceptionIsThrown() throws IOException {
         RecordDecorator recordDecorator = Mockito.mock(RecordDecorator.class);
@@ -296,6 +409,14 @@ public class ProtoMessageRecordConverterTest {
                 .isEqualTo(new ErrorInfo(new InvalidMessageException(invalidMessage), ErrorType.INVALID_MESSAGE_ERROR));
     }
 
+    /**
+     * Builds the sample {@code MaxComputeRecord} payload shared by the tests.
+     *
+     * <p>Constructs a record with an id, two inner records (each carrying a name and balance), and a timestamp,
+     * used both to stub the parsed message and to populate the {@link Message} payloads under test.</p>
+     *
+     * @return a populated {@code TestMaxComputeRecord.MaxComputeRecord} instance
+     */
     private static TestMaxComputeRecord.MaxComputeRecord getMockedMessage() {
         return TestMaxComputeRecord.MaxComputeRecord
                 .newBuilder()

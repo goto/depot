@@ -59,12 +59,36 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link MessageRecordConverter} when parsing Protobuf-encoded messages into BigQuery
+ * {@link Records}.
+ *
+ * <p>The fixture configures a {@link ProtoMessageParser} backed by a {@link ClassLoadStencilClient}
+ * (or, in some tests, a mocked {@link StencilClient}) and a {@link BigQuerySinkConfig} derived from
+ * system properties. The tests assert that valid protobuf messages convert to columns plus metadata,
+ * that null-valued, malformed and unknown-field messages are routed to invalid records with the
+ * correct {@link ErrorType}, that metadata namespacing is honoured, and that individual field types
+ * (timestamp, struct, enum, bytes and {@code NaN} floating point) are converted or rejected as
+ * expected.</p>
+ */
 public class MessageRecordConverterTest {
+    /** Converter under test, rebuilt in {@link #setUp()} and, in some tests, with bespoke config. */
     private MessageRecordConverter recordConverter;
+    /** Mocked stencil client (with real methods) used to resolve protobuf descriptors. */
     @Mock
     private ClassLoadStencilClient stencilClient;
+    /** Reference instant captured during setup and reused to build metadata and timestamps. */
     private Instant now;
 
+    /**
+     * Configures the converter under test from system properties before each test.
+     *
+     * <p>Sets the proto message class and metadata column properties, builds a
+     * {@link ProtoMessageParser} over a real-methods {@link ClassLoadStencilClient} and a
+     * {@link BigQuerySinkConfig}, and captures the reference {@code now} instant.</p>
+     *
+     * @throws IOException if the stencil client or parser cannot be initialized
+     */
     @Before
     public void setUp() throws IOException {
         System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestMessage");
@@ -83,6 +107,12 @@ public class MessageRecordConverterTest {
         now = Instant.now();
     }
 
+    /**
+     * Verifies that valid protobuf messages convert to columns plus metadata.
+     *
+     * <p>Given two consumer records, when {@code convert} runs, then both become valid records whose
+     * columns contain the order fields and the expected metadata columns for their offsets.</p>
+     */
     @Test
     public void shouldGetRecordForBQFromConsumerRecords() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -116,6 +146,12 @@ public class MessageRecordConverterTest {
         assertEquals(record2ExpectedColumns, record2Columns);
     }
 
+    /**
+     * Verifies that a record with an empty (null) value is dropped from the valid output.
+     *
+     * <p>Given one normal record and one record built with a {@code null} value, when {@code convert}
+     * runs, then only the normal record is returned as valid, with its expected columns.</p>
+     */
     @Test
     public void shouldIgnoreNullRecords() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -139,6 +175,12 @@ public class MessageRecordConverterTest {
         assertEquals(record1ExpectedColumns, record1Columns);
     }
 
+    /**
+     * Verifies that a null-valued record is excluded from the valid records.
+     *
+     * <p>Given one normal record and one record with a {@code null} value, when {@code convert} runs,
+     * then exactly one valid record (the normal one) is produced with its expected columns.</p>
+     */
     @Test
     public void shouldReturnInvalidRecordsWhenGivenNullRecords() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -161,6 +203,12 @@ public class MessageRecordConverterTest {
         assertEquals(record1ExpectedColumns, record1Columns);
     }
 
+    /**
+     * Verifies that metadata columns are not nested under a namespace when none is configured.
+     *
+     * <p>Given an empty metadata namespace, when a record is converted, then its metadata columns are
+     * placed at the top level of the column map and the configured namespace is the empty string.</p>
+     */
     @Test
     public void shouldNotNamespaceMetadataFieldWhenNamespaceIsNotProvided() {
         BigQuerySinkConfig sinkConfig = ConfigFactory.create(BigQuerySinkConfig.class, System.getProperties());
@@ -189,6 +237,12 @@ public class MessageRecordConverterTest {
         assertEquals(sinkConfig.getBqMetadataNamespace(), "");
     }
 
+    /**
+     * Verifies that metadata columns are nested under the configured namespace.
+     *
+     * <p>Given a {@code metadata_ns} namespace, when a record is converted, then the metadata columns
+     * are grouped under a single {@code metadata_ns} column rather than placed at the top level.</p>
+     */
     @Test
     public void shouldNamespaceMetadataFieldWhenNamespaceIsProvided() {
         System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "metadata_ns");
@@ -219,6 +273,12 @@ public class MessageRecordConverterTest {
     }
 
 
+    /**
+     * Verifies that a message with an unparseable protobuf value is reported as invalid.
+     *
+     * <p>Given one valid record and one record carrying invalid value bytes, when {@code convert}
+     * runs, then exactly one invalid record is produced.</p>
+     */
     @Test
     public void shouldReturnInvalidRecordsGivenInvalidProtobufMessage() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -233,6 +293,15 @@ public class MessageRecordConverterTest {
         assertEquals(1, records.getInvalidRecords().size());
     }
 
+    /**
+     * Verifies that an invalid record preserves its metadata and is classified as a deserialization
+     * error.
+     *
+     * <p>Given one valid record and one record with invalid value bytes but full metadata, when
+     * {@code convert} runs, then there is one valid and one invalid record; the invalid record has
+     * empty columns, retains the original metadata and carries
+     * {@link ErrorType#DESERIALIZATION_ERROR}.</p>
+     */
     @Test
     public void shouldWriteToErrorWriterInvalidRecords() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -266,6 +335,15 @@ public class MessageRecordConverterTest {
         assertEquals(ErrorType.DESERIALIZATION_ERROR, records.getInvalidRecords().get(0).getErrorInfo().getErrorType());
     }
 
+    /**
+     * Verifies that messages containing unknown protobuf fields are rejected when disallowed.
+     *
+     * <p>Given {@code allow-unknown-fields} disabled and a parsed message carrying an unknown field,
+     * when {@code convert} runs, then no valid records are produced and the single invalid record is
+     * classified as {@link ErrorType#UNKNOWN_FIELDS_ERROR} while retaining the original metadata.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldReturnInvalidRecordsWhenUnknownFieldsFound() throws IOException {
         System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_ALLOW_UNKNOWN_FIELDS_ENABLE", "false");
@@ -299,6 +377,15 @@ public class MessageRecordConverterTest {
         assertEquals(consumerRecord.getMetadata(), records.getInvalidRecords().get(0).getMetadata());
     }
 
+    /**
+     * Verifies that unknown protobuf fields are tolerated when explicitly allowed.
+     *
+     * <p>Given {@code allow-unknown-fields} enabled and a parsed message carrying an unknown field,
+     * when {@code convert} runs, then the message becomes a single valid record (with no invalid
+     * records) whose metadata columns are derived from the configured metadata column types.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldIgnoreUnknownFieldsIfTheConfigIsSet() throws IOException {
         System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_ALLOW_UNKNOWN_FIELDS_ENABLE", "true");
@@ -344,6 +431,19 @@ public class MessageRecordConverterTest {
         assertEquals(record, records.getValidRecords().get(0));
     }
 
+    /**
+     * Builds a converter, input messages and expected metadata for a single-field type test.
+     *
+     * <p>Creates a {@link TestMessageBQ} with the given field set to {@code value}, stubs a
+     * {@link StencilClient} to parse it into a {@link DynamicMessage}, and wires a
+     * {@link ProtoMessageParser} and {@link MessageRecordConverter} around it.</p>
+     *
+     * @param fieldName the {@link TestMessageBQ} field to populate
+     * @param value     the value to set on that field
+     * @return a tuple of the converter, the single-message input list and the expected metadata
+     *         columns
+     * @throws InvalidProtocolBufferException if the constructed message cannot be parsed
+     */
     private Tuple3<MessageRecordConverter, List<Message>, Map<String, Object>> setupForTypeTest(String fieldName, Object value) throws InvalidProtocolBufferException {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
         Descriptors.FieldDescriptor fd = TestMessageBQ.getDescriptor().findFieldByName(fieldName);
@@ -373,6 +473,15 @@ public class MessageRecordConverterTest {
         return new Tuple3<>(messageRecordConverter, messages, metadataColumns);
     }
 
+    /**
+     * Verifies that a protobuf timestamp field is converted to a {@link DateTime} column.
+     *
+     * <p>Given a {@code created_at} timestamp set to {@code now}, when the message is converted, then
+     * the single valid record's {@code created_at} column equals the corresponding
+     * {@link DateTime}.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldConvertTimestampFieldToDateTime() throws IOException {
         Timestamp timestampData = Timestamps.fromMillis(now.toEpochMilli());
@@ -389,6 +498,15 @@ public class MessageRecordConverterTest {
         assertEquals(expectedDayTime, record1Columns.get("created_at"));
     }
 
+    /**
+     * Verifies that a protobuf struct field is serialized to a JSON string column.
+     *
+     * <p>Given a {@code properties} struct with string, number, boolean and null entries, when the
+     * message is converted, then the single valid record's {@code properties} column is the equivalent
+     * JSON object.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldConvertStructFieldToMap() throws IOException {
         Struct structData = Struct.newBuilder()
@@ -412,6 +530,15 @@ public class MessageRecordConverterTest {
         assertEquals(new JSONObject(expectedProperties).toString(), new JSONObject((String) record1Columns.get("properties")).toString());
     }
 
+    /**
+     * Verifies that {@code NaN} float and double values are rejected as a deserialization error.
+     *
+     * <p>Given a {@link TestTypesMessage} with {@code NaN} float and double values, when the message
+     * is converted, then the single invalid record carries an {@link IllegalArgumentException}
+     * classified as {@link ErrorType#DESERIALIZATION_ERROR}.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldThrowExceptionWhenFloatingPointIsNaN() throws IOException {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -440,6 +567,15 @@ public class MessageRecordConverterTest {
         assertEquals(ErrorType.DESERIALIZATION_ERROR, records.getInvalidRecords().get(0).getErrorInfo().getErrorType());
     }
 
+    /**
+     * Verifies that a {@code NaN} double value is rejected as a deserialization error.
+     *
+     * <p>Given a {@link TestTypesMessage} with a {@code NaN} double value, when the message is
+     * converted, then the single invalid record carries an {@link IllegalArgumentException} classified
+     * as {@link ErrorType#DESERIALIZATION_ERROR}.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldThrowExceptionWhenDoubleIsNaN() throws IOException {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), now.toEpochMilli());
@@ -468,6 +604,14 @@ public class MessageRecordConverterTest {
         assertEquals(ErrorType.DESERIALIZATION_ERROR, records.getInvalidRecords().get(0).getErrorInfo().getErrorType());
     }
 
+    /**
+     * Verifies that a protobuf enum field is converted to its string name.
+     *
+     * <p>Given a {@code status} field set to {@code CANCELLED}, when the message is converted, then the
+     * single valid record's {@code status} column is the string {@code "CANCELLED"}.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldConvertEnumToString() throws IOException {
 
@@ -484,6 +628,14 @@ public class MessageRecordConverterTest {
         assertEquals("CANCELLED", record1Columns.get("status"));
     }
 
+    /**
+     * Verifies that a protobuf bytes field is converted to its base64 string representation.
+     *
+     * <p>Given a {@code user_token} bytes field, when the message is converted, then the single valid
+     * record's {@code user_token} column equals the base64 encoding of the original bytes.</p>
+     *
+     * @throws IOException if the message cannot be parsed
+     */
     @Test
     public void shouldConvertBytesToString() throws IOException {
         byte[] byteData = "byteDataTest".getBytes(StandardCharsets.UTF_8);

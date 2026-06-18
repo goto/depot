@@ -17,13 +17,35 @@ import java.util.HashMap;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
+/**
+ * Unit tests for {@link ProtoMessageParser}, which deserializes Protobuf payloads into a
+ * {@link ParsedMessage} for a configured message class.
+ *
+ * <p>The shared {@link #configMap} disables the Stencil schema registry and pins the proto message
+ * class to {@code TestMessage}. Each test builds a parser from a {@link SinkConfig}, a mocked
+ * {@link StatsDReporter} and a mocked {@link DepotStencilUpdateListener}, then parses key and message
+ * payloads in {@link SinkConnectorSchemaMessageMode#LOG_KEY} and
+ * {@link SinkConnectorSchemaMessageMode#LOG_MESSAGE} modes. Coverage includes successful parsing, the
+ * {@link InvalidProtocolBufferException} raised for malformed bytes and the error raised when no mode
+ * is supplied.</p>
+ */
 public class ProtoMessageParserTest {
 
+    /** Parser configuration: Stencil disabled, proto message class pinned to {@code TestMessage}. */
     private final HashMap<String, String> configMap = new HashMap<String, String>() {{
         put("SCHEMA_REGISTRY_STENCIL_ENABLE", "false");
         put("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestMessage");
     }};
 
+    /**
+     * Verifies that a valid Protobuf payload is parsed in log-message mode.
+     *
+     * <p>Given a serialized {@link TestMessage}, when it is parsed in
+     * {@link SinkConnectorSchemaMessageMode#LOG_MESSAGE} mode for the configured class, then the raw
+     * parsed message equals the original.</p>
+     *
+     * @throws IOException if parsing fails
+     */
     @Test
     public void shouldParseLogMessage() throws IOException {
         SinkConfig sinkConfig = ConfigFactory.create(SinkConfig.class, configMap);
@@ -37,6 +59,13 @@ public class ProtoMessageParserTest {
 
     }
 
+    /**
+     * Verifies that malformed message bytes fail to parse.
+     *
+     * <p>Given invalid bytes, when they are parsed in
+     * {@link SinkConnectorSchemaMessageMode#LOG_MESSAGE} mode, then an
+     * {@link InvalidProtocolBufferException} is thrown.</p>
+     */
     @Test
     public void shouldThrowErrorOnInvalidMessage() {
         SinkConfig sinkConfig = ConfigFactory.create(SinkConfig.class, configMap);
@@ -50,6 +79,15 @@ public class ProtoMessageParserTest {
         });
     }
 
+    /**
+     * Verifies that a valid Protobuf payload is parsed in log-key mode.
+     *
+     * <p>Given a serialized {@link TestMessage} supplied as the key, when it is parsed in
+     * {@link SinkConnectorSchemaMessageMode#LOG_KEY} mode, then the raw parsed message equals the
+     * original.</p>
+     *
+     * @throws IOException if parsing fails
+     */
     @Test
     public void shouldParseLogKey() throws IOException {
         SinkConfig sinkConfig = ConfigFactory.create(SinkConfig.class, configMap);
@@ -63,6 +101,13 @@ public class ProtoMessageParserTest {
 
     }
 
+    /**
+     * Verifies that malformed key bytes fail to parse.
+     *
+     * <p>Given invalid key bytes, when they are parsed in
+     * {@link SinkConnectorSchemaMessageMode#LOG_KEY} mode, then an
+     * {@link InvalidProtocolBufferException} is thrown.</p>
+     */
     @Test
     public void shouldThrowErrorOnInvalidKey() {
         SinkConfig sinkConfig = ConfigFactory.create(SinkConfig.class, configMap);
@@ -76,6 +121,12 @@ public class ProtoMessageParserTest {
         });
     }
 
+    /**
+     * Verifies that parsing without a message mode is rejected.
+     *
+     * <p>Given a valid payload and a {@code null} mode, when it is parsed, then an {@link IOException}
+     * with the message {@code "parser mode not defined"} is thrown.</p>
+     */
     @Test
     public void shouldThrowErrorWhenModeNotDefined() {
         SinkConfig sinkConfig = ConfigFactory.create(SinkConfig.class, configMap);

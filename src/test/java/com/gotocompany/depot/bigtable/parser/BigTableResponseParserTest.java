@@ -30,21 +30,49 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Unit tests for {@link BigTableResponseParser}, which converts a failed {@link BigTableResponse} into
+ * a map of record index to {@link ErrorInfo} and emits per-failure error metrics.
+ *
+ * <p>The {@link ApiException} and its {@link StatusCode}, {@link StatusCode.Code} and
+ * {@link ErrorDetails} are Mockito mocks wired together in {@link #setUp()}, alongside mocked
+ * {@link BigTableMetrics} and {@link Instrumentation} and two valid {@link BigTableRecord}s. Each test
+ * builds a {@link MutateRowsException} with a single failed mutation, varies the HTTP status code,
+ * retryability and error-detail kind, and then asserts the {@link ErrorType} mapped by
+ * {@link BigTableResponseParser#getErrorsFromSinkResponse(java.util.List, BigTableResponse, BigTableMetrics, Instrumentation)}
+ * as well as the error-type counters and the error logging.</p>
+ */
 public class BigTableResponseParserTest {
+    /** Mock metrics providing the error counter names and tags. */
     @Mock
     private BigTableMetrics bigtableMetrics;
+    /** Mock instrumentation whose counter increments and error logging are verified. */
     @Mock
     private Instrumentation instrumentation;
+    /** Mock API exception describing a single failed mutation. */
     @Mock
     private ApiException apiException;
+    /** Mock status code returned by the API exception. */
     @Mock
     private StatusCode statusCode;
+    /** Mock status code enum whose HTTP status drives the mapped error type. */
     @Mock
     private StatusCode.Code code;
+    /** Mock error details used to select the Bigtable error-type metric. */
     @Mock
     private ErrorDetails errorDetails;
+    /** Two valid records (indices {@code 0} and {@code 1}) whose failures are looked up by index. */
     private List<BigTableRecord> validRecords;
 
+    /**
+     * Wires the mocked API exception graph and builds the record fixtures before each test.
+     *
+     * <p>Stubs the {@link ApiException} to expose the mocked {@link StatusCode},
+     * {@link StatusCode.Code} and {@link ErrorDetails}, a reason string, a non-retryable flag and
+     * itself as the cause, with all error-detail kinds defaulting to {@code null}. Also builds two
+     * booking-log {@link Message}s and the matching valid {@link BigTableRecord}s at indices
+     * {@code 0} and {@code 1}.</p>
+     */
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -73,6 +101,13 @@ public class BigTableResponseParserTest {
         validRecords = Collections.list(bigTableRecord1, bigTableRecord2);
     }
 
+    /**
+     * Verifies that a retryable failure maps to a retryable sink error.
+     *
+     * <p>Given a single failed mutation at index {@code 1} with HTTP status {@code 400} and the API
+     * exception marked retryable, when the response is parsed, then the entry for index {@code 1} has
+     * error type {@link ErrorType#SINK_RETRYABLE_ERROR} and retains the originating exception.</p>
+     */
     @Test
     public void shouldReturnErrorInfoMapWithRetryableError() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -89,6 +124,13 @@ public class BigTableResponseParserTest {
         Assertions.assertEquals(apiException, errorsFromSinkResponse.get(1L).getException());
     }
 
+    /**
+     * Verifies that a non-retryable 4xx failure maps to a 4xx sink error.
+     *
+     * <p>Given a failed mutation with HTTP status {@code 400} and a non-retryable exception, when the
+     * response is parsed, then the entry has error type {@link ErrorType#SINK_4XX_ERROR} and retains
+     * the originating exception.</p>
+     */
     @Test
     public void shouldReturnErrorInfoMapWith4XXError() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -104,6 +146,12 @@ public class BigTableResponseParserTest {
         Assertions.assertEquals(apiException, errorsFromSinkResponse.get(1L).getException());
     }
 
+    /**
+     * Verifies that a 5xx failure maps to a 5xx sink error.
+     *
+     * <p>Given a failed mutation with HTTP status {@code 500}, when the response is parsed, then the
+     * entry has error type {@link ErrorType#SINK_5XX_ERROR} and retains the originating exception.</p>
+     */
     @Test
     public void shouldReturnErrorInfoMapWith5XXError() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -119,6 +167,13 @@ public class BigTableResponseParserTest {
         Assertions.assertEquals(apiException, errorsFromSinkResponse.get(1L).getException());
     }
 
+    /**
+     * Verifies that a failure with no recognised HTTP status maps to an unknown sink error.
+     *
+     * <p>Given a failed mutation with HTTP status {@code 0}, when the response is parsed, then the
+     * entry has error type {@link ErrorType#SINK_UNKNOWN_ERROR} and retains the originating
+     * exception.</p>
+     */
     @Test
     public void shouldReturnErrorInfoMapWithUnknownError() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -134,6 +189,13 @@ public class BigTableResponseParserTest {
         Assertions.assertEquals(apiException, errorsFromSinkResponse.get(1L).getException());
     }
 
+    /**
+     * Verifies that a bad-request error detail increments the bad-request error counter.
+     *
+     * <p>Given error details exposing a {@code BadRequest}, when the response is parsed, then the
+     * instrumentation increments the total-errors counter once with the
+     * {@code BigTableErrorType.BAD_REQUEST} tag.</p>
+     */
     @Test
     public void shouldCaptureMetricBigtableErrorTypeBadRequest() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -149,6 +211,13 @@ public class BigTableResponseParserTest {
         Mockito.verify(instrumentation, Mockito.times(1)).incrementCounter(bigtableMetrics.getBigtableTotalErrorsMetrics(), String.format(BigTableMetrics.BIGTABLE_ERROR_TAG, BigTableMetrics.BigTableErrorType.BAD_REQUEST));
     }
 
+    /**
+     * Verifies that a quota-failure error detail increments the quota-failure error counter.
+     *
+     * <p>Given error details exposing a {@code QuotaFailure}, when the response is parsed, then the
+     * instrumentation increments the total-errors counter once with the
+     * {@code BigTableErrorType.QUOTA_FAILURE} tag.</p>
+     */
     @Test
     public void shouldCaptureMetricBigtableErrorTypeQuotaFailure() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -164,6 +233,13 @@ public class BigTableResponseParserTest {
         Mockito.verify(instrumentation, Mockito.times(1)).incrementCounter(bigtableMetrics.getBigtableTotalErrorsMetrics(), String.format(BigTableMetrics.BIGTABLE_ERROR_TAG, BigTableMetrics.BigTableErrorType.QUOTA_FAILURE));
     }
 
+    /**
+     * Verifies that a precondition-failure error detail increments the precondition-failure counter.
+     *
+     * <p>Given error details exposing a {@code PreconditionFailure}, when the response is parsed, then
+     * the instrumentation increments the total-errors counter once with the
+     * {@code BigTableErrorType.PRECONDITION_FAILURE} tag.</p>
+     */
     @Test
     public void shouldCaptureMetricBigtableErrorTypePreconditionFailure() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -179,6 +255,13 @@ public class BigTableResponseParserTest {
         Mockito.verify(instrumentation, Mockito.times(1)).incrementCounter(bigtableMetrics.getBigtableTotalErrorsMetrics(), String.format(BigTableMetrics.BIGTABLE_ERROR_TAG, BigTableMetrics.BigTableErrorType.PRECONDITION_FAILURE));
     }
 
+    /**
+     * Verifies that error details with no specific failure default to the RPC-failure counter.
+     *
+     * <p>Given error details exposing none of the known failure kinds, when the response is parsed,
+     * then the instrumentation increments the total-errors counter once with the
+     * {@code BigTableErrorType.RPC_FAILURE} tag.</p>
+     */
     @Test
     public void shouldCaptureMetricBigtableErrorTypeRpcFailureByDefault() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -193,6 +276,13 @@ public class BigTableResponseParserTest {
         Mockito.verify(instrumentation, Mockito.times(1)).incrementCounter(bigtableMetrics.getBigtableTotalErrorsMetrics(), String.format(BigTableMetrics.BIGTABLE_ERROR_TAG, BigTableMetrics.BigTableErrorType.RPC_FAILURE));
     }
 
+    /**
+     * Verifies that null error details fall back to the RPC-failure counter.
+     *
+     * <p>Given an API exception whose error details are {@code null}, when the response is parsed,
+     * then the instrumentation increments the total-errors counter once with the
+     * {@code BigTableErrorType.RPC_FAILURE} tag.</p>
+     */
     @Test
     public void shouldCaptureMetricBigtableErrorTypeRpcFailureIfErrorDetailsIsNull() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -208,6 +298,13 @@ public class BigTableResponseParserTest {
         Mockito.verify(instrumentation, Mockito.times(1)).incrementCounter(bigtableMetrics.getBigtableTotalErrorsMetrics(), String.format(BigTableMetrics.BIGTABLE_ERROR_TAG, BigTableMetrics.BigTableErrorType.RPC_FAILURE));
     }
 
+    /**
+     * Verifies that each failed record is logged with its metadata, cause, reason and status codes.
+     *
+     * <p>Given a failed mutation at index {@code 1}, when the response is parsed, then the
+     * {@link Instrumentation} logs the error once with the failing record's metadata, the failure
+     * cause, the reason, the status code and the HTTP status code.</p>
+     */
     @Test
     public void shouldLogErrorRecordWithReasonAndStatusCode() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();

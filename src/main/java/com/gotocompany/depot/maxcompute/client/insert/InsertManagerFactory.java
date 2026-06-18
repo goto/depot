@@ -8,6 +8,11 @@ import com.gotocompany.depot.metrics.MaxComputeMetrics;
 
 /**
  * Factory class to create InsertManager based on the configuration.
+ *
+ * <p>The choice is driven by whether table partitioning is enabled: a {@link PartitionedInsertManager} is
+ * produced for partitioned tables and a {@link NonPartitionedInsertManager} otherwise. Each manager is paired
+ * with a matching {@link StreamingSessionManager}, created for the partitioned or non-partitioned case as
+ * appropriate.</p>
  */
 public class InsertManagerFactory {
 

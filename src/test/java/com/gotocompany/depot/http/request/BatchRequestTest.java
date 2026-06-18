@@ -26,22 +26,61 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link BatchRequest}, the {@link Request} strategy that collapses an entire batch of
+ * messages into a single HTTP request whose body is a JSON array of the per-message payloads.
+ *
+ * <p>The builders ({@link HeaderBuilder}, {@link QueryParamBuilder}, {@link UriBuilder}), the
+ * {@link MessageParser} and the {@link HttpSinkConfig} are Mockito mocks; a real
+ * {@link com.gotocompany.depot.TestMessage} protobuf is used as the message payload. The tests assert
+ * how messages are partitioned into valid and invalid {@link HttpRequestRecord} instances via
+ * {@link HttpRequestRecord#isValid()}, that valid messages are merged into a single batched record,
+ * and how {@code DELETE} requests are rendered with or without a body depending on configuration.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class BatchRequestTest {
 
+    /**
+     * Shared, mutable list of input messages populated per test before building the request.
+     */
     private final List<Message> messages = new ArrayList<>();
+    /**
+     * Mocked builder for HTTP headers.
+     */
     @Mock
     private HeaderBuilder headerBuilder;
+    /**
+     * Mocked builder for query parameters.
+     */
     @Mock
     private QueryParamBuilder queryParamBuilder;
+    /**
+     * Mocked builder for the request URI.
+     */
     @Mock
     private UriBuilder uriBuilder;
+    /**
+     * Mocked message parser supplied to the batch request.
+     */
     @Mock
     private MessageParser parser;
+    /**
+     * Mocked HTTP sink configuration controlling body type, method and delete-body behaviour.
+     */
     @Mock
     private HttpSinkConfig config;
+    /**
+     * Reusable protobuf payload used to build the input messages.
+     */
     private TestMessage testMessage;
 
+    /**
+     * Builds the shared {@link com.gotocompany.depot.TestMessage} fixture and stubs the configuration
+     * common to every test.
+     *
+     * <p>Configures a {@link HttpRequestBodyType#RAW} body type and a {@link HttpRequestMethodType#PUT}
+     * request method so that the request defaults to a raw, batched PUT unless a test overrides it.</p>
+     */
     @Before
     public void setup() {
         testMessage = TestMessage.newBuilder().setOrderNumber("test-order-1").setOrderDetails("ORDER-DETAILS-1").build();
@@ -49,6 +88,17 @@ public class BatchRequestTest {
         when(config.getSinkHttpRequestMethod()).thenReturn(HttpRequestMethodType.PUT);
     }
 
+    /**
+     * Verifies that an entire batch of valid messages is wrapped into a single request whose body is
+     * a JSON array of per-message payloads.
+     *
+     * <p>Given two valid messages (one with a {@code null} key), when
+     * {@link BatchRequest#createRecords(List)} is invoked, then exactly one valid record is produced
+     * with no invalid records, and its request body is the JSON array containing both messages'
+     * base64-encoded {@code log_key}/{@code log_message} entries.</p>
+     *
+     * @throws IOException never in practice; declared because reading the request body is checked
+     */
     @Test
     public void shouldWrapMessagesToSingleRequestBody() throws IOException {
         messages.add(new Message(null, testMessage.toByteArray()));
@@ -64,6 +114,13 @@ public class BatchRequestTest {
         assertEquals("[{\"log_key\":\"\",\"log_message\":\"Cgx0ZXN0LW9yZGVyLTEaD09SREVSLURFVEFJTFMtMQ==\"}, {\"log_key\":\"Cgx0ZXN0LW9yZGVyLTEaD09SREVSLURFVEFJTFMtMQ==\",\"log_message\":\"Cgx0ZXN0LW9yZGVyLTEaD09SREVSLURFVEFJTFMtMQ==\"}]", parsedRecords.get(0).getRequestBody());
     }
 
+    /**
+     * Verifies that a batch of two valid messages yields a single valid batched record.
+     *
+     * <p>Given two valid messages, when {@link BatchRequest#createRecords(List)} is invoked and the
+     * results are partitioned by validity, then there is one record in total, one valid record and no
+     * invalid records.</p>
+     */
     @Test
     public void shouldGetValidRequestRecords() {
         messages.add(new Message(null, testMessage.toByteArray()));
@@ -78,6 +135,14 @@ public class BatchRequestTest {
         assertEquals(0, invalidRecords.size());
     }
 
+    /**
+     * Verifies that messages which cannot be serialised become individual invalid records rather than
+     * being batched.
+     *
+     * <p>Given two messages whose key/value types are not byte arrays, when
+     * {@link BatchRequest#createRecords(List)} is invoked, then two records are produced, none valid
+     * and both invalid.</p>
+     */
     @Test
     public void shouldGetInvalidRequestRecords() {
         messages.add(new Message("", 1));
@@ -92,6 +157,13 @@ public class BatchRequestTest {
         assertEquals(2, invalidRecords.size());
     }
 
+    /**
+     * Verifies that a mixed batch yields one batched valid record plus a separate invalid record.
+     *
+     * <p>Given one message with a non-serialisable payload and one valid message, when
+     * {@link BatchRequest#createRecords(List)} is invoked, then two records are produced, one valid
+     * (the batched valid message) and one invalid.</p>
+     */
     @Test
     public void shouldGetValidAndInvalidRequestRecords() {
         messages.add(new Message("", 1));
@@ -106,6 +178,19 @@ public class BatchRequestTest {
         assertEquals(1, invalidRecords.size());
     }
 
+    /**
+     * Verifies that a batched {@code DELETE} request includes the JSON array body when delete bodies
+     * are enabled.
+     *
+     * <p>Given a {@link HttpRequestMethodType#DELETE} method with delete-body support enabled and a
+     * real {@link UriBuilder}, when the batch of two valid messages is converted to records, then a
+     * single valid record is produced whose request string reports the {@code DELETE} method, the
+     * configured URL, empty headers and the batched JSON array body.</p>
+     *
+     * @throws IOException never in practice; declared because building the request string is checked
+     * @throws InvalidTemplateException never in practice; declared because the real URI builder may
+     *     reject an invalid template
+     */
     @Test
     public void shouldCreateDeleteRequestWithBody() throws IOException, InvalidTemplateException {
         when(config.getSinkHttpRequestMethod()).thenReturn(HttpRequestMethodType.DELETE);
@@ -130,6 +215,18 @@ public class BatchRequestTest {
                 parsedRecords.get(0).getRequestString());
     }
 
+    /**
+     * Verifies that a batched {@code DELETE} request omits the body when delete bodies are disabled.
+     *
+     * <p>Given a {@link HttpRequestMethodType#DELETE} method with delete-body support disabled and a
+     * real {@link UriBuilder}, when the batch of two valid messages is converted to records, then a
+     * single valid record is produced whose request string reports the {@code DELETE} method, the
+     * configured URL and empty headers, with no request body line.</p>
+     *
+     * @throws IOException never in practice; declared because building the request string is checked
+     * @throws InvalidTemplateException never in practice; declared because the real URI builder may
+     *     reject an invalid template
+     */
     @Test
     public void shouldCreateDeleteRequestWithoutBody() throws IOException, InvalidTemplateException {
         when(config.getSinkHttpRequestMethod()).thenReturn(HttpRequestMethodType.DELETE);

@@ -35,18 +35,54 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link RedisParser}, which converts a batch of {@link Message}s into
+ * {@link RedisRecord}s by delegating to a {@link ProtoMessageParser} and a {@link RedisEntryParser}.
+ *
+ * <p>The tests run under {@link MockitoJUnitRunner}. The {@link #setup()} fixture stubs a
+ * {@link RedisSinkConfig} for the key-value data type and prepares six {@link TestMessage} payloads,
+ * while {@link #setupParserResponse()} wires a real Stencil-backed {@link ProtoParsedMessage} for each
+ * message and builds the parser under test. They cover both the happy path (every message converted)
+ * and the partitioning of valid versus invalid records with the {@link ErrorType} mapped from each
+ * parse failure.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RedisParserTest {
+    /**
+     * Shared list of source messages built in {@link #setup()} and converted by the parser.
+     */
     private final List<Message> messages = new ArrayList<>();
+    /**
+     * Fully-qualified proto schema class used to parse the {@link TestMessage} fixtures.
+     */
     private final String schemaClass = "com.gotocompany.depot.TestMessage";
+    /**
+     * Mocked sink configuration stubbed for a key-value Redis sink.
+     */
     @Mock
     private RedisSinkConfig redisSinkConfig;
+    /**
+     * Mocked proto parser whose per-message parse results (or thrown errors) are stubbed.
+     */
     @Mock
     private ProtoMessageParser protoMessageParser;
+    /**
+     * Mocked StatsD reporter passed to the {@link RedisEntryParserFactory}.
+     */
     @Mock
     private StatsDReporter statsDReporter;
+    /**
+     * Parser under test, constructed in {@link #setupParserResponse()}.
+     */
     private RedisParser redisParser;
 
+    /**
+     * Builds the shared fixture by stubbing the {@link RedisSinkConfig} for a key-value Redis sink
+     * keyed by {@code "test-key"} on field {@code order_number} in {@code LOG_MESSAGE} mode, and
+     * creating six {@link TestMessage} payloads wrapped as {@link Message}s for conversion.
+     *
+     * @throws IOException if serialising the message fixtures fails
+     */
     @Before
     public void setup() throws IOException {
         when(redisSinkConfig.getSinkRedisDataType()).thenReturn(RedisSinkDataType.KEYVALUE);
@@ -69,6 +105,13 @@ public class RedisParserTest {
         messages.add(new Message(null, message6.toByteArray()));
     }
 
+    /**
+     * Completes the fixture by stubbing the mocked {@link ProtoMessageParser} to return a real
+     * Stencil-parsed {@link ProtoParsedMessage} for every fixture message, then constructs the
+     * {@link RedisParser} under test from the resolved mode/schema and the entry parser.
+     *
+     * @throws IOException if Stencil parsing of a fixture message fails
+     */
     public void setupParserResponse() throws IOException {
         Parser protoParser = StencilClientFactory.getClient().getParser(TestMessage.class.getName());
         Configuration jsonPathConfig = Configuration.builder()
@@ -83,6 +126,16 @@ public class RedisParserTest {
         redisParser = new RedisParser(this.protoMessageParser, redisEntryParser, modeAndSchema);
     }
 
+    /**
+     * Verifies that every parseable message is converted into a valid key-value record.
+     *
+     * <p>Given the six fixture messages and a fully stubbed parser, when {@link RedisParser#convert}
+     * is invoked, then all six records are valid, none are invalid, and each record's string form
+     * matches the expected {@link RedisKeyValueEntry} (mapping {@code "test-key"} to
+     * {@code "test-order-N"}) in order.</p>
+     *
+     * @throws IOException if parsing a fixture message fails
+     */
     @Test
     public void shouldConvertMessageToRedisRecords() throws IOException {
         setupParserResponse();
@@ -102,6 +155,18 @@ public class RedisParserTest {
         IntStream.range(0, expectedRecords.size()).forEach(index -> assertEquals(expectedRecords.get(index).toString(), parsedRecords.get(index).toString()));
     }
 
+    /**
+     * Verifies that parse failures are captured per message with the correct error types.
+     *
+     * <p>Given the parser stubbed to throw for the last four messages — an {@link IOException}, a
+     * {@link ConfigurationException}, an {@link IllegalArgumentException} and an
+     * {@link UnsupportedOperationException} respectively — when {@link RedisParser#convert} is invoked,
+     * then two records remain valid and four are invalid, carrying
+     * {@link ErrorType#DESERIALIZATION_ERROR}, {@link ErrorType#UNKNOWN_FIELDS_ERROR},
+     * {@link ErrorType#DEFAULT_ERROR} and {@link ErrorType#INVALID_MESSAGE_ERROR} in turn.</p>
+     *
+     * @throws IOException if parsing a fixture message fails
+     */
     @Test
     public void shouldReportValidAndInvalidRecords() throws IOException {
         setupParserResponse();

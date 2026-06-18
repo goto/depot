@@ -11,9 +11,21 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Set;
 
+/**
+ * Factory that selects and constructs the appropriate {@link PartitioningStrategy} for a table based
+ * on the sink configuration and the Protobuf descriptor of the partition key.
+ *
+ * <p>When partitioning is enabled, the factory validates that the partition key exists and that its
+ * resolved MaxCompute type is supported, then returns a {@link TimestampPartitioningStrategy} for
+ * timestamp keys or a {@link DefaultPartitioningStrategy} for the other supported scalar types.</p>
+ */
 @RequiredArgsConstructor
 public class PartitioningStrategyFactory {
 
+    /**
+     * Set of MaxCompute types permitted as partition keys. A partition key whose resolved type is not
+     * contained in this set is rejected.
+     */
     private static final Set<TypeInfo> ALLOWED_PARTITION_KEY_TYPE_INFO = Sets.newHashSet(
             TypeInfoFactory.TIMESTAMP_NTZ,
             TypeInfoFactory.TIMESTAMP,
@@ -29,10 +41,17 @@ public class PartitioningStrategyFactory {
      * Create default partitioning strategy if schema key is non timestamp type.
      * Create timestamp partitioning strategy if schema key is timestamp type.
      *
+     * <p>If partitioning is enabled, the configured partition key is looked up in the descriptor and
+     * its MaxCompute type is resolved. The type is checked against the set of supported partition
+     * types; a timestamp type yields a {@link TimestampPartitioningStrategy}, while any other supported
+     * type yields a {@link DefaultPartitioningStrategy}.</p>
+     *
      * @param protobufConverterOrchestrator to check the type of the partition key
      * @param maxComputeSinkConfig sink config
      * @param descriptor descriptor of the protobuf message
      * @return partitioning strategy
+     * @throws IllegalArgumentException if the partition key is not found in the descriptor or its
+     *         resolved type is not a supported partition key type
      */
     public static PartitioningStrategy createPartitioningStrategy(
             ProtobufConverterOrchestrator protobufConverterOrchestrator,
@@ -57,6 +76,12 @@ public class PartitioningStrategyFactory {
         }
     }
 
+    /**
+     * Verifies that the resolved partition key type is one of the supported partition types.
+     *
+     * @param typeInfo the resolved MaxCompute type of the partition key
+     * @throws IllegalArgumentException if {@code typeInfo} is not a supported partition key type
+     */
     private static void checkPartitionTypePrecondition(TypeInfo typeInfo) {
         if (!ALLOWED_PARTITION_KEY_TYPE_INFO.contains(typeInfo)) {
             throw new IllegalArgumentException("Partition key type not supported: " + typeInfo.getTypeName());

@@ -26,12 +26,46 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link MessageProtobufMaxComputeConverter}, which recursively maps nested Protobuf messages
+ * onto MaxCompute structs.
+ *
+ * <p>The converter walks a message descriptor to produce a {@code STRUCT} type (and matching
+ * {@code ReorderableStruct} values), delegating each field to the appropriate converter via a
+ * {@link MaxComputeProtobufConverterCache}, and enforces a maximum nesting depth taken from
+ * {@link MaxComputeSinkConfig}. Tests build the converter in {@link #init()} from a Mockito-mocked
+ * configuration (UTC zone, a permissive timestamp range, {@code TIMESTAMP_NTZ} timestamps, and a maximum
+ * nested depth of {@code 15}) and exercise it against the generated {@code TestMaxComputeTypeInfo}
+ * fixtures.</p>
+ *
+ * <p>The suite covers the derived struct type for singular and repeated message fields, the full value
+ * conversion of a deeply nested buyer/cart/item message, and the guard that rejects a non-positive nesting
+ * depth.</p>
+ */
 public class MessageProtobufMaxComputeConverterTest {
 
+    /**
+     * The converter under test, rebuilt in {@link #init()} from the mocked configuration.
+     */
     private MessageProtobufMaxComputeConverter messageProtobufMaxComputeConverter;
+
+    /**
+     * Descriptor of the {@code TestRoot} fixture message, used to resolve nested message fields by index.
+     */
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
+
+    /**
+     * Descriptor of the {@code TestBuyerWrapper} fixture message, used to drive the full struct conversion.
+     */
     private final Descriptors.Descriptor payloadDescriptor = TestMaxComputeTypeInfo.TestBuyerWrapper.getDescriptor();
 
+    /**
+     * Builds the converter under test from a Mockito-mocked {@link MaxComputeSinkConfig}.
+     *
+     * <p>Stubs the configuration with a UTC zone, a permissive valid-timestamp range, {@code TIMESTAMP_NTZ} as
+     * the Protobuf timestamp mapping, and a maximum nested message depth of {@code 15}, then constructs the
+     * {@link MessageProtobufMaxComputeConverter} backed by a {@link MaxComputeProtobufConverterCache}.</p>
+     */
     @Before
     public void init() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
@@ -44,6 +78,15 @@ public class MessageProtobufMaxComputeConverterTest {
         messageProtobufMaxComputeConverter = new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }
 
+    /**
+     * Verifies that singular and repeated message fields are mapped to the expected struct types.
+     *
+     * <p>Resolves the converter type for the first (singular) and second (repeated) message fields of
+     * {@code TestRoot} via {@link MessageProtobufMaxComputeConverter#convertTypeInfo(ProtoPayload)}. Asserts
+     * the singular field becomes a nested
+     * {@code STRUCT<string_field:STRING,another_inner_field:STRUCT<string_field:STRING>,another_inner_list_field:ARRAY<STRUCT<string_field:STRING>>>}
+     * and that the repeated field becomes an {@code ARRAY} of that same struct type.</p>
+     */
     @Test
     public void shouldConvertMessageToProperTypeInfo() {
         TypeInfo firstMessageFieldTypeInfo = messageProtobufMaxComputeConverter.convertTypeInfo(new ProtoPayload(descriptor.getFields().get(1)));
@@ -56,6 +99,16 @@ public class MessageProtobufMaxComputeConverterTest {
         assertEquals(expectedSecondMessageTypeRepresentation, secondMessageFieldTypeInfo.toString());
     }
 
+    /**
+     * Verifies the end-to-end value conversion of a deeply nested message into a MaxCompute struct.
+     *
+     * <p>Builds a {@code TestBuyerWrapper} wrapping a buyer with a cart, two items, a creation timestamp, and a
+     * cart-age duration, then converts the wrapped buyer field via
+     * {@link MessageProtobufMaxComputeConverter#convertPayload(ProtoPayload)}. Asserts the resulting
+     * {@code ReorderableStruct} carries the expected nested struct type and that its field values match the
+     * expected name, nested cart (items, timestamp, and duration struct), and top-level creation
+     * timestamp.</p>
+     */
     @Test
     public void shouldConvertToStruct() {
         Timestamp timestamp = Timestamp.newBuilder()
@@ -114,6 +167,12 @@ public class MessageProtobufMaxComputeConverterTest {
         assertEquals(expectedStructValues.toString(), result.getFieldValues().toString());
     }
 
+    /**
+     * Verifies that constructing the converter with a non-positive maximum nesting depth is rejected.
+     *
+     * <p>Stubs the configuration to report a maximum nested message depth of {@code 0} and expects the
+     * {@link MessageProtobufMaxComputeConverter} constructor to throw an {@link IllegalArgumentException}.</p>
+     */
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenMaxNestedMessageDepthIsLessThanOne() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);

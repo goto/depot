@@ -33,11 +33,42 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link ProtobufConverterOrchestrator}, the facade that maps Protobuf fields to MaxCompute
+ * types and values and memoizes the derived type information.
+ *
+ * <p>The orchestrator resolves the right converter per field through an internal
+ * {@link MaxComputeProtobufConverterCache} and exposes
+ * {@link ProtobufConverterOrchestrator#toMaxComputeTypeInfo(ProtoPayload)},
+ * {@link ProtobufConverterOrchestrator#toMaxComputeValue(ProtoPayload)}, and
+ * {@link ProtobufConverterOrchestrator#clearCache()}. Tests build the orchestrator in {@link #init()} from a
+ * Mockito-mocked configuration (UTC zone, a permissive timestamp range, {@code TIMESTAMP_NTZ} timestamps, and
+ * a maximum nested depth of {@code 15}) and exercise it against the {@code TestMaxComputeTypeInfo}
+ * fixtures.</p>
+ *
+ * <p>The suite covers type resolution across primitive, message, repeated-message, timestamp, duration, and
+ * struct fields, the rejection of unsupported field types, end-to-end value conversion, and the clearing of
+ * the type-info cache (inspected through reflection).</p>
+ */
 public class ProtobufConverterOrchestratorTest {
 
+    /**
+     * Descriptor of the {@code TestRoot} fixture message whose fields drive the conversions.
+     */
     private final Descriptors.Descriptor descriptor = TestMaxComputeTypeInfo.TestRoot.getDescriptor();
+
+    /**
+     * The orchestrator under test, rebuilt in {@link #init()} from the mocked configuration.
+     */
     private ProtobufConverterOrchestrator protobufConverterOrchestrator;
 
+    /**
+     * Builds the orchestrator under test from a Mockito-mocked {@link MaxComputeSinkConfig}.
+     *
+     * <p>Stubs the configuration with a UTC zone, a permissive valid-timestamp range, {@code TIMESTAMP_NTZ} as
+     * the Protobuf timestamp mapping, and a maximum nested message depth of {@code 15}, then constructs the
+     * {@link ProtobufConverterOrchestrator}.</p>
+     */
     @Before
     public void init() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
@@ -50,6 +81,16 @@ public class ProtobufConverterOrchestratorTest {
         protobufConverterOrchestrator = new ProtobufConverterOrchestrator(maxComputeSinkConfig);
     }
 
+    /**
+     * Verifies that each category of field resolves to its expected MaxCompute type.
+     *
+     * <p>Resolves the type for a string, nested message, repeated message, timestamp, duration, and struct
+     * field via {@link ProtobufConverterOrchestrator#toMaxComputeTypeInfo(ProtoPayload)} and asserts their
+     * string representations: {@code STRING} for the scalar, a nested {@code STRUCT} for the message field, an
+     * {@code ARRAY} of that struct for the repeated message field, {@code TIMESTAMP_NTZ} for the timestamp,
+     * {@code STRUCT<seconds:BIGINT,nanos:BIGINT>} for the duration, and {@code STRING} for the struct
+     * field.</p>
+     */
     @Test
     public void shouldConvertPayloadToTypeInfo() {
         String expectedStringTypeInfoRepresentation = "STRING";
@@ -74,12 +115,29 @@ public class ProtobufConverterOrchestratorTest {
         assertEquals(expectedStructTypeInfoRepresentation, structTypeInfo.toString());
     }
 
+    /**
+     * Verifies that resolving the type of an unsupported field is rejected.
+     *
+     * <p>Looks up the {@code empty_field} descriptor, which has no corresponding MaxCompute mapping, and
+     * expects {@link ProtobufConverterOrchestrator#toMaxComputeTypeInfo(ProtoPayload)} to throw an
+     * {@link IllegalArgumentException}.</p>
+     */
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionForUnsupportedType() {
         Descriptors.FieldDescriptor unsupportedFieldDescriptor = descriptor.findFieldByName("empty_field");
         protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(unsupportedFieldDescriptor, null, 0));
     }
 
+    /**
+     * Verifies end-to-end value conversion across the supported field categories.
+     *
+     * <p>Builds a {@code TestRoot} message populated with a string, timestamp, duration, struct, singular inner
+     * message, and repeated inner message, then converts each field via
+     * {@link ProtobufConverterOrchestrator#toMaxComputeValue(ProtoPayload)}. Asserts that the string is
+     * returned unchanged, the timestamp becomes the expected {@code LocalDateTime}, the duration and nested
+     * messages become the expected {@code ReorderableStruct}s (the repeated one wrapped in a list), and the
+     * struct becomes its JSON string form.</p>
+     */
     @Test
     public void shouldConvertPayloadToRecord() {
         Struct.Builder structBuilder = Struct.newBuilder();
@@ -132,6 +190,17 @@ public class ProtobufConverterOrchestratorTest {
         assertEquals("{\"intField\":1.0,\"stringField\":\"String\"}", structRecord);
     }
 
+    /**
+     * Verifies that {@link ProtobufConverterOrchestrator#clearCache()} empties the cached type information.
+     *
+     * <p>Triggers a type resolution to populate the cache, then uses reflection to read the private
+     * {@code typeInfoCache} held by the orchestrator's {@link MaxComputeProtobufConverterCache} and asserts it
+     * is non-empty. After invoking {@link ProtobufConverterOrchestrator#clearCache()}, asserts the cache is
+     * empty.</p>
+     *
+     * @throws NoSuchFieldException   if the reflective lookup of the cache field fails
+     * @throws IllegalAccessException if the reflective access to the cache field is denied
+     */
     @Test
     public void shouldClearTheTypeInfoCache() throws NoSuchFieldException, IllegalAccessException {
         protobufConverterOrchestrator.toMaxComputeTypeInfo(new ProtoPayload(descriptor.findFieldByName("inner_list_field"), null, 0));

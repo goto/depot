@@ -17,11 +17,29 @@ import java.util.Map;
 import java.util.function.Function;
 
 
+/**
+ * Unit tests for {@link MessageUtils}, the helper methods for reading fields from JSON payloads and
+ * assembling message metadata.
+ *
+ * <p>The shared {@link #configuration} is a JsonPath {@link Configuration} backed by a
+ * {@code JsonOrgJsonProvider} so lookups operate over {@code org.json} objects. The tests cover field
+ * extraction from flat, nested and repeated JSON, the error raised for invalid field paths,
+ * timestamp-column coercion driven by the {@link SinkConfig} metadata column types, metadata assembly
+ * from a {@link Message}, and the type validation performed by {@code MessageUtils.validate}.</p>
+ */
 public class MessageUtilsTest {
+    /** JsonPath configuration backed by an {@code org.json} provider, shared by the lookups. */
     private final Configuration configuration = Configuration.builder()
             .jsonProvider(new JsonOrgJsonProvider())
             .build();
 
+    /**
+     * Verifies that a top-level string field is read from a JSON object.
+     *
+     * <p>Given a JSON object with a {@code test} property, when
+     * {@link MessageUtils#getFieldFromJsonObject(String, JSONObject, Configuration)} is queried for
+     * {@code "test"}, then it returns the string {@code "test"}.</p>
+     */
     @Test
     public void shouldGetStringFieldFromJsonObject() {
         JSONObject object = new JSONObject("{\"test\" :\"test\"}");
@@ -29,6 +47,13 @@ public class MessageUtilsTest {
     }
 
 
+    /**
+     * Verifies that elements of a JSON array of objects are addressable by index and key.
+     *
+     * <p>Given a {@code test} array of person objects, when fields are read with the paths
+     * {@code "test[1].name"} and {@code "test[2].height"}, then they resolve to {@code "Bob"} and
+     * {@code 175} respectively.</p>
+     */
     @Test
     public void shouldGetFieldFromNested() {
         JSONObject object = new JSONObject("{\"test\" :[{\"name\":\"John\",\"age\":50},{\"name\":\"Bob\",\"age\":60},{\"name\":\"Alice\",\"active\":true,\"height\":175}]}");
@@ -36,6 +61,14 @@ public class MessageUtilsTest {
         Assert.assertEquals(175, MessageUtils.getFieldFromJsonObject("test[2].height", object, configuration));
     }
 
+    /**
+     * Verifies that nested arrays and deeply nested values are read correctly.
+     *
+     * <p>Given a {@code test} array whose first element holds an {@code alist} array, when fields are
+     * read by path, then {@code "test[2].height"} resolves to {@code 175}, {@code "test[0].alist"}
+     * returns the nested array in its JSON form, and {@code "test[0].alist[0].value"} resolves to
+     * {@code "sometest"}.</p>
+     */
     @Test
     public void shouldGetRepeatedField() {
         String jsonString = "{\n"
@@ -72,6 +105,14 @@ public class MessageUtilsTest {
         Assert.assertEquals("sometest", MessageUtils.getFieldFromJsonObject("test[0].alist[0].value", object, configuration));
     }
 
+    /**
+     * Verifies that an unknown field path is rejected with a descriptive error.
+     *
+     * <p>Given a JSON object with only a {@code test} property, when a missing top-level path
+     * ({@code "testing"}) and a missing nested path ({@code "test[0].testing"}) are queried, then each
+     * throws an {@link IllegalArgumentException} whose message is {@code "Invalid field config : "}
+     * followed by the offending path.</p>
+     */
     @Test
     public void shouldThrowExceptionIfInvalidPath() {
         JSONObject object = new JSONObject("{\"test\" :\"test\"}");
@@ -82,6 +123,14 @@ public class MessageUtilsTest {
         Assert.assertEquals("Invalid field config : test[0].testing", exception.getMessage());
     }
 
+    /**
+     * Verifies that metadata columns typed as timestamps are converted with the supplied function.
+     *
+     * <p>Given a metadata map and metadata column types declaring {@code col4} as a timestamp, when
+     * {@link MessageUtils#checkAndSetTimeStampColumns(java.util.Map, java.util.List, java.util.function.Function)}
+     * applies a {@link Date}-producing converter, then {@code col4} becomes a {@link Date} while the
+     * string and integer columns are left unchanged.</p>
+     */
     @Test
     public void shouldCheckAndSetTimeStampColumns() {
         Map<String, Object> metadata = new HashMap<>();
@@ -104,6 +153,15 @@ public class MessageUtilsTest {
         Assert.assertEquals(new Date(1668158346000L), finalMetadata.get("col4"));
     }
 
+    /**
+     * Verifies that message metadata is assembled and timestamp columns are coerced.
+     *
+     * <p>Given a {@link Message} carrying metadata tuples and a config declaring {@code col4} as a
+     * timestamp, when
+     * {@link MessageUtils#getMetaData(Message, SinkConfig, java.util.function.Function)} is called with
+     * a {@link Date}-producing converter, then the returned map has four entries with {@code col4}
+     * converted to a {@link Date} and the remaining values preserved.</p>
+     */
     @Test
     public void shouldReturnMetadata() {
         Message message = new Message(
@@ -127,6 +185,14 @@ public class MessageUtilsTest {
         Assert.assertEquals(new Date(1668158346000L), finalMetadata.get("col4"));
     }
 
+    /**
+     * Verifies that validating a message against a mismatched type fails.
+     *
+     * <p>Given a {@link Message} whose key and value are {@link String}s, when
+     * {@link MessageUtils#validate(Message, Class)} is asked to validate it as {@link Integer}, then an
+     * {@link IOException} is thrown describing the expected type alongside the actual key and message
+     * types.</p>
+     */
     @Test
     public void shouldThrowExceptionIfNotValid() {
         Message message = new Message("test", "test");

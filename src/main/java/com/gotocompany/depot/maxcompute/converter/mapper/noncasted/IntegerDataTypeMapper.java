@@ -20,8 +20,24 @@ import static com.google.protobuf.Descriptors.FieldDescriptor.Type.SINT64;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT32;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT64;
 
+/**
+ * {@link ProtoPrimitiveDataTypeMapper} that maps integer Protobuf types to their natural-width MaxCompute types.
+ *
+ * <p>The 64-bit families ({@code INT64}, {@code UINT64}, {@code FIXED64}, {@code SFIXED64}, {@code SINT64}) map to
+ * {@code BIGINT}, and the 32-bit families ({@code INT32}, {@code UINT32}, {@code FIXED32}, {@code SFIXED32},
+ * {@code SINT32}) map to {@code INT}. All values pass through unchanged. This is the default integer mapper, used
+ * unless integer-to-bigint widening is enabled.</p>
+ *
+ * @see com.gotocompany.depot.maxcompute.converter.mapper.casted.IntegerToBigintDataTypeMapper
+ * @see ProtoPrimitiveDataTypeMapper
+ */
 public class IntegerDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
+    /**
+     * Returns the MaxCompute type mapping for the integer types.
+     *
+     * @return a map from the 64-bit integer types to {@code BIGINT} and the 32-bit integer types to {@code INT}
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, TypeInfo>builder()
@@ -38,6 +54,11 @@ public class IntegerDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
                 .build();
     }
 
+    /**
+     * Returns the value-conversion mapping for the integer types.
+     *
+     * @return a map from each handled integer type to an identity converter, since no value change is required
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()

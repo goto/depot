@@ -16,8 +16,22 @@ import static com.google.protobuf.Descriptors.FieldDescriptor.Type.BYTES;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.ENUM;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.STRING;
 
+/**
+ * {@link ProtoPrimitiveDataTypeMapper} for the non-numeric primitive Protobuf types.
+ *
+ * <p>It maps {@code BYTES} to MaxCompute {@code BINARY}, both {@code STRING} and {@code ENUM} to {@code STRING},
+ * and {@code BOOL} to {@code BOOLEAN}. Strings and booleans pass through unchanged, enums are rendered via their
+ * string representation, and byte strings are wrapped in a MaxCompute {@link Binary}.</p>
+ *
+ * @see ProtoPrimitiveDataTypeMapper
+ */
 public class NonNumericDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
+    /**
+     * Returns the MaxCompute type mapping for the non-numeric types.
+     *
+     * @return a map from {@code BYTES}, {@code STRING}, {@code ENUM}, and {@code BOOL} to their MaxCompute types
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, TypeInfo>builder()
@@ -28,6 +42,12 @@ public class NonNumericDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
                 .build();
     }
 
+    /**
+     * Returns the value-conversion mapping for the non-numeric types.
+     *
+     * @return a map from each handled type to its value converter (identity for strings and booleans, string
+     *         rendering for enums, and binary wrapping for byte strings)
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
@@ -38,6 +58,12 @@ public class NonNumericDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
                 .build();
     }
 
+    /**
+     * Wraps a protobuf {@link ByteString} into a MaxCompute {@link Binary}.
+     *
+     * @param object the byte string to wrap
+     * @return the MaxCompute {@link Binary} holding the same bytes
+     */
     private static Binary toBinaryFrom(ByteString object) {
         return new Binary(object.toByteArray());
     }
