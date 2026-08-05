@@ -151,4 +151,98 @@ public interface KafkaSinkConfig extends SinkConfig {
     @Key("SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_FETCH_RETRIES")
     @DefaultValue("4")
     Integer getSinkKafkaSchemaRegistryStencilFetchRetries();
+
+    /**
+     * Returns the Kafka producer acks setting.
+     *
+     * @return the configured acks value
+     */
+    @Key("SINK_KAFKA_ACKS")
+    @DefaultValue("all")
+    String getSinkKafkaAcks();
+
+    /**
+     * Returns the Kafka producer batch size in bytes.
+     *
+     * @return the configured batch size
+     */
+    @Key("SINK_KAFKA_BATCH_SIZE")
+    @DefaultValue("16384")
+    Integer getSinkKafkaBatchSize();
+
+    /**
+     * Returns the Kafka producer buffer memory in bytes.
+     *
+     * @return the configured buffer memory
+     */
+    @Key("SINK_KAFKA_BUFFER_MEMORY")
+    @DefaultValue("33554432")
+    Long getSinkKafkaBufferMemory();
+
+    /**
+     * Returns the Kafka producer key serializer class name.
+     *
+     * @return the configured key serializer
+     */
+    @Key("SINK_KAFKA_KEY_SERIALIZER")
+    @DefaultValue("org.apache.kafka.common.serialization.ByteArraySerializer")
+    String getSinkKafkaKeySerializer();
+
+    /**
+     * Returns the Kafka producer linger time in milliseconds.
+     *
+     * @return the configured linger ms
+     */
+    @Key("SINK_KAFKA_LINGER_MS")
+    @DefaultValue("1000")
+    Integer getSinkKafkaLingerMs();
+
+    /**
+     * Returns the Kafka producer retries setting.
+     *
+     * @return the configured retries
+     */
+    @Key("SINK_KAFKA_RETRIES")
+    @DefaultValue("2147483647")
+    Integer getSinkKafkaRetries();
+
+    /**
+     * Returns the Kafka producer value serializer class name.
+     *
+     * @return the configured value serializer
+     */
+    @Key("SINK_KAFKA_VALUE_SERIALIZER")
+    @DefaultValue("org.apache.kafka.common.serialization.ByteArraySerializer")
+    String getSinkKafkaValueSerializer();
+
+    /**
+     * Returns the partition count used when the sink auto-creates the output topic.
+     *
+     * <p>Ignored when the topic already exists on the broker.
+     *
+     * @return the configured partition count
+     */
+    @Key("SINK_KAFKA_TOPIC_PARTITION_COUNT")
+    @DefaultValue("3")
+    Integer getSinkKafkaTopicPartitionCount();
+
+    /**
+     * Returns the replication factor used when the sink auto-creates the output topic.
+     *
+     * <p>Ignored when the topic already exists. When unset, the broker default is used.
+     *
+     * @return the configured replication factor, or {@code null} to use the broker default
+     */
+    @Key("SINK_KAFKA_TOPIC_REPLICATION_FACTOR")
+    Integer getSinkKafkaTopicReplicationFactor();
+
+    /**
+     * Returns the topic retention period in hours used when the sink auto-creates the output topic.
+     *
+     * <p>Ignored when the topic already exists. When unset, the broker default is used.
+     *
+     * @return the configured retention in hours, or {@code null} to use the broker default
+     */
+    @Key("SINK_KAFKA_TOPIC_RETENTION_HR")
+    Integer getSinkKafkaTopicRetentionHr();
 }

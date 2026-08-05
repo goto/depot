@@ -28,13 +28,18 @@ public class KafkaProducerPropertiesFactoryTest {
     }
 
     @Test
-    public void shouldCreateBaseProducerProperties() {
+    public void shouldCreateBaseProducerPropertiesWithDefaults() {
         Map<String, String> configMap = getBaseConfig();
         KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, configMap);
         Properties properties = KafkaProducerPropertiesFactory.create(sinkConfig, configMap);
         assertEquals("localhost:9092", properties.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
         assertEquals(ByteArraySerializer.class.getName(), properties.get(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
         assertEquals(ByteArraySerializer.class.getName(), properties.get(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
+        assertEquals("all", properties.get(ProducerConfig.ACKS_CONFIG));
+        assertEquals("16384", properties.get(ProducerConfig.BATCH_SIZE_CONFIG));
+        assertEquals("33554432", properties.get(ProducerConfig.BUFFER_MEMORY_CONFIG));
+        assertEquals("1000", properties.get(ProducerConfig.LINGER_MS_CONFIG));
+        assertEquals("2147483647", properties.get(ProducerConfig.RETRIES_CONFIG));
         assertFalse(properties.containsKey(ProducerConfig.MAX_REQUEST_SIZE_CONFIG));
         assertFalse(properties.containsKey(ProducerConfig.COMPRESSION_TYPE_CONFIG));
     }
@@ -42,6 +47,9 @@ public class KafkaProducerPropertiesFactoryTest {
     @Test
     public void shouldNotPassReservedConfigsToProducer() {
         Map<String, String> configMap = getBaseConfig();
+        configMap.put("SINK_KAFKA_TOPIC_PARTITION_COUNT", "5");
+        configMap.put("SINK_KAFKA_TOPIC_REPLICATION_FACTOR", "2");
+        configMap.put("SINK_KAFKA_TOPIC_RETENTION_HR", "24");
         KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, configMap);
         Properties properties = KafkaProducerPropertiesFactory.create(sinkConfig, configMap);
         assertFalse(properties.containsKey("topic"));
@@ -52,21 +60,37 @@ public class KafkaProducerPropertiesFactoryTest {
         assertFalse(properties.containsKey("schema.registry.stencil.urls"));
         assertFalse(properties.containsKey("stream"));
         assertFalse(properties.containsKey("produce.large.message.enable"));
+        assertFalse(properties.containsKey("topic.partition.count"));
+        assertFalse(properties.containsKey("topic.replication.factor"));
+        assertFalse(properties.containsKey("topic.retention.hr"));
     }
 
     @Test
     public void shouldPassThroughAdditionalSinkKafkaConfigsToProducer() {
         Map<String, String> configMap = getBaseConfig();
-        configMap.put("SINK_KAFKA_LINGER_MS", "10");
         configMap.put("SINK_KAFKA_SASL_JAAS_CONFIG", "org.apache.kafka.common.security.plain.PlainLoginModule required;");
-        configMap.put("SINK_KAFKA_ACKS", "all");
         configMap.put("SOME_OTHER_CONFIG", "value");
         KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, configMap);
         Properties properties = KafkaProducerPropertiesFactory.create(sinkConfig, configMap);
-        assertEquals("10", properties.get("linger.ms"));
         assertEquals("org.apache.kafka.common.security.plain.PlainLoginModule required;", properties.get("sasl.jaas.config"));
-        assertEquals("all", properties.get("acks"));
         assertFalse(properties.containsKey("some.other.config"));
+    }
+
+    @Test
+    public void shouldOverrideProducerDefaultsFromConfig() {
+        Map<String, String> configMap = getBaseConfig();
+        configMap.put("SINK_KAFKA_LINGER_MS", "10");
+        configMap.put("SINK_KAFKA_ACKS", "1");
+        configMap.put("SINK_KAFKA_BATCH_SIZE", "32768");
+        configMap.put("SINK_KAFKA_BUFFER_MEMORY", "67108864");
+        configMap.put("SINK_KAFKA_RETRIES", "3");
+        KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, configMap);
+        Properties properties = KafkaProducerPropertiesFactory.create(sinkConfig, configMap);
+        assertEquals("10", properties.get(ProducerConfig.LINGER_MS_CONFIG));
+        assertEquals("1", properties.get(ProducerConfig.ACKS_CONFIG));
+        assertEquals("32768", properties.get(ProducerConfig.BATCH_SIZE_CONFIG));
+        assertEquals("67108864", properties.get(ProducerConfig.BUFFER_MEMORY_CONFIG));
+        assertEquals("3", properties.get(ProducerConfig.RETRIES_CONFIG));
     }
 
     @Test
@@ -101,13 +125,18 @@ public class KafkaProducerPropertiesFactoryTest {
     }
 
     @Test
-    public void shouldCreateOnlyBasePropertiesForEmptyConfigMap() {
+    public void shouldCreateDefaultProducerPropertiesForEmptyConfigMap() {
         Map<String, String> configMap = getBaseConfig();
         KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, configMap);
         Properties properties = KafkaProducerPropertiesFactory.create(sinkConfig, new HashMap<>());
-        assertEquals(3, properties.size());
         assertEquals("localhost:9092", properties.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
         assertEquals(ByteArraySerializer.class.getName(), properties.get(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
         assertEquals(ByteArraySerializer.class.getName(), properties.get(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
+        assertEquals("all", properties.get(ProducerConfig.ACKS_CONFIG));
+        assertEquals("16384", properties.get(ProducerConfig.BATCH_SIZE_CONFIG));
+        assertEquals("33554432", properties.get(ProducerConfig.BUFFER_MEMORY_CONFIG));
+        assertEquals("1000", properties.get(ProducerConfig.LINGER_MS_CONFIG));
+        assertEquals("2147483647", properties.get(ProducerConfig.RETRIES_CONFIG));
+        assertEquals(8, properties.size());
     }
 }

@@ -15,6 +15,7 @@ Following are the components of the Kafka sink:
 - `ProtoMappingFunction`: The core mapping component. Maps source Proto fields to sink Proto fields based on `SINK_KAFKA_PROTO_MAPPING` using CEL (Common Expression Language) expressions.
 - `KafkaMessageSerializer`: Serializes the mapped output Proto messages back to `byte[]`.
 - `KafkaProducerClient`: Produces the serialized key and value to the output Kafka topic and handles the producer acknowledgements.
+- `KafkaTopicCreator`: Ensures the output Kafka topic exists at startup, creating it when missing using the optional topic creation configs.
 - `SinkStencilClient`: A separate Stencil client, configured with `SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_*` variables, which fetches the sink/output Proto schemas used by the mapping function.
 - `KafkaResponseParser`: Collects errors from the producer responses and maps them to Depot's per message `ErrorInfo` in the `SinkResponse`.
 

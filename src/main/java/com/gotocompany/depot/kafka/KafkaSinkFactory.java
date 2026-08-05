@@ -7,6 +7,7 @@ import com.gotocompany.depot.exception.ConfigurationException;
 import com.gotocompany.depot.kafka.client.KafkaProducerClient;
 import com.gotocompany.depot.kafka.client.KafkaProducerFactory;
 import com.gotocompany.depot.kafka.client.KafkaProducerPropertiesFactory;
+import com.gotocompany.depot.kafka.client.KafkaTopicCreator;
 import com.gotocompany.depot.kafka.mapping.ProtoMappingFunctionCache;
 import com.gotocompany.depot.kafka.mapping.ProtoMappingFunctionFactory;
 import com.gotocompany.depot.kafka.parser.KafkaRecordParser;
@@ -40,6 +41,7 @@ public class KafkaSinkFactory {
     private final KafkaSinkConfig sinkConfig;
     private final StatsDReporter statsDReporter;
     private final Map<String, String> configMap;
+    private final KafkaTopicCreator topicCreator;
     private KafkaSinkMetrics kafkaSinkMetrics;
     private KafkaRecordParser recordParser;
     private Properties producerProperties;
@@ -51,9 +53,21 @@ public class KafkaSinkFactory {
      * @param statsDReporter the reporter used for metrics and the Stencil client
      */
     public KafkaSinkFactory(Map<String, String> env, StatsDReporter statsDReporter) {
+        this(env, statsDReporter, new KafkaTopicCreator());
+    }
+
+    /**
+     * Creates a factory from a raw configuration map with a custom topic creator.
+     *
+     * @param env            the environment configuration used to build the sink config and producer pass-through properties
+     * @param statsDReporter the reporter used for metrics and the Stencil client
+     * @param topicCreator   the topic creator used to ensure the output topic exists
+     */
+    KafkaSinkFactory(Map<String, String> env, StatsDReporter statsDReporter, KafkaTopicCreator topicCreator) {
         this.sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, env);
         this.statsDReporter = statsDReporter;
         this.configMap = env;
+        this.topicCreator = topicCreator;
     }
 
     /**
@@ -63,9 +77,21 @@ public class KafkaSinkFactory {
      * @param statsDReporter the reporter used for metrics and the Stencil client
      */
     public KafkaSinkFactory(KafkaSinkConfig sinkConfig, StatsDReporter statsDReporter) {
+        this(sinkConfig, statsDReporter, new KafkaTopicCreator());
+    }
+
+    /**
+     * Creates a factory from an already parsed sink configuration with a custom topic creator.
+     *
+     * @param sinkConfig     the parsed Kafka sink configuration
+     * @param statsDReporter the reporter used for metrics and the Stencil client
+     * @param topicCreator   the topic creator used to ensure the output topic exists
+     */
+    KafkaSinkFactory(KafkaSinkConfig sinkConfig, StatsDReporter statsDReporter, KafkaTopicCreator topicCreator) {
         this.sinkConfig = sinkConfig;
         this.statsDReporter = statsDReporter;
         this.configMap = Collections.emptyMap();
+        this.topicCreator = topicCreator;
     }
 
     /**
@@ -111,6 +137,8 @@ public class KafkaSinkFactory {
             this.recordParser = new KafkaRecordParser(messageParser, mappingFunctionCache,
                     new ProtoKafkaMessageSerializer(), MessageConfigUtils.getModeAndSchema(sinkConfig));
             this.producerProperties = KafkaProducerPropertiesFactory.create(sinkConfig, configMap);
+            topicCreator.ensureTopicExists(sinkConfig, producerProperties,
+                    new Instrumentation(statsDReporter, KafkaTopicCreator.class));
             instrumentation.captureValue(kafkaSinkMetrics.getKafkaLargeMessageModeMetric(),
                     sinkConfig.isSinkKafkaProduceLargeMessageEnable() ? 1 : 0);
             instrumentation.logInfo("Kafka sink initialized successfully");

@@ -49,6 +49,42 @@ public class KafkaSinkConfigTest {
         assertEquals(Long.valueOf(60000L), config.getSinkKafkaSchemaRegistryStencilFetchBackoffMinMs());
         assertEquals(Integer.valueOf(4), config.getSinkKafkaSchemaRegistryStencilFetchRetries());
         assertNotNull(config.getSinkKafkaSchemaRegistryStencilRefreshStrategy());
+        assertEquals("all", config.getSinkKafkaAcks());
+        assertEquals(Integer.valueOf(16384), config.getSinkKafkaBatchSize());
+        assertEquals(Long.valueOf(33554432L), config.getSinkKafkaBufferMemory());
+        assertEquals("org.apache.kafka.common.serialization.ByteArraySerializer", config.getSinkKafkaKeySerializer());
+        assertEquals(Integer.valueOf(1000), config.getSinkKafkaLingerMs());
+        assertEquals(Integer.valueOf(2147483647), config.getSinkKafkaRetries());
+        assertEquals("org.apache.kafka.common.serialization.ByteArraySerializer", config.getSinkKafkaValueSerializer());
+        assertEquals(Integer.valueOf(3), config.getSinkKafkaTopicPartitionCount());
+        assertNull(config.getSinkKafkaTopicReplicationFactor());
+        assertNull(config.getSinkKafkaTopicRetentionHr());
+    }
+
+    @Test
+    public void shouldParseProducerAndTopicCreationConfigs() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("SINK_KAFKA_ACKS", "1");
+        properties.put("SINK_KAFKA_BATCH_SIZE", "32768");
+        properties.put("SINK_KAFKA_BUFFER_MEMORY", "67108864");
+        properties.put("SINK_KAFKA_KEY_SERIALIZER", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("SINK_KAFKA_LINGER_MS", "5");
+        properties.put("SINK_KAFKA_RETRIES", "10");
+        properties.put("SINK_KAFKA_VALUE_SERIALIZER", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("SINK_KAFKA_TOPIC_PARTITION_COUNT", "6");
+        properties.put("SINK_KAFKA_TOPIC_REPLICATION_FACTOR", "2");
+        properties.put("SINK_KAFKA_TOPIC_RETENTION_HR", "48");
+        KafkaSinkConfig config = ConfigFactory.create(KafkaSinkConfig.class, properties);
+        assertEquals("1", config.getSinkKafkaAcks());
+        assertEquals(Integer.valueOf(32768), config.getSinkKafkaBatchSize());
+        assertEquals(Long.valueOf(67108864L), config.getSinkKafkaBufferMemory());
+        assertEquals("org.apache.kafka.common.serialization.StringSerializer", config.getSinkKafkaKeySerializer());
+        assertEquals(Integer.valueOf(5), config.getSinkKafkaLingerMs());
+        assertEquals(Integer.valueOf(10), config.getSinkKafkaRetries());
+        assertEquals("org.apache.kafka.common.serialization.StringSerializer", config.getSinkKafkaValueSerializer());
+        assertEquals(Integer.valueOf(6), config.getSinkKafkaTopicPartitionCount());
+        assertEquals(Integer.valueOf(2), config.getSinkKafkaTopicReplicationFactor());
+        assertEquals(Integer.valueOf(48), config.getSinkKafkaTopicRetentionHr());
     }
 
     @Test

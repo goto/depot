@@ -11,7 +11,7 @@ The list of ips/dns with port of the Kafka brokers hosting the output Kafka topi
 
 ### `SINK_KAFKA_TOPIC`
 
-The Kafka topic where the output messages will be produced by the Kafka sink. This topic would be auto created if it does not already exist in the Kafka broker and the broker has topic auto creation enabled.
+The Kafka topic where the output messages will be produced by the Kafka sink. If the topic does not already exist on the Kafka broker, the sink creates it at startup using `SINK_KAFKA_TOPIC_PARTITION_COUNT`, `SINK_KAFKA_TOPIC_REPLICATION_FACTOR` and `SINK_KAFKA_TOPIC_RETENTION_HR`. Those topic creation configs are ignored when the topic already exists.
 
 - Example value: `output-topic`
 - Type: `required`
@@ -44,6 +44,84 @@ Enable/Disable to produce large messages to Kafka. By default, this configuratio
 - Example value: `true`
 - Type: `optional`
 - Default value: `false`
+
+### `SINK_KAFKA_ACKS`
+
+The number of acknowledgments the Kafka producer requires the leader to have received before considering a request complete. Maps to the Kafka producer `acks` config.
+
+- Example value: `all`
+- Type: `optional`
+- Default value: `all`
+
+### `SINK_KAFKA_BATCH_SIZE`
+
+The Kafka producer batch size in bytes. Maps to the Kafka producer `batch.size` config.
+
+- Example value: `16384`
+- Type: `optional`
+- Default value: `16384`
+
+### `SINK_KAFKA_BUFFER_MEMORY`
+
+The total bytes of memory the Kafka producer can use to buffer records waiting to be sent to the server. Maps to the Kafka producer `buffer.memory` config.
+
+- Example value: `33554432`
+- Type: `optional`
+- Default value: `33554432`
+
+### `SINK_KAFKA_KEY_SERIALIZER`
+
+The serializer class for Kafka record keys. Maps to the Kafka producer `key.serializer` config.
+
+- Example value: `org.apache.kafka.common.serialization.ByteArraySerializer`
+- Type: `optional`
+- Default value: `org.apache.kafka.common.serialization.ByteArraySerializer`
+
+### `SINK_KAFKA_LINGER_MS`
+
+The time in milliseconds the Kafka producer waits for additional records before sending a batch. Maps to the Kafka producer `linger.ms` config.
+
+- Example value: `1000`
+- Type: `optional`
+- Default value: `1000`
+
+### `SINK_KAFKA_RETRIES`
+
+The number of retries the Kafka producer will attempt when a send fails with a potentially transient error. Maps to the Kafka producer `retries` config.
+
+- Example value: `2147483647`
+- Type: `optional`
+- Default value: `2147483647`
+
+### `SINK_KAFKA_VALUE_SERIALIZER`
+
+The serializer class for Kafka record values. Maps to the Kafka producer `value.serializer` config.
+
+- Example value: `org.apache.kafka.common.serialization.ByteArraySerializer`
+- Type: `optional`
+- Default value: `org.apache.kafka.common.serialization.ByteArraySerializer`
+
+### `SINK_KAFKA_TOPIC_PARTITION_COUNT`
+
+The number of partitions to use when the sink auto-creates the output Kafka topic. This config is ignored if the topic already exists on the broker.
+
+- Example value: `3`
+- Type: `optional`
+- Default value: `3`
+
+### `SINK_KAFKA_TOPIC_REPLICATION_FACTOR`
+
+The replication factor to use when the sink auto-creates the output Kafka topic. This config is ignored if the topic already exists on the broker. If unset and the topic does not exist, the Kafka broker default replication factor is used.
+
+- Example value: `2`
+- Type: `optional`
+
+### `SINK_KAFKA_TOPIC_RETENTION_HR`
+
+The topic retention period in hours to use when the sink auto-creates the output Kafka topic. Converted to `retention.ms` during topic creation. This config is ignored if the topic already exists on the broker. If unset and the topic does not exist, the Kafka broker default retention is used.
+
+- Example value: `24`
+- Type: `optional`
 
 ### `SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_ENABLE`
 
@@ -117,7 +195,7 @@ The number of retries while fetching the descriptors from the Stencil server.
 
 ### `SINK_KAFKA_(.*)`
 
-Any other environment variables starting with `SINK_KAFKA_` will be passed to the Kafka producer after converting the variable name to the corresponding producer property name. This one is useful for setting any Kafka producer property that is not available in the configuration. Please refer to the [Kafka producer configs documentation](https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html) for all the available Kafka producer properties.
+Any other environment variables starting with `SINK_KAFKA_` that are not reserved sink, stencil or topic-creation configs will be passed to the Kafka producer after converting the variable name to the corresponding producer property name. This is useful for setting any Kafka producer property that is not available as an explicit configuration. Please refer to the [Kafka producer configs documentation](https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html) for all the available Kafka producer properties.
 
-- Example: `SINK_KAFKA_LINGER_MS`, `SINK_KAFKA_SASL_JAAS_CONFIG`, etc
+- Example: `SINK_KAFKA_SASL_JAAS_CONFIG`, `SINK_KAFKA_SECURITY_PROTOCOL`, etc
 - Type: `optional`

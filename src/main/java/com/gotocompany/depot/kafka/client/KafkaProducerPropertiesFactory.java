@@ -2,7 +2,6 @@ package com.gotocompany.depot.kafka.client;
 
 import com.gotocompany.depot.config.KafkaSinkConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,8 +14,9 @@ import java.util.Set;
  * Builds the Kafka producer properties from the sink configuration and the pass-through environment.
  *
  * <p>Any {@code SINK_KAFKA_} variable that is not a reserved sink key or a Stencil-prefixed key is forwarded
- * to the producer as a dotted, lower cased property name. Large message mode and the mandatory bootstrap and
- * serializer settings are applied last so that they take precedence over pass-through values.
+ * to the producer as a dotted, lower cased property name. Explicit producer settings from
+ * {@link KafkaSinkConfig}, large message mode and the mandatory bootstrap servers are applied last so that
+ * they take precedence over pass-through values.
  */
 public final class KafkaProducerPropertiesFactory {
 
@@ -38,7 +38,17 @@ public final class KafkaProducerPropertiesFactory {
             "SINK_KAFKA_PROTO_KEY",
             "SINK_KAFKA_PROTO_MAPPING",
             "SINK_KAFKA_PRODUCE_LARGE_MESSAGE_ENABLE",
-            "SINK_KAFKA_STREAM"));
+            "SINK_KAFKA_STREAM",
+            "SINK_KAFKA_ACKS",
+            "SINK_KAFKA_BATCH_SIZE",
+            "SINK_KAFKA_BUFFER_MEMORY",
+            "SINK_KAFKA_KEY_SERIALIZER",
+            "SINK_KAFKA_LINGER_MS",
+            "SINK_KAFKA_RETRIES",
+            "SINK_KAFKA_VALUE_SERIALIZER",
+            "SINK_KAFKA_TOPIC_PARTITION_COUNT",
+            "SINK_KAFKA_TOPIC_REPLICATION_FACTOR",
+            "SINK_KAFKA_TOPIC_RETENTION_HR"));
 
     /**
      * Prevents instantiation of this utility class.
@@ -63,8 +73,13 @@ public final class KafkaProducerPropertiesFactory {
             properties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, LARGE_MESSAGE_COMPRESSION_TYPE);
         }
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, sinkConfig.getSinkKafkaBrokers());
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+        properties.put(ProducerConfig.ACKS_CONFIG, sinkConfig.getSinkKafkaAcks());
+        properties.put(ProducerConfig.BATCH_SIZE_CONFIG, String.valueOf(sinkConfig.getSinkKafkaBatchSize()));
+        properties.put(ProducerConfig.BUFFER_MEMORY_CONFIG, String.valueOf(sinkConfig.getSinkKafkaBufferMemory()));
+        properties.put(ProducerConfig.LINGER_MS_CONFIG, String.valueOf(sinkConfig.getSinkKafkaLingerMs()));
+        properties.put(ProducerConfig.RETRIES_CONFIG, String.valueOf(sinkConfig.getSinkKafkaRetries()));
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, sinkConfig.getSinkKafkaKeySerializer());
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, sinkConfig.getSinkKafkaValueSerializer());
         return properties;
     }
 
