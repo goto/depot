@@ -70,6 +70,8 @@ dependencies {
     testImplementation group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.1'
     testImplementation group: 'io.opentracing', name: 'opentracing-mock', version: '0.33.0'
     testImplementation group: 'org.mock-server', name: 'mockserver-netty', version: '5.15.0'
+    testImplementation group: 'org.testcontainers', name: 'testcontainers', version: '1.19.8'
+    testImplementation group: 'org.testcontainers', name: 'kafka', version: '1.19.8'
     testImplementation gradleTestKit()
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
