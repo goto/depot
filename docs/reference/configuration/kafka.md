@@ -127,9 +127,9 @@ The topic retention period in hours to use when the sink auto-creates the output
 
 Defines whether to enable the Stencil schema registry for fetching the descriptors of the output Proto classes. If disabled, the output Proto descriptors are loaded from the classpath.
 
-- Example value: `true`
+- Example value: `false`
 - Type: `optional`
-- Default value: `false`
+- Default value: `true`
 
 ### `SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_URLS`
 
