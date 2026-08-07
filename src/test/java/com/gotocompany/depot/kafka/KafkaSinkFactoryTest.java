@@ -37,6 +37,7 @@ public class KafkaSinkFactoryTest {
         configMap.put("SINK_KAFKA_PROTO_KEY", "com.gotocompany.depot.TestKafkaOutputKey");
         configMap.put("SINK_KAFKA_PROTO_MAPPING",
                 "{\"order_id\": \"string(source.order_number)\", \"user_id\": \"source.account_go_id\", \"order_number\": \"source.order_number\"}");
+        configMap.put("SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_ENABLE", "false");
         statsDReporter = new StatsDReporter(new NoOpStatsDClient());
         topicCreator = mock(KafkaTopicCreator.class);
     }

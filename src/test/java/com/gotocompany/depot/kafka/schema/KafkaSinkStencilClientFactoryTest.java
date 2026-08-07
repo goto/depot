@@ -21,7 +21,9 @@ public class KafkaSinkStencilClientFactoryTest {
 
     @Test
     public void shouldCreateClassLoadStencilClientWhenStencilIsDisabled() {
-        KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, new HashMap<String, String>());
+        Map<String, String> properties = new HashMap<>();
+        properties.put("SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_ENABLE", "false");
+        KafkaSinkConfig sinkConfig = ConfigFactory.create(KafkaSinkConfig.class, properties);
         StencilClient stencilClient = KafkaSinkStencilClientFactory.create(sinkConfig, new NoOpStatsDClient(), null);
         assertTrue(stencilClient instanceof ClassLoadStencilClient);
     }

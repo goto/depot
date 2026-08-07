@@ -40,7 +40,7 @@ public class KafkaSinkConfigTest {
         assertNull(config.getSinkKafkaProtoKey());
         assertTrue(config.getSinkKafkaProtoMapping().isEmpty());
         assertFalse(config.isSinkKafkaProduceLargeMessageEnable());
-        assertFalse(config.isSinkKafkaSchemaRegistryStencilEnable());
+        assertTrue(config.isSinkKafkaSchemaRegistryStencilEnable());
         assertEquals("", config.getSinkKafkaSchemaRegistryStencilUrls());
         assertTrue(config.getSinkKafkaSchemaRegistryStencilCacheAutoRefresh());
         assertNull(config.getSinkKafkaSchemaRegistryStencilFetchAuthBearerToken());
