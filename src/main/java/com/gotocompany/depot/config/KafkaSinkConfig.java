@@ -75,7 +75,7 @@ public interface KafkaSinkConfig extends SinkConfig {
      * @return {@code true} if the sink Stencil registry is enabled, {@code false} otherwise
      */
     @Key("SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_ENABLE")
-    @DefaultValue("false")
+    @DefaultValue("true")
     boolean isSinkKafkaSchemaRegistryStencilEnable();
 
     /**
