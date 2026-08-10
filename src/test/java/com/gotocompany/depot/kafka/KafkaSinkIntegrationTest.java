@@ -25,9 +25,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
+import org.junit.runners.model.Statement;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -71,9 +76,21 @@ public class KafkaSinkIntegrationTest {
                     + "\"is_valid\": \"source.amount > 0.0\", \"order_amount\": \"int(source.amount)\", "
                     + "\"service_type\": \"source.service_type\", \"payload\": \"source.payload\"}";
 
-    @ClassRule
-    public static final KafkaContainer KAFKA = new KafkaContainer(
+    private static final KafkaContainer KAFKA = new KafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.5.3"));
+
+    @ClassRule
+    public static final TestRule KAFKA_RULE = RuleChain
+            .outerRule((base, description) -> new Statement() {
+                @Override
+                public void evaluate() throws Throwable {
+                    Assume.assumeTrue(
+                            "Docker is required for KafkaSinkIntegrationTest",
+                            DockerClientFactory.instance().isDockerAvailable());
+                    base.evaluate();
+                }
+            })
+            .around(KAFKA);
 
     private StatsDReporter statsDReporter;
     private TestKafkaSourceMessage sourceMessage;
@@ -295,6 +312,7 @@ public class KafkaSinkIntegrationTest {
             config.put("SINK_KAFKA_PROTO_KEY", OUTPUT_KEY_PROTO);
         }
         config.put("SINK_KAFKA_PROTO_MAPPING", mapping);
+        config.put("SINK_KAFKA_SCHEMA_REGISTRY_STENCIL_ENABLE", "false");
         config.put("SINK_KAFKA_TOPIC_PARTITION_COUNT", "1");
         config.put("SINK_KAFKA_TOPIC_REPLICATION_FACTOR", "1");
         config.put("SINK_KAFKA_LINGER_MS", "0");
