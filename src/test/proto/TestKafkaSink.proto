@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package com.gotocompany.depot;
+
+option java_multiple_files = true;
+option java_package = "com.gotocompany.depot";
+option java_outer_classname = "TestKafkaSinkProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+message TestKafkaServiceType {
+  enum Enum {
+    UNKNOWN = 0;
+    GO_RIDE = 1;
+    GO_FOOD = 2;
+  }
+}
+
+message TestKafkaSourceStatus {
+  string last_status = 1;
+}
+
+message TestKafkaSourceLocation {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message TestKafkaSourceAddress {
+  string city = 1;
+}
+
+message TestKafkaSinkLocation {
+  double lat = 1;
+  double lng = 2;
+}
+
+message TestKafkaSourceMessage {
+  int64 order_number = 1;
+  string account_go_id = 2;
+  TestKafkaSourceStatus status = 3;
+  repeated int64 order_list = 4;
+  TestKafkaSourceLocation order_location = 5;
+  string current_status = 6;
+  TestKafkaSourceAddress address = 7;
+  TestKafkaSourceLocation pickup_location = 8;
+  double amount = 9;
+  int32 order_type = 10;
+  google.protobuf.Timestamp event_timestamp = 11;
+  TestKafkaServiceType.Enum service_type = 12;
+  bytes payload = 13;
+  map<string, string> labels = 14;
+  uint32 retry_count = 15;
+  uint64 total_count = 16;
+  float float_amount = 17;
+  repeated string tags = 18;
+}
+
+message TestKafkaOutputMessage {
+  string order_id = 1;
+  string user_id = 2;
+  string approval_status = 3;
+  double order_lat = 4;
+  double order_lng = 5;
+  int64 primary_order_id = 6;
+  int64 service_area_id = 7;
+  repeated int64 order_labels = 8;
+  string status = 9;
+  string city = 10;
+  TestKafkaSourceLocation origin = 11;
+  TestKafkaSinkLocation sink_origin = 12;
+  bool is_valid = 13;
+  int32 order_amount = 14;
+  google.protobuf.Timestamp event_timestamp = 15;
+  TestKafkaServiceType.Enum service_type = 16;
+  bytes payload = 17;
+  map<string, string> labels = 18;
+  uint32 retry_count = 19;
+  uint64 total_count = 20;
+  float float_amount = 21;
+  repeated string tags = 22;
+  google.protobuf.StringValue order_note = 23;
+}
+
+message TestKafkaOutputKey {
+  string order_id = 1;
+  int64 order_number = 2;
+}
