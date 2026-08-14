@@ -25,15 +25,41 @@ import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link RedisSink}, which converts messages with a {@link RedisParser}, writes the
+ * valid records with a {@link RedisClient} and aggregates parse and write failures into a
+ * {@link SinkResponse}.
+ *
+ * <p>The tests run under {@link MockitoJUnitRunner} with a mocked {@link RedisClient},
+ * {@link RedisParser} and {@link Instrumentation}. They cover the all-success path, the reporting of
+ * parse-time errors, per-record client failures, the combination of both, and the conversion of an
+ * unexpected client exception into non-retryable errors for every record.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RedisSinkTest {
+    /**
+     * Mocked client whose per-record responses (or thrown errors) are stubbed.
+     */
     @Mock
     private RedisClient redisClient;
+    /**
+     * Mocked parser stubbed to convert the input messages into records.
+     */
     @Mock
     private RedisParser redisParser;
+    /**
+     * Mocked instrumentation supplied to the sink.
+     */
     @Mock
     private Instrumentation instrumentation;
 
+    /**
+     * Verifies that a fully successful batch reports no errors.
+     *
+     * <p>Given the parser returning five valid records and the client returning five non-failed
+     * responses, when {@link RedisSink#pushToSink} is called, then the resulting {@link SinkResponse}
+     * has no errors.</p>
+     */
     @Test
     public void shouldPushToSink() {
         List<Message> messages = new ArrayList<>();
@@ -56,6 +82,15 @@ public class RedisSinkTest {
         Assert.assertFalse(sinkResponse.hasErrors());
     }
 
+    /**
+     * Verifies that parse-time failures are surfaced while valid records are still written.
+     *
+     * <p>Given five records of which those at indices {@code 0} and {@code 2} are invalid (carrying a
+     * {@link ErrorType#DESERIALIZATION_ERROR} and a {@link ErrorType#DEFAULT_ERROR} respectively) and
+     * the remaining valid records are written successfully, when {@link RedisSink#pushToSink} is
+     * called, then the {@link SinkResponse} has exactly two errors, mapped to indices {@code 0} and
+     * {@code 2} with the matching error types.</p>
+     */
     @Test
     public void shouldReportParsingErrors() {
         List<Message> messages = new ArrayList<>();
@@ -80,6 +115,14 @@ public class RedisSinkTest {
         Assert.assertEquals(ErrorType.DEFAULT_ERROR, sinkResponse.getErrorsFor(2).getErrorType());
     }
 
+    /**
+     * Verifies that per-record client write failures are surfaced.
+     *
+     * <p>Given five valid records whose responses at indices {@code 2}, {@code 3} and {@code 4} are
+     * failed with messages {@code "failed at 2"}, {@code "failed at 3"} and {@code "failed at 4"}, when
+     * {@link RedisSink#pushToSink} is called, then the {@link SinkResponse} has three errors of type
+     * {@link ErrorType#DEFAULT_ERROR}, each carrying the corresponding failure message.</p>
+     */
     @Test
     public void shouldReportClientErrors() {
         List<Message> messages = new ArrayList<>();
@@ -117,6 +160,16 @@ public class RedisSinkTest {
         Assert.assertEquals("failed at 4", sinkResponse.getErrorsFor(4).getException().getMessage());
     }
 
+    /**
+     * Verifies that parse-time and client write failures are combined in one response.
+     *
+     * <p>Given records at indices {@code 0} and {@code 2} that failed to parse plus valid records at
+     * indices {@code 1}, {@code 3} and {@code 4} whose written responses fail for indices {@code 3} and
+     * {@code 4}, when {@link RedisSink#pushToSink} is called, then the {@link SinkResponse} carries four
+     * errors: the two parse errors ({@link ErrorType#DESERIALIZATION_ERROR} at {@code 0} and
+     * {@link ErrorType#DEFAULT_ERROR} at {@code 2}) and the two client failures with messages
+     * {@code "failed at 3"} and {@code "failed at 4"}.</p>
+     */
     @Test
     public void shouldReportNetErrors() {
         List<Message> messages = new ArrayList<>();
@@ -146,6 +199,14 @@ public class RedisSinkTest {
         Assert.assertEquals("failed at 4", sinkResponse.getErrorsFor(4).getException().getMessage());
     }
 
+    /**
+     * Verifies that an unexpected client exception fails the whole batch as non-retryable.
+     *
+     * <p>Given five valid records and a client that throws a {@link ClassCastException} when writing
+     * them, when {@link RedisSink#pushToSink} is called, then the {@link SinkResponse} contains five
+     * errors, all of type {@link ErrorType#SINK_NON_RETRYABLE_ERROR} and each carrying the exception
+     * message.</p>
+     */
     @Test
     public void shouldReturnNonRetryableErrors() {
         List<Message> messages = new ArrayList<>();

@@ -36,23 +36,48 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+/**
+ * Unit tests for {@link MessageRecordConverter} when parsing JSON-encoded messages into BigQuery
+ * {@link Records}.
+ *
+ * <p>The tests drive the converter with a real {@link JsonMessageParser} and a
+ * {@link BigQuerySinkConfig} configured for the relevant message mode ({@code LOG_MESSAGE} or
+ * {@code LOG_KEY}). They assert that well-formed JSON becomes valid {@link Record}s, that malformed
+ * or empty payloads are collected as invalid records with the right {@link ErrorType}, and that the
+ * {@code event_timestamp} column is injected when enabled.</p>
+ */
 public class MessageRecordConverterForJsonTest {
 
+    /** UTC time zone applied to the date formatter used in event-timestamp assertions. */
     private static final TimeZone TZ = TimeZone.getTimeZone("UTC");
+    /** Formatter ({@code yyyy-MM-dd'T'HH:mm'Z'}) used to parse injected event timestamps. */
     private static final DateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
 
     static {
         DF.setTimeZone(TZ);
     }
 
+    /** Default sink configuration created from an empty property map. */
     private final SinkConfig defaultConfig = ConfigFactory.create(SinkConfig.class, Collections.emptyMap());
+    /** Shared record builder reused to construct the expected records. */
     private final Record.RecordBuilder recordBuilder = Record.builder();
+    /** Empty metadata map shared by the expected records. */
     private final Map<String, Object> emptyMetadata = Collections.emptyMap();
+    /** Empty columns map shared by the expected invalid records. */
     private final Map<String, Object> emptyColumnsMap = Collections.emptyMap();
+    /** Sentinel {@code null} {@link ErrorInfo} denoting a record with no error. */
     private final ErrorInfo noError = null;
+    /** Mocked instrumentation passed to the JSON message parser. */
     private final Instrumentation instrumentation = mock(Instrumentation.class);
+    /** JSON parser metrics derived from the default configuration. */
     private final JsonParserMetrics jsonParserMetrics = new JsonParserMetrics(defaultConfig);
 
+    /**
+     * Verifies that converting an empty message list yields empty record collections.
+     *
+     * <p>Given a converter over an empty input list, when {@code convert} runs, then it returns a
+     * {@link Records} with empty valid and invalid lists.</p>
+     */
     @Test
     public void shouldReturnEmptyRecordsForEmptyList() {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);
@@ -68,6 +93,12 @@ public class MessageRecordConverterForJsonTest {
         assertEquals(expectedRecords, records);
     }
 
+    /**
+     * Verifies conversion of JSON log-message payloads into valid records.
+     *
+     * <p>Given {@code LOG_MESSAGE} mode and two JSON messages, when {@code convert} runs, then both
+     * become valid records whose columns mirror the JSON, with sequential indexes and no errors.</p>
+     */
     @Test
     public void shouldConvertJsonMessagesToRecordForLogMessage() {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);
@@ -103,6 +134,13 @@ public class MessageRecordConverterForJsonTest {
         assertEquals(expectedRecords, records);
     }
 
+    /**
+     * Verifies conversion of JSON log-key payloads into valid records.
+     *
+     * <p>Given {@code LOG_KEY} mode and two messages whose JSON is carried in the key, when
+     * {@code convert} runs, then both become valid records whose columns mirror the JSON key, with
+     * sequential indexes and no errors.</p>
+     */
     @Test
     public void shouldConvertJsonMessagesToRecordForLogKey() {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);
@@ -138,6 +176,16 @@ public class MessageRecordConverterForJsonTest {
         assertEquals(expectedRecords, records);
     }
 
+    /**
+     * Verifies that a mix of valid and invalid JSON messages is partitioned correctly.
+     *
+     * <p>Given {@code LOG_MESSAGE} mode and a batch of two well-formed flat objects (indexes {@code 0}
+     * and {@code 2}), two malformed payloads (indexes {@code 1} and {@code 3}) and one nested JSON
+     * object (index {@code 4}), when {@code convert} runs, then the two flat objects become valid
+     * records, the malformed payloads become invalid records of type
+     * {@link ErrorType#DESERIALIZATION_ERROR}, and the nested object becomes an invalid record of type
+     * {@link ErrorType#INVALID_MESSAGE_ERROR}.</p>
+     */
     @Test
     public void shouldHandleBothInvalidAndValidJsonMessages() {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);
@@ -209,6 +257,16 @@ public class MessageRecordConverterForJsonTest {
         assertEquals(expectedInvalidRecords, records.getInvalidRecords());
     }
 
+    /**
+     * Verifies that an {@code event_timestamp} column is injected for JSON sources when enabled.
+     *
+     * <p>Given JSON {@code LOG_MESSAGE} mode with event-timestamp injection enabled and two messages,
+     * when {@code convert} runs, then there are no invalid records, both valid records retain their
+     * original columns, and each carries an {@code event_timestamp} that parses to within roughly a
+     * minute of the current time.</p>
+     *
+     * @throws ParseException if a generated {@code event_timestamp} value cannot be parsed
+     */
     @Test
     public void shouldInjectEventTimestamp() throws ParseException {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);
@@ -251,11 +309,24 @@ public class MessageRecordConverterForJsonTest {
         assertTrue("the difference is " + timeDifferenceForSecondDate, timeDifferenceForSecondDate < 60000);
     }
 
+    /**
+     * Wraps a JSON string as the log-message payload of a new {@link Message}.
+     *
+     * @param jsonStr the JSON document to use as the message value
+     * @return a {@link Message} with a {@code null} key and the JSON bytes as its value
+     */
     private Message getMessageForString(String jsonStr) {
         byte[] logMessage = jsonStr.getBytes();
         return new Message(null, logMessage);
     }
 
+    /**
+     * Verifies that empty and entirely absent payloads are reported as invalid messages.
+     *
+     * <p>Given {@code LOG_KEY} mode and two messages whose key is an empty byte array and {@code null}
+     * respectively, when {@code convert} runs, then both produce invalid records of type
+     * {@link ErrorType#INVALID_MESSAGE_ERROR}.</p>
+     */
     @Test
     public void shouldConvertJsonMessagesToRecordForEmpty() {
         MessageParser parser = new JsonMessageParser(defaultConfig, instrumentation, jsonParserMetrics);

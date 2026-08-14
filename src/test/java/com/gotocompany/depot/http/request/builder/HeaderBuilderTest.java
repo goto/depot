@@ -25,15 +25,50 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link HeaderBuilder}, which assembles HTTP request headers from a static base header
+ * configuration and an optional header template whose {@code %s,field} placeholders are resolved from
+ * the message or key.
+ *
+ * <p>A real {@link ProtoMessageParser} obtained via {@link MessageParserFactory} parses
+ * {@link com.gotocompany.depot.TestBookingLogKey} and {@link com.gotocompany.depot.TestBookingLogMessage}
+ * payloads, while the {@link MessageContainer} and {@link StatsDReporter} are Mockito mocks. The tests
+ * cover base header parsing, multiple headers, empty and malformed configurations, templated headers
+ * sourced from the message and from the key, constant template entries, and the validation error raised
+ * for an unknown field.</p>
+ */
 public class HeaderBuilderTest {
 
+    /**
+     * HTTP sink configuration rebuilt per scenario from {@link #configuration}.
+     */
     private HttpSinkConfig sinkConfig;
+    /**
+     * Mocked metrics reporter required when constructing the message parser.
+     */
     @Mock
     private StatsDReporter statsDReporter;
+    /**
+     * Mocked container supplying the parsed log key and log message used for templated headers.
+     */
     @Mock
     private MessageContainer messageContainer;
+    /**
+     * Mutable configuration map seeded in {@link #setup()} and overridden per test before the config
+     * is rebuilt.
+     */
     private final Map<String, String> configuration = new HashMap<>();
 
+    /**
+     * Parses a representative booking-log key and message and stubs the container before each test.
+     *
+     * <p>Configures the proto key/message classes, {@link SinkConnectorSchemaMessageMode#LOG_MESSAGE}
+     * mode and a {@code MESSAGE} header parameter source, then parses both the key and message with a
+     * real {@link ProtoMessageParser} and stubs the container to return the parsed key and parsed
+     * message.</p>
+     *
+     * @throws IOException if parser construction or message parsing fails
+     */
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.openMocks(this);
@@ -54,6 +89,13 @@ public class HeaderBuilderTest {
         when(messageContainer.getParsedLogMessage(sinkConfig.getSinkConnectorSchemaProtoMessageClass())).thenReturn(parsedMessage);
     }
 
+    /**
+     * Verifies that a single base header entry is parsed into the header map.
+     *
+     * <p>Given a base header configuration of {@code content-type:json}, when
+     * {@link HeaderBuilder#build()} is invoked, then the returned map maps {@code content-type} to
+     * {@code json}.</p>
+     */
     @Test
     public void shouldGenerateBaseHeader() {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -63,6 +105,13 @@ public class HeaderBuilderTest {
         assertEquals("json", headerBuilder.build().get("content-type"));
     }
 
+    /**
+     * Verifies that multiple comma-separated base headers are each parsed into the header map.
+     *
+     * <p>Given a base header configuration of {@code Authorization:auth_token,Accept:text/plain}, when
+     * {@link HeaderBuilder#build()} is invoked, then the returned map contains both the
+     * {@code Authorization} and {@code Accept} entries with their values.</p>
+     */
     @Test
     public void shouldHandleMultipleBaseHeaders() {
         configuration.put("SINK_HTTPV2_HEADERS", "Authorization:auth_token,Accept:text/plain");
@@ -74,6 +123,12 @@ public class HeaderBuilderTest {
         assertEquals("text/plain", header.get("Accept"));
     }
 
+    /**
+     * Verifies that an empty base header configuration is handled gracefully.
+     *
+     * <p>Given an empty header configuration, when {@link HeaderBuilder#build()} is invoked, then it
+     * completes without throwing a {@code NullPointerException}.</p>
+     */
     @Test
     public void shouldNotThrowNullPointerExceptionWhenHeaderConfigEmpty() {
         configuration.put("SINK_HTTPV2_HEADERS", "");
@@ -82,6 +137,13 @@ public class HeaderBuilderTest {
         headerBuilder.build();
     }
 
+    /**
+     * Verifies that a malformed base header configuration fails fast.
+     *
+     * <p>Given a header configuration containing entries that are not well-formed {@code key:value}
+     * pairs, when {@link HeaderBuilder#build()} is invoked, then an
+     * {@link ArrayIndexOutOfBoundsException} is thrown.</p>
+     */
     @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void shouldThrowErrorIfHeaderConfigIsInvalid() {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json,header_key;header_value,key:,:value");
@@ -90,6 +152,16 @@ public class HeaderBuilderTest {
         headerBuilder.build();
     }
 
+    /**
+     * Verifies that a header template is resolved from message fields and merged with base headers.
+     *
+     * <p>Given a base header {@code content-type:json} and a template
+     * {@code {"H-%s,order_number":"V-%s,service_type"}} with a {@code MESSAGE} parameter source, when
+     * {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has two entries:
+     * {@code content-type=json} and {@code H-ON#1=V-GO_SEND}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldGenerateParameterisedHeaderFromTemplate() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -103,6 +175,16 @@ public class HeaderBuilderTest {
         assertEquals("V-GO_SEND", headers.get("H-ON#1"));
     }
 
+    /**
+     * Verifies that a header template can be resolved from key fields when the parameter source is the
+     * key.
+     *
+     * <p>Given a template {@code {"H-%s,order_url":"V-%s,order_number"}} with a {@code KEY} parameter
+     * source, when {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has two
+     * entries: {@code content-type=json} and {@code H-OURL#1=V-ON#1} sourced from the parsed key.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldGenerateParameterisedHeaderFromTemplateWhenHeaderParamSourceIsKey() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -117,6 +199,15 @@ public class HeaderBuilderTest {
         assertEquals("V-ON#1", headers.get("H-OURL#1"));
     }
 
+    /**
+     * Verifies that templated headers are produced even when no base headers are configured.
+     *
+     * <p>Given only a header template {@code {"H-%s,order_number":"V-%s,service_type"}} and no base
+     * headers, when {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has a
+     * single entry {@code H-ON#1=V-GO_SEND}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldGenerateParameterisedHeaderFromTemplateWhenBaseHeadersAreNotProvided() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS_TEMPLATE", "{\"H-%s,order_number\":\"V-%s,service_type\"}");
@@ -128,6 +219,16 @@ public class HeaderBuilderTest {
         assertEquals("V-GO_SEND", headers.get("H-ON#1"));
     }
 
+    /**
+     * Verifies that constant template entries coexist with parameterised entries and base headers.
+     *
+     * <p>Given a base header and a template mixing a parameterised entry with a constant
+     * {@code "H-const":"V-const"}, when {@link HeaderBuilder#build(MessageContainer)} is invoked, then
+     * the result has three entries: {@code H-ON#1=V-GO_SEND}, {@code H-const=V-const} and
+     * {@code content-type=json}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldHandleConstantHeaderStringsProvidedInTemplateAlongWithAnyFormattedString() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -142,6 +243,15 @@ public class HeaderBuilderTest {
         assertEquals("json", headers.get("content-type"));
     }
 
+    /**
+     * Verifies that an empty JSON object template yields only the base headers.
+     *
+     * <p>Given a base header and a template of {@code {}}, when
+     * {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has a single entry
+     * {@code content-type=json}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldReturnBaseHeadersIfHeadersTemplateIsEmpty() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -154,6 +264,15 @@ public class HeaderBuilderTest {
         assertEquals("json", headers.get("content-type"));
     }
 
+    /**
+     * Verifies that an empty-string template yields only the base headers.
+     *
+     * <p>Given a base header and an empty template string, when
+     * {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has a single entry
+     * {@code content-type=json}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldReturnBaseHeadersIfHeadersTemplateIsEmptyString() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -166,6 +285,15 @@ public class HeaderBuilderTest {
         assertEquals("json", headers.get("content-type"));
     }
 
+    /**
+     * Verifies that omitting the template entirely yields only the base headers.
+     *
+     * <p>Given a base header and no configured template, when
+     * {@link HeaderBuilder#build(MessageContainer)} is invoked, then the result has a single entry
+     * {@code content-type=json}.</p>
+     *
+     * @throws IOException never in practice; declared because building templated headers is checked
+     */
     @Test
     public void shouldReturnBaseHeadersIfHeadersTemplateIsNotProvided() throws IOException {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");
@@ -177,6 +305,14 @@ public class HeaderBuilderTest {
         assertEquals("json", headers.get("content-type"));
     }
 
+    /**
+     * Verifies that a template referencing a field absent from the schema is rejected.
+     *
+     * <p>Given a template placeholder naming {@code RANDOM_FIELD}, when
+     * {@link HeaderBuilder#build(MessageContainer)} is invoked, then an
+     * {@link IllegalArgumentException} with the message {@code "Invalid field config : RANDOM_FIELD"}
+     * is thrown; the assertion is performed inside a {@code catch} block.</p>
+     */
     @Test
     public void shouldThrowIllegalArgumentExceptionIfAnyFieldNameProvidedDoesNotExistInSchema() {
         configuration.put("SINK_HTTPV2_HEADERS", "content-type:json");

@@ -31,13 +31,37 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+/**
+ * Unit tests for {@link LogSink}, the sink that logs parsed messages rather than writing them to an
+ * external system.
+ *
+ * <p>Each test builds a {@link LogSink} from a mocked {@link SinkConfig}, a {@link MessageParser}
+ * (either a Mockito mock or a real {@link JsonMessageParser}) and a mocked {@link Instrumentation}.
+ * The batch pipeline is exercised through {@link LogSink#pushToSink(java.util.List)} and the returned
+ * {@link SinkResponse}, along with the interactions captured on the {@link Instrumentation} mock, is
+ * asserted. The shared {@link #template} mirrors the layout the sink uses to render the data and
+ * metadata sections of each log line.</p>
+ */
 public class LogSinkTest {
+    /** Log format string shared with the sink: a data section followed by a metadata section. */
     private final String template = "\n================= DATA =======================\n{}\n================= METADATA =======================\n{}\n";
+    /** Mocked sink configuration supplied to the sink and to the metrics under test. */
     private SinkConfig config;
+    /** Message parser used by the sink; a Mockito mock or a real {@link JsonMessageParser} per test. */
     private MessageParser messageParser;
+    /** Mocked instrumentation used to assert logging and metric interactions. */
     private Instrumentation instrumentation;
+    /** JSON parser metrics bound to the mocked config and passed to the real JSON parser. */
     private JsonParserMetrics jsonParserMetrics;
 
+    /**
+     * Initialises the shared fixtures before each test.
+     *
+     * <p>Creates Mockito mocks for the {@link SinkConfig}, {@link MessageParser} and
+     * {@link Instrumentation}, and a real {@link JsonParserMetrics} bound to the mocked config.</p>
+     *
+     * @throws Exception if fixture initialisation fails
+     */
     @Before
     public void setUp() throws Exception {
         config = mock(SinkConfig.class);
@@ -47,6 +71,15 @@ public class LogSinkTest {
 
     }
 
+    /**
+     * Verifies that pushing an empty batch is a no-op that reports no errors.
+     *
+     * <p>Given a {@link LogSink} and an empty message list, when
+     * {@link LogSink#pushToSink(java.util.List)} is invoked, then the returned {@link SinkResponse}
+     * carries an empty error map and neither the message parser nor the instrumentation is invoked.</p>
+     *
+     * @throws IOException if the sink push fails
+     */
     @Test
     public void shouldProcessEmptyMessageWithNoError() throws IOException {
         LogSink logSink = new LogSink(config, messageParser, instrumentation);
@@ -59,6 +92,17 @@ public class LogSinkTest {
         verify(instrumentation, never()).logInfo(any(), any(), any());
     }
 
+    /**
+     * Verifies that valid JSON messages are parsed and logged without errors.
+     *
+     * <p>Given a sink configured in {@code log_message} mode with a real {@link JsonMessageParser},
+     * when two valid JSON payloads are pushed, then the response contains no errors and the
+     * {@link Instrumentation} logs both payloads exactly twice using the shared {@link #template} and
+     * an empty metadata map. The captured log arguments are asserted to contain both payloads in any
+     * order.</p>
+     *
+     * @throws SinkException if the sink push fails
+     */
     @Test
     public void shouldLogJsonMessages() throws SinkException {
         HashMap<String, String> configMap = new HashMap<String, String>() {{
@@ -86,6 +130,16 @@ public class LogSinkTest {
         assertThat(jsonStrCaptor.getAllValues(), containsInAnyOrder(validJsonFirstName, validJsonLastName));
     }
 
+    /**
+     * Verifies that an invalid message is reported as an error while valid messages are still logged.
+     *
+     * <p>Given a sink in {@code log_message} mode fed one valid and one malformed JSON payload, when
+     * the batch is pushed, then the response records an {@link ErrorType#DESERIALIZATION_ERROR} for
+     * the malformed entry at index {@code 1} and the single valid payload is logged exactly once with
+     * the shared {@link #template}.</p>
+     *
+     * @throws SinkException if the sink push fails
+     */
     @Test
     public void shouldReturnErrorResponseAndProcessValidMessage() throws SinkException {
         HashMap<String, String> configMap = new HashMap<String, String>() {{

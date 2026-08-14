@@ -23,15 +23,44 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for the list-data-type Redis entry parser produced by {@link RedisEntryParserFactory},
+ * which maps a {@link ParsedMessage} to a {@link RedisListEntry} for the {@code LIST} sink type.
+ *
+ * <p>The tests run under {@link MockitoJUnitRunner} with a mocked {@link RedisSinkConfig}. Each
+ * scenario calls {@link #redisSinkSetup(String, String)} to stub the configuration, parse a
+ * {@link TestMessage} through a real {@link ProtoMessageParser} and resolve the parser under test.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RedisListEntryParserTest {
+    /**
+     * Mocked sink configuration stubbed for the {@code LIST} data type per scenario.
+     */
     @Mock
     private RedisSinkConfig redisSinkConfig;
+    /**
+     * Mocked StatsD reporter passed to the proto parser and the entry-parser factory.
+     */
     @Mock
     private StatsDReporter statsDReporter;
+    /**
+     * Parser under test, resolved from the factory in {@link #redisSinkSetup(String, String)}.
+     */
     private RedisEntryParser redisListEntryParser;
+    /**
+     * Parsed fixture message fed to the parser under test.
+     */
     private ParsedMessage parsedMessage;
 
+    /**
+     * Stubs the {@link RedisSinkConfig} for a {@code LIST} sink with the given key template and list
+     * data field, parses a fixed {@link TestMessage} through a real {@link ProtoMessageParser}, and
+     * resolves the parser under test from {@link RedisEntryParserFactory}.
+     *
+     * @param template the Redis key template to stub
+     * @param field the list data field name to stub
+     * @throws IOException if parsing the fixture message fails
+     */
     private void redisSinkSetup(String template, String field) throws IOException {
         when(redisSinkConfig.getSinkRedisDataType()).thenReturn(RedisSinkDataType.LIST);
         when(redisSinkConfig.getSinkRedisListDataFieldName()).thenReturn(field);
@@ -48,6 +77,15 @@ public class RedisListEntryParserTest {
         redisListEntryParser = RedisEntryParserFactory.getRedisEntryParser(redisSinkConfig, statsDReporter);
     }
 
+    /**
+     * Verifies that a valid field configuration yields the expected list entry.
+     *
+     * <p>Given a {@code LIST} setup keyed by {@code "test-key"} reading field {@code order_details},
+     * when {@link RedisEntryParser#getRedisEntry} is called with the parsed message, then it returns a
+     * single {@link RedisListEntry} mapping {@code "test-key"} to {@code "new-eureka-order"}.</p>
+     *
+     * @throws IOException if parsing the fixture message fails
+     */
     @Test
     public void shouldConvertParsedMessageToRedisListEntry() throws IOException {
         redisSinkSetup("test-key", "order_details");
@@ -56,6 +94,15 @@ public class RedisListEntryParserTest {
         assertEquals(Collections.singletonList(expectedEntry), redisDataEntries);
     }
 
+    /**
+     * Verifies that an unknown list data field is rejected.
+     *
+     * <p>Given a {@code LIST} setup whose data field is {@code "random-field"}, when
+     * {@link RedisEntryParser#getRedisEntry} is called, then an {@link IllegalArgumentException} with
+     * the message {@code "Invalid field config : random-field"} is thrown.</p>
+     *
+     * @throws IOException if parsing the fixture message fails
+     */
     @Test
     public void shouldThrowExceptionForInvalidKeyValueDataFieldName() throws IOException {
         redisSinkSetup("test-key", "random-field");

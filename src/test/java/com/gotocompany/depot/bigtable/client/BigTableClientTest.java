@@ -40,23 +40,55 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 
+/**
+ * Unit tests for {@link BigTableClient}, the wrapper around the Bigtable data and admin clients used
+ * to apply mutations and validate the destination table.
+ *
+ * <p>The Google Bigtable clients ({@link BigtableDataClient}, {@link BigtableTableAdminClient}), the
+ * {@link BigTableMetrics} and the {@link Instrumentation} are Mockito mocks. The {@link #setUp()}
+ * fixture seeds connection and schema system properties, builds two valid {@link BigTableRecord}s and
+ * constructs the {@link BigTableClient} under test. Tests cover the success and failure outcomes of
+ * {@link BigTableClient#send(java.util.List)} (including a {@link MutateRowsException}), the schema
+ * validation paths of {@link BigTableClient#validateBigTableSchema()} that raise a
+ * {@link BigTableInvalidSchemaException}, and the latency and count metrics emitted on a successful
+ * bulk mutation.</p>
+ */
 public class BigTableClientTest {
 
+    /** Mock Bigtable data client whose bulk-mutation behaviour is stubbed per test. */
     @Mock
     private BigtableDataClient bigTableDataClient;
+    /** Mock Bigtable admin client used to stub table existence and lookups. */
     @Mock
     private BigtableTableAdminClient bigtableTableAdminClient;
+    /** Mock API exception used to populate failed mutations. */
     @Mock
     private ApiException apiException;
+    /** Mock metrics supplying metric names and tags used in verifications. */
     @Mock
     private BigTableMetrics bigtableMetrics;
+    /** Mock instrumentation whose logging and metric calls are verified. */
     @Mock
     private Instrumentation instrumentation;
 
+    /** Client under test, built from the mocked clients and schema. */
     private BigTableClient bigTableClient;
+    /** Two valid records sent through the client. */
     private List<BigTableRecord> validRecords;
+    /** Sink configuration loaded from the seeded system properties. */
     private BigTableSinkConfig sinkConfig;
 
+    /**
+     * Seeds connection and schema configuration and builds the client under test before each test.
+     *
+     * <p>Opens the Mockito annotations, sets the proto class, message mode, GCP project, instance,
+     * table, credential path, column-family mapping and row-key template as system properties, builds
+     * two valid {@link BigTableRecord}s and a {@link BigTableSchema}, and constructs the
+     * {@link BigTableClient} from the mocked data client, admin client, metrics and
+     * instrumentation.</p>
+     *
+     * @throws IOException if loading configuration fails
+     */
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
@@ -86,6 +118,13 @@ public class BigTableClientTest {
         bigTableClient = new BigTableClient(sinkConfig, bigTableDataClient, bigtableTableAdminClient, schema, bigtableMetrics, instrumentation);
     }
 
+    /**
+     * Verifies that a successful bulk mutation yields a null response (no errors).
+     *
+     * <p>Given the data client's {@code bulkMutateRows} stubbed to do nothing, when
+     * {@link BigTableClient#send(java.util.List)} is called with valid records, then the returned
+     * {@link BigTableResponse} is {@code null}.</p>
+     */
     @Test
     public void shouldReturnNullBigTableResponseWhenBulkMutateRowsDoesNotThrowAnException() {
         doNothing().when(bigTableDataClient).bulkMutateRows(isA(BulkMutation.class));
@@ -95,6 +134,13 @@ public class BigTableClientTest {
         Assert.assertNull(bigTableResponse);
     }
 
+    /**
+     * Verifies that a {@link MutateRowsException} is surfaced as a response carrying failed mutations.
+     *
+     * <p>Given {@code bulkMutateRows} stubbed to throw a {@link MutateRowsException} with two failed
+     * mutations, when records are sent, then the returned {@link BigTableResponse} reports errors with
+     * two failed mutations and the failure cause is logged once through the {@link Instrumentation}.</p>
+     */
     @Test
     public void shouldReturnBigTableResponseWithFailedMutationsWhenBulkMutateRowsThrowsMutateRowsException() {
         List<MutateRowsException.FailedMutation> failedMutations = new ArrayList<>();
@@ -111,6 +157,14 @@ public class BigTableClientTest {
         Mockito.verify(instrumentation, Mockito.times(1)).logError("Some entries failed to be applied. {}", mutateRowsException.getCause());
     }
 
+    /**
+     * Verifies that validating against a missing table reports the full table path.
+     *
+     * <p>Given the admin client stubbed so the configured table does not exist, when
+     * {@link BigTableClient#validateBigTableSchema()} is invoked, then a
+     * {@link BigTableInvalidSchemaException} is thrown whose message gives the
+     * {@code projects/.../instances/.../tables/...} path of the missing table.</p>
+     */
     @Test
     public void shouldThrowInvalidSchemaExceptionIfTableDoesNotExist() {
         when(bigtableTableAdminClient.exists(sinkConfig.getTableId())).thenReturn(false);
@@ -123,6 +177,14 @@ public class BigTableClientTest {
         }
     }
 
+    /**
+     * Verifies that validating against a table missing a configured column family is rejected.
+     *
+     * <p>Given an existing table that declares only {@code existing-family-test}, when
+     * {@link BigTableClient#validateBigTableSchema()} is invoked, then a
+     * {@link BigTableInvalidSchemaException} is thrown reporting that the configured
+     * {@code family-test} family does not exist in the table.</p>
+     */
     @Test
     public void shouldThrowInvalidSchemaExceptionIfColumnFamilyDoesNotExist() {
         Table testTable = Table.fromProto(com.google.bigtable.admin.v2.Table.newBuilder()
@@ -139,6 +201,13 @@ public class BigTableClientTest {
         }
     }
 
+    /**
+     * Verifies that a successful bulk mutation emits the operation latency and count metrics.
+     *
+     * <p>Given {@code bulkMutateRows} stubbed to do nothing, when records are sent, then the
+     * {@link Instrumentation} records the Bigtable operation latency once and the operation total
+     * count once, each tagged with the configured instance and table.</p>
+     */
     @Test
     public void shouldCaptureBigtableMetricsWhenBulkMutateRowsDoesNotThrowAnException() {
         doNothing().when(bigTableDataClient).bulkMutateRows(isA(BulkMutation.class));

@@ -15,8 +15,29 @@ import java.time.ZoneId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link RecordDecoratorFactory}.
+ *
+ * <p>These tests verify that the factory assembles the correct {@link RecordDecorator} chain based on whether
+ * metadata columns are enabled. The configuration objects ({@link MaxComputeSinkConfig} and {@link SinkConfig})
+ * are Mockito mocks, while the remaining collaborators carried by
+ * {@link RecordDecoratorFactory.RecordDecoratorConfig} are passed as mocks or lightweight real helpers. The
+ * resulting chain is inspected with AssertJ, including its private {@code decorator} field, to confirm both the
+ * head type and the presence or absence of a nested decorator.</p>
+ *
+ * @see RecordDecoratorFactory
+ */
 public class RecordDecoratorFactoryTest {
 
+    /**
+     * Verifies that a bare data-column decorator is created when metadata columns are disabled.
+     *
+     * <p>Given a {@link MaxComputeSinkConfig} whose {@link MaxComputeSinkConfig#shouldAddMetadata()} returns
+     * {@code false}, when
+     * {@link RecordDecoratorFactory#createRecordDecorator(RecordDecoratorFactory.RecordDecoratorConfig)} is
+     * invoked, then the returned decorator is asserted to be a {@link ProtoDataColumnRecordDecorator} whose
+     * nested {@code decorator} field is {@code null}, confirming it terminates the chain.</p>
+     */
     @Test
     public void shouldCreateDataRecordDecorator() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);
@@ -42,6 +63,16 @@ public class RecordDecoratorFactoryTest {
                 .isNull();
     }
 
+    /**
+     * Verifies that a metadata-column decorator wrapping a data-column decorator is created when metadata is
+     * enabled.
+     *
+     * <p>Given a {@link MaxComputeSinkConfig} whose {@link MaxComputeSinkConfig#shouldAddMetadata()} returns
+     * {@code true}, when
+     * {@link RecordDecoratorFactory#createRecordDecorator(RecordDecoratorFactory.RecordDecoratorConfig)} is
+     * invoked, then the returned decorator is asserted to be a {@link ProtoMetadataColumnRecordDecorator} whose
+     * nested {@code decorator} field is a non-null {@link ProtoDataColumnRecordDecorator}.</p>
+     */
     @Test
     public void shouldCreateDataRecordDecoratorWithNamespaceDecorator() {
         MaxComputeSinkConfig maxComputeSinkConfig = Mockito.mock(MaxComputeSinkConfig.class);

@@ -24,12 +24,34 @@ import java.util.stream.IntStream;
 
 /**
  * ProtoMessageRecordConverter converts a list of proto messages to RecordWrappers.
+ *
+ * <p>For each message it allocates a {@link com.aliyun.odps.data.ReorderableRecord} built from the current
+ * {@link MaxComputeSchema}, then applies the {@link RecordDecorator} chain to populate it. Conversion failures
+ * are caught per message and recorded as invalid records carrying a typed {@link ErrorInfo}, so that a single
+ * bad message never aborts the rest of the batch. The mapping from exception to {@link ErrorType} is:</p>
+ * <ul>
+ *     <li>schema mismatch (checked or runtime) becomes {@link ErrorType#SINK_NON_RETRYABLE_ERROR};</li>
+ *     <li>{@link java.io.IOException} becomes {@link ErrorType#DESERIALIZATION_ERROR};</li>
+ *     <li>{@link UnknownFieldsException} becomes {@link ErrorType#UNKNOWN_FIELDS_ERROR};</li>
+ *     <li>{@link InvalidMessageException} and {@link EmptyMessageException} become
+ *     {@link ErrorType#INVALID_MESSAGE_ERROR};</li>
+ *     <li>any other exception becomes {@link ErrorType#SINK_UNKNOWN_ERROR}.</li>
+ * </ul>
+ *
+ * @see MessageRecordConverter
+ * @see RecordDecorator
  */
 @RequiredArgsConstructor
 @Slf4j
 public class ProtoMessageRecordConverter implements MessageRecordConverter {
 
+    /**
+     * Decorator chain that populates a record's columns (data and metadata) from a message.
+     */
     private final RecordDecorator recordDecorator;
+    /**
+     * Cache supplying the current {@link MaxComputeSchema} used to allocate each record.
+     */
     private final MaxComputeSchemaCache maxComputeSchemaCache;
 
     /**
@@ -79,6 +101,13 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
         return recordWrappers;
     }
 
+    /**
+     * Builds an invalid-record wrapper that carries the error and preserves the original index and partition spec.
+     *
+     * @param recordWrapper the wrapper of the record that failed conversion, used for its index and partition spec
+     * @param e             the error describing why the conversion failed
+     * @return a {@link RecordWrapper} with a {@code null} record and the supplied {@link ErrorInfo}
+     */
     private RecordWrapper toErrorRecordWrapper(RecordWrapper recordWrapper, ErrorInfo e) {
         return new RecordWrapper(null, recordWrapper.getIndex(), e, recordWrapper.getPartitionSpec());
     }

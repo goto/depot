@@ -10,8 +10,24 @@ import org.mockito.Mockito;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Unit tests for {@link MessageRecordConverterUtils}, the helper that augments BigQuery column maps
+ * with message metadata and JSON event timestamps.
+ *
+ * <p>The tests drive the static helpers with a mocked {@link Message} and configurations created via
+ * {@code ConfigFactory}, asserting that the configured metadata columns are merged into the target
+ * column map and that an {@code event_timestamp} column is injected for JSON sources when
+ * enabled.</p>
+ */
 public class MessageRecordConverterUtilsTest {
 
+    /**
+     * Verifies that configured metadata columns are merged into the existing column map.
+     *
+     * <p>Given a column map with one entry, a {@link Message} whose metadata exposes three values and
+     * a config enabling metadata with matching column types, when {@code addMetadata} runs, then the
+     * three metadata entries are added alongside the original column.</p>
+     */
     @Test
     public void shouldAddMetaData() {
         Map<String, Object> columns = new HashMap<String, Object>() {{
@@ -36,6 +52,13 @@ public class MessageRecordConverterUtilsTest {
         }}, columns);
     }
 
+    /**
+     * Verifies that an event-timestamp column is injected for JSON sources when enabled.
+     *
+     * <p>Given a column map with one entry and a JSON config with event-timestamp injection enabled,
+     * when {@code addTimeStampColumnForJson} runs, then the map gains a non-null
+     * {@code event_timestamp} column, growing to two entries.</p>
+     */
     @Test
     public void shouldAddTimeStampForJson() {
         Map<String, Object> columns = new HashMap<String, Object>() {{

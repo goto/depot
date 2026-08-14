@@ -38,18 +38,41 @@ import java.util.HashMap;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link BigqueryProtoUpdateListener}, which rebuilds the message converter and upserts
+ * the BigQuery table whenever the stencil-managed protobuf schema changes.
+ *
+ * <p>The listener is built from a {@link BigQuerySinkConfig} (derived from system properties), a
+ * mocked {@link BigQueryClient}, a mocked {@link StencilClient} and a real
+ * {@link MessageRecordConverterCache}. The tests invoke {@code onSchemaUpdate} and then convert a
+ * {@link Message} through the refreshed converter to assert that the new schema is applied; they also
+ * verify metadata namespacing behaviour and that parser, converter and namespace-collision failures
+ * propagate as runtime exceptions. The {@link MockitoJUnitRunner} initializes the
+ * {@link Mock}-annotated collaborators.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class BigqueryProtoUpdateListenerTest {
+    /** Mocked BigQuery client whose table upserts are verified. */
     @Mock
     private BigQueryClient bigQueryClient;
+    /** Mocked stencil client supplying protobuf descriptors. */
     @Mock
     private StencilClient stencilClient;
 
+    /** Sink configuration derived from system properties in {@link #setUp()}. */
     private BigQuerySinkConfig config;
+    /** JSON-path configuration backing the protobuf message parser. */
     private Configuration jsonPathConfig;
 
+    /** Real converter cache that holds the converter rebuilt on each schema update. */
     private MessageRecordConverterCache converterWrapper;
 
+    /**
+     * Sets the proto and metadata system properties and builds the shared fixtures before each test.
+     *
+     * @throws InvalidProtocolBufferException if stubbing the stencil client fails to parse a
+     *                                        descriptor
+     */
     @Before
     public void setUp() throws InvalidProtocolBufferException {
         System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestKeyBQ");
@@ -65,6 +88,13 @@ public class BigqueryProtoUpdateListenerTest {
 
     }
 
+    /**
+     * Verifies that a schema update rebuilds the converter to honour the new proto schema.
+     *
+     * <p>Given a descriptor map for {@link TestKeyBQ}, when {@code onSchemaUpdate} runs and a matching
+     * message is converted, then it yields a single valid record whose {@code order_number} and
+     * {@code order_url} columns reflect the message.</p>
+     */
     @Test
     public void shouldUseNewSchemaIfProtoChanges() {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -108,6 +138,13 @@ public class BigqueryProtoUpdateListenerTest {
         Assert.assertEquals("test", convert.getValidRecords().get(0).getColumns().get("order_url"));
     }
 
+    /**
+     * Verifies that a {@code null} descriptor map falls back to the stencil client's descriptors.
+     *
+     * <p>Given the stencil client stubbed to return all descriptors, when {@code onSchemaUpdate} is
+     * called with {@code null} and a matching message is converted, then it yields a single valid
+     * record with the expected {@code order_number} and {@code order_url} columns.</p>
+     */
     @Test
     public void shouldUseNewSchemaIfProtoChangesWhenNullDescriptorMapSentInBqSinkFactoryInit() {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -153,6 +190,12 @@ public class BigqueryProtoUpdateListenerTest {
     }
 
 
+    /**
+     * Verifies that a schema update with a null descriptor raises a runtime exception.
+     *
+     * <p>Given a descriptor map whose value for the message class is {@code null}, when
+     * {@code onSchemaUpdate} runs, then a {@link RuntimeException} is thrown.</p>
+     */
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfParserFails() {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -167,6 +210,12 @@ public class BigqueryProtoUpdateListenerTest {
         bigqueryProtoUpdateListener.onSchemaUpdate(descriptorsMap);
     }
 
+    /**
+     * Verifies that a schema update fails when no message parser has been configured.
+     *
+     * <p>Given a valid descriptor map but no message parser set on the listener, when
+     * {@code onSchemaUpdate} runs, then a {@link RuntimeException} is thrown.</p>
+     */
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfConverterFails() {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -184,6 +233,15 @@ public class BigqueryProtoUpdateListenerTest {
         bigqueryProtoUpdateListener.onSchemaUpdate(descriptorsMap);
     }
 
+    /**
+     * Verifies that {@code onSchemaUpdate} raises a runtime exception in this configuration.
+     *
+     * <p>Despite its name, the test does not simulate a dataset-location change: it supplies a valid
+     * descriptor map but configures no message parser, so when {@code onSchemaUpdate} runs, then a
+     * {@link RuntimeException} is thrown.</p>
+     *
+     * @throws IOException if descriptor handling fails
+     */
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfDatasetLocationIsChanged() throws IOException {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -202,6 +260,15 @@ public class BigqueryProtoUpdateListenerTest {
         bigqueryProtoUpdateListener.onSchemaUpdate(descriptorsMap);
     }
 
+    /**
+     * Verifies that metadata fields are not namespaced when no namespace is configured.
+     *
+     * <p>Given an empty metadata namespace, when {@code onSchemaUpdate} runs, then the table is upserted
+     * with the order fields followed by the flat (non-namespaced) metadata fields, and a converted
+     * message yields the expected columns.</p>
+     *
+     * @throws IOException if descriptor handling fails
+     */
     @Test
     public void shouldNotNamespaceMetadataFieldsWhenNamespaceIsNotProvided() throws IOException {
         BigqueryProtoUpdateListener bigqueryProtoUpdateListener = new BigqueryProtoUpdateListener(config, bigQueryClient, converterWrapper);
@@ -245,6 +312,15 @@ public class BigqueryProtoUpdateListenerTest {
         verify(bigQueryClient, times(1)).upsertTable(bqSchemaFields); // assert that metadata fields were not namespaced
     }
 
+    /**
+     * Verifies that metadata fields are grouped under the configured namespace.
+     *
+     * <p>Given a {@code metadata_ns} namespace, when {@code onSchemaUpdate} runs, then the table is
+     * upserted with the order fields plus a single namespaced metadata record field, and a converted
+     * message yields the expected columns.</p>
+     *
+     * @throws IOException if descriptor handling fails
+     */
     @Test
     public void shouldNamespaceMetadataFieldsWhenNamespaceIsProvided() throws IOException {
         System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "metadata_ns");
@@ -293,6 +369,15 @@ public class BigqueryProtoUpdateListenerTest {
         System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "");
     }
 
+    /**
+     * Verifies that a metadata namespace colliding with an existing column is rejected.
+     *
+     * <p>Given the metadata namespace set to {@code order_number} (an existing column), when
+     * {@code onSchemaUpdate} runs, then a {@link RuntimeException} is thrown reporting the collision and
+     * the table is never upserted.</p>
+     *
+     * @throws IOException if descriptor handling fails
+     */
     @Test
     public void shouldThrowExceptionWhenMetadataNamespaceNameCollidesWithAnyFieldName() throws IOException {
         System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "order_number"); // set field name to an existing column name

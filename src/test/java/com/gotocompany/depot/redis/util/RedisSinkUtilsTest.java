@@ -23,11 +23,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Unit tests for {@link RedisSinkUtils}, the static helper that maps per-record Redis responses to
+ * message-level errors and builds the Jedis client configuration from the sink configuration.
+ *
+ * <p>The tests run under {@link MockitoJUnitRunner} and back a real {@link Instrumentation} with a
+ * mocked {@link StatsDReporter}. They exercise {@link RedisSinkUtils#getErrorsFromResponse} with
+ * position-aligned records and {@link RedisClusterResponse}s, and verify
+ * {@link RedisSinkUtils#getJedisConfig} against configurations created via {@link ConfigFactory}.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RedisSinkUtilsTest {
+    /**
+     * Mocked StatsD reporter used to construct the real {@link Instrumentation} passed to the helper.
+     */
     @Mock
     private StatsDReporter statsDReporter;
 
+    /**
+     * Verifies that only failed responses become per-message errors keyed by the record index.
+     *
+     * <p>Given five valid records at indices {@code 1, 4, 7, 10, 15} aligned positionally with five
+     * {@link RedisClusterResponse}s where positions one through three are failures
+     * ({@code "FAILED AT 4"}, {@code "FAILED AT 7"}, {@code "FAILED AT 10"}) and the first and last
+     * succeed, when {@link RedisSinkUtils#getErrorsFromResponse} is invoked, then the returned map
+     * holds exactly three entries keyed by the failing records' indices ({@code 4, 7, 10}), each
+     * exposing the response text as the wrapped exception message and an
+     * {@link ErrorType#DEFAULT_ERROR} type.</p>
+     */
     @Test
     public void shouldGetErrorsFromResponse() {
         List<RedisRecord> records = new ArrayList<>();
@@ -52,6 +75,14 @@ public class RedisSinkUtilsTest {
         Assert.assertEquals(ErrorType.DEFAULT_ERROR, errors.get(10L).getErrorType());
     }
 
+    /**
+     * Verifies that a batch whose responses all succeed yields no errors.
+     *
+     * <p>Given records aligned with mocked {@link RedisResponse}s whose
+     * {@link RedisResponse#isFailed()} all return {@code false}, when
+     * {@link RedisSinkUtils#getErrorsFromResponse} is invoked, then the returned error map is
+     * empty.</p>
+     */
     @Test
     public void shouldGetEmptyMapWhenNoErrors() {
         List<RedisRecord> records = new ArrayList<>();
@@ -74,6 +105,14 @@ public class RedisSinkUtilsTest {
     }
 
 
+    /**
+     * Verifies that the configured connection timeout is carried into the Jedis client config.
+     *
+     * <p>Given a {@link RedisSinkConfig} created with {@code SINK_REDIS_CONNECTION_TIMEOUT_MS} set to
+     * {@code "5000"}, when {@link RedisSinkUtils#getJedisConfig} builds the
+     * {@link DefaultJedisClientConfig}, then its connection timeout equals {@code 5000}
+     * milliseconds.</p>
+     */
     @Test
     public void shouldSetRedisConnectionTimeoutMillis() {
 
@@ -85,6 +124,13 @@ public class RedisSinkUtilsTest {
 
     }
 
+    /**
+     * Verifies that the configured socket timeout is carried into the Jedis client config.
+     *
+     * <p>Given a {@link RedisSinkConfig} created with {@code SINK_REDIS_SOCKET_TIMEOUT_MS} set to
+     * {@code "7000"}, when {@link RedisSinkUtils#getJedisConfig} builds the
+     * {@link DefaultJedisClientConfig}, then its socket timeout equals {@code 7000} milliseconds.</p>
+     */
     @Test
     public void shouldSetRedisSocketTimeoutMillis() {
 

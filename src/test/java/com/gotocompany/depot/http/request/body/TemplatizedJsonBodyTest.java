@@ -29,16 +29,54 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link TemplatizedJsonBody}, the {@link RequestBody} implementation that renders a
+ * configurable JSON template whose {@code %s,field} placeholders are substituted with values extracted
+ * from the parsed message.
+ *
+ * <p>A real {@link ProtoMessageParser} obtained via {@link MessageParserFactory} parses a
+ * {@link com.gotocompany.depot.TestTypesMessage}, while the {@link MessageContainer} and
+ * {@link StatsDReporter} are Mockito mocks. The tests cover successful parameterised rendering as well
+ * as the validation failures raised for an empty template, a syntactically invalid template
+ * ({@link ConfigurationException}) and a placeholder that names a non-existent field
+ * ({@link IllegalArgumentException}).</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class TemplatizedJsonBodyTest {
+    /**
+     * Mocked container supplying the parsed log message to the body builder.
+     */
     @Mock
     private MessageContainer messageContainer;
+    /**
+     * Mocked metrics reporter required when constructing the message parser.
+     */
     @Mock
     private StatsDReporter statsDReporter;
+    /**
+     * Timestamp instant embedded in the message and referenced by the rendering assertion.
+     */
     private Instant time;
+    /**
+     * HTTP sink configuration rebuilt per scenario from {@link #configuration}.
+     */
     private HttpSinkConfig sinkConfig;
+    /**
+     * Mutable configuration map seeded in {@link #setup()} and overridden per test before the config
+     * is rebuilt.
+     */
     private final Map<String, String> configuration = new HashMap<>();
 
+    /**
+     * Parses a representative protobuf message and stubs the container before each test.
+     *
+     * <p>Configures the proto key/message classes, the {@link SinkConnectorSchemaMessageMode#LOG_MESSAGE}
+     * mode and disables default field values, then builds a {@link com.gotocompany.depot.TestTypesMessage}
+     * (including a timestamp), parses it with a real {@link ProtoMessageParser}, and stubs the container
+     * to return the parsed log message.</p>
+     *
+     * @throws IOException if parser construction or message parsing fails
+     */
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.openMocks(this);
@@ -69,6 +107,18 @@ public class TemplatizedJsonBodyTest {
         when(messageContainer.getParsedLogMessage(sinkConfig.getSinkConnectorSchemaProtoMessageClass())).thenReturn(parsedLogMessage);
     }
 
+    /**
+     * Verifies that template placeholders are substituted with values from the parsed message across
+     * multiple field types.
+     *
+     * <p>Given a JSON template referencing float, string, repeated, message, nested-message and
+     * timestamp fields (including a nested {@code timestamp_value.seconds} access), when
+     * {@link TemplatizedJsonBody#build(MessageContainer)} is invoked, then the rendered JSON equals the
+     * expected document with each placeholder resolved (and the timestamp rendered from
+     * {@link #time}).</p>
+     *
+     * @throws IOException never in practice; declared because building the body is a checked operation
+     */
     @Test
     public void shouldReturnJsonBodyWithParameterizedValue() throws IOException {
         configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE",
@@ -95,6 +145,13 @@ public class TemplatizedJsonBodyTest {
         assertEquals(expected, stringBody);
     }
 
+    /**
+     * Verifies that an empty template is rejected at construction time.
+     *
+     * <p>Given an empty {@code SINK_HTTPV2_JSON_BODY_TEMPLATE}, when a {@link TemplatizedJsonBody} is
+     * constructed, then a {@link ConfigurationException} is thrown with the message
+     * {@code "Json body template cannot be empty"}.</p>
+     */
     @Test
     public void shouldThrowExceptionIfJsonTemplateBodyIsEmpty() {
         configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "");
@@ -103,6 +160,13 @@ public class TemplatizedJsonBodyTest {
         assertEquals("Json body template cannot be empty", thrown.getMessage());
     }
 
+    /**
+     * Verifies that a syntactically invalid template is rejected at construction time.
+     *
+     * <p>Given a malformed template ({@code {"a"="b"}}), when a {@link TemplatizedJsonBody} is
+     * constructed, then a {@link ConfigurationException} is thrown whose message reports the underlying
+     * JSON parse error.</p>
+     */
     @Test
     public void shouldThrowExceptionIfJsonTemplateBodyIsNotValid() {
         configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "{\"a\"=\"b\"}");
@@ -113,6 +177,14 @@ public class TemplatizedJsonBodyTest {
     }
 
 
+    /**
+     * Verifies that referencing a field absent from the schema fails when the body is built.
+     *
+     * <p>Given a template placeholder naming {@code unknown_field}, when
+     * {@link TemplatizedJsonBody#build(MessageContainer)} is invoked, then an
+     * {@link IllegalArgumentException} is thrown with the message
+     * {@code "Invalid field config : unknown_field"}.</p>
+     */
     @Test
     public void shouldThrowExceptionForUnknownFieldInTemplate() {
         configuration.put("SINK_HTTPV2_JSON_BODY_TEMPLATE", "{\"test_string\":\"%s,unknown_field\"}");

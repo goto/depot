@@ -34,14 +34,42 @@ import java.util.stream.Collectors;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 
 
+/**
+ * Unit tests for {@link BigQueryProtoStorageClient}, which converts protobuf {@link Message}s into a
+ * {@link BigQueryPayload} of serialized rows for the BigQuery Storage Write API.
+ *
+ * <p>The fixture derives a protobuf descriptor from a {@link TableSchema} (via
+ * {@link BQTableSchemaToProtoDescriptor}) modelled on {@code TestMessageBQ}, and wires a
+ * {@link ProtoMessageParser} and a mocked {@link BigQueryProtoWriter} that returns that descriptor.
+ * The tests convert messages and re-parse the resulting {@link ProtoRows} to assert the mapping of
+ * primitive, case-insensitive, duration, map, nested, timestamp and struct fields, the placement of
+ * (optionally namespaced) metadata, the routing of invalid records, and the partition-column
+ * timestamp bounds enforced by BigQuery.</p>
+ */
 public class BigQueryProtoStorageClientTest {
 
 
+    /** Protobuf descriptor derived from {@code testMessageBQSchema}; the conversion target. */
     private Descriptors.Descriptor testDescriptor;
+    /** Client under test, converting messages into a {@link BigQueryPayload}. */
     private BigQueryProtoStorageClient converter;
+    /** BigQuery table schema modelling {@code TestMessageBQ}, used to build the descriptor. */
     private TableSchema testMessageBQSchema;
+    /** Parser used by the client to deserialize protobuf messages. */
     private ProtoMessageParser protoMessageParser;
 
+    /**
+     * Builds the descriptor, parser and client under test before each test.
+     *
+     * <p>Sets the proto, metadata and partition-key system properties, constructs the
+     * {@code TestMessageBQ} {@link TableSchema}, converts it to a protobuf descriptor, and wires the
+     * {@link BigQueryProtoStorageClient} around a mocked {@link BigQueryProtoWriter} that returns that
+     * descriptor.</p>
+     *
+     * @throws IOException                               if parser or stencil setup fails
+     * @throws Descriptors.DescriptorValidationException if the descriptor cannot be built from the
+     *                                                   schema
+     */
     @Before
     public void setUp() throws IOException, Descriptors.DescriptorValidationException {
         System.setProperty("SINK_CONNECTOR_SCHEMA_PROTO_MESSAGE_CLASS", "com.gotocompany.depot.TestMessageBQ");
@@ -179,6 +207,15 @@ public class BigQueryProtoStorageClientTest {
         Mockito.when(writer.getDescriptor()).thenReturn(testDescriptor);
     }
 
+    /**
+     * Verifies conversion of primitive and repeated scalar fields.
+     *
+     * <p>Given a message with string, long, bytes, enum, counter and repeated alias fields, when
+     * {@code convert} runs, then the single serialized row decodes back to those values, with the enum
+     * rendered as its string name and the aliases preserved in order.</p>
+     *
+     * @throws Exception if the message cannot be parsed or converted
+     */
     @Test
     public void shouldConvertPrimitiveFields() throws Exception {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
@@ -212,6 +249,14 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals("COMPLETED", convertedMessage.getField(testDescriptor.findFieldByName("status")));
     }
 
+    /**
+     * Verifies that field lookup tolerates case differences between proto and BigQuery names.
+     *
+     * <p>Given a message setting {@code camelCase}, when {@code convert} runs, then the serialized row
+     * exposes the value under the lower-cased {@code camelcase} field of the target descriptor.</p>
+     *
+     * @throws InvalidProtocolBufferException if the serialized row cannot be parsed
+     */
     @Test
     public void shouldReturnCaseInsensitiveFields() throws InvalidProtocolBufferException {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
@@ -228,6 +273,15 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals("testing", convertedMessage.getField(testDescriptor.findFieldByName("camelcase")));
     }
 
+    /**
+     * Verifies that a duration field is converted to a nested seconds/nanos record.
+     *
+     * <p>Given a message with a {@code trip_duration} of 1234 seconds and 231 nanos, when
+     * {@code convert} runs, then the serialized row's {@code trip_duration} record exposes those
+     * seconds and nanos values.</p>
+     *
+     * @throws IOException if the serialized row cannot be parsed
+     */
     @Test
     public void shouldReturnDurationField() throws IOException {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
@@ -247,6 +301,14 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals(231L, tripDuration.getField(tripDuration.getDescriptorForType().findFieldByName("nanos")));
     }
 
+    /**
+     * Verifies that a protobuf map is converted to a repeated key/value record.
+     *
+     * <p>Given a message with four {@code current_state} map entries, when {@code convert} runs, then
+     * the serialized row's {@code current_state} repeated record contains the four key/value pairs.</p>
+     *
+     * @throws Exception if the serialized row cannot be parsed
+     */
     @Test
     public void shouldReturnMapField() throws Exception {
         TestMessageBQ m1 = TestMessageBQ.newBuilder()
@@ -281,6 +343,17 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals(expected, actual);
     }
 
+    /**
+     * Verifies conversion of nested and repeated message fields plus repeated scalars.
+     *
+     * <p>Given a {@code TestNestedRepeatedMessageBQ} with a single nested message, two repeated nested
+     * messages, a scalar number and three repeated numbers, when {@code convert} runs against the
+     * matching descriptor, then the serialized row exposes the nested order numbers, the scalar number
+     * and the three repeated numbers in order.</p>
+     *
+     * @throws Descriptors.DescriptorValidationException if the nested descriptor cannot be built
+     * @throws IOException                               if the serialized row cannot be parsed
+     */
     @Test
     public void shouldReturnComplexAndNestedType() throws Descriptors.DescriptorValidationException, IOException {
         TableSchema schema = TableSchema.newBuilder()
@@ -352,6 +425,15 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals(Long.valueOf(13), repeatedNumbers.get(2));
     }
 
+    /**
+     * Verifies that timestamp fields are converted to microsecond values.
+     *
+     * <p>Given a message with a {@code created_at} and two {@code updated_at} timestamps set to
+     * {@code now}, when {@code convert} runs, then the serialized row exposes those timestamps as
+     * microseconds since the epoch.</p>
+     *
+     * @throws IOException if the serialized row cannot be parsed
+     */
     @Test
     public void shouldConvertTimeStamp() throws IOException {
         Instant now = Instant.now();
@@ -376,6 +458,15 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals(TimeUnit.SECONDS.toMicros(now.getEpochSecond()), updatedAt.get(1));
     }
 
+    /**
+     * Verifies that a struct field is serialized to a JSON string.
+     *
+     * <p>Given a {@code properties} struct holding a string, a list, a boolean and a number, when
+     * {@code convert} runs, then the serialized row's {@code properties} column equals the equivalent
+     * JSON document.</p>
+     *
+     * @throws IOException if the serialized row cannot be parsed
+     */
     @Test
     public void shouldConvertStruct() throws IOException {
         ListValue.Builder builder = ListValue.newBuilder();
@@ -418,6 +509,15 @@ public class BigQueryProtoStorageClientTest {
         JSONAssert.assertEquals(expected, properties, true);
     }
 
+    /**
+     * Verifies that message metadata is written as top-level columns when no namespace is set.
+     *
+     * <p>Given two messages carrying partition, topic, offset, load-time and timestamp metadata, when
+     * {@code convert} runs, then both serialized rows expose those metadata values (timestamps in
+     * microseconds) at the top level.</p>
+     *
+     * @throws InvalidProtocolBufferException if a serialized row cannot be parsed
+     */
     @Test
     public void shouldHaveMetadataOnPayload() throws InvalidProtocolBufferException {
         Instant now = Instant.now();
@@ -465,6 +565,16 @@ public class BigQueryProtoStorageClientTest {
     }
 
 
+    /**
+     * Verifies that message metadata is nested under a namespace record when one is configured.
+     *
+     * <p>Given a {@code __kafka_metadata} namespace and a matching nested descriptor, when
+     * {@code convert} runs, then the serialized row exposes the metadata under the
+     * {@code __kafka_metadata} record (timestamps in microseconds).</p>
+     *
+     * @throws InvalidProtocolBufferException            if the serialized row cannot be parsed
+     * @throws Descriptors.DescriptorValidationException if the namespaced descriptor cannot be built
+     */
     @Test
     public void shouldHaveMetadataOnPayloadWithNameSpace() throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
         System.setProperty("SINK_BIGQUERY_METADATA_NAMESPACE", "__kafka_metadata");
@@ -540,6 +650,16 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertEquals(TimeUnit.MILLISECONDS.toMicros(now.toEpochMilli()), metadata.getField(metadata.getDescriptorForType().findFieldByName("message_timestamp")));
     }
 
+    /**
+     * Verifies that unparseable messages are recorded as invalid while valid ones are kept.
+     *
+     * <p>Given three messages where the middle one carries invalid bytes, when {@code convert} runs,
+     * then two rows are serialized and the payload maps valid positions back to input indexes
+     * {@code 0} and {@code 2}; the invalid record carries a {@link ErrorType#DESERIALIZATION_ERROR}
+     * with the truncated-message error text while the valid record has no error.</p>
+     *
+     * @throws InvalidProtocolBufferException if a serialized row cannot be parsed
+     */
     @Test
     public void shouldReturnInvalidRecords() throws InvalidProtocolBufferException {
         Instant now = Instant.now();
@@ -583,6 +703,15 @@ public class BigQueryProtoStorageClientTest {
                 invalidRecord.getErrorInfo().getException().getMessage());
     }
 
+    /**
+     * Verifies that a partition timestamp older than five years is rejected.
+     *
+     * <p>Given a {@code created_at} partition value 1826 days in the past, when {@code convert} runs,
+     * then no rows are serialized and the single record is an {@link ErrorType#INVALID_MESSAGE_ERROR}
+     * whose message reports the value is outside the allowed date range.</p>
+     *
+     * @throws IOException if conversion fails
+     */
     @Test
     public void shouldNotConvertFiveYearsOldTimeStamp() throws IOException {
         Instant moreThanFiveYears = Instant.now().minus(Days.of(1826));
@@ -607,6 +736,15 @@ public class BigQueryProtoStorageClientTest {
                 .contains("is outside the allowed bounds. You can only stream to date range within 1825 days in the past and 366 days in the future relative to the current date."));
     }
 
+    /**
+     * Verifies that out-of-range timestamps are tolerated on non-partition columns.
+     *
+     * <p>Given an in-range {@code created_at} partition value but far out-of-range {@code updated_at}
+     * values, when {@code convert} runs, then the row is serialized successfully and the record carries
+     * no error.</p>
+     *
+     * @throws IOException if conversion fails
+     */
     @Test
     public void shouldConvertAnyTimeStampIfNotPartitionColumn() throws IOException {
         Instant moreThanFiveYears = Instant.now().minus(Days.of(18216));
@@ -630,6 +768,15 @@ public class BigQueryProtoStorageClientTest {
         Assert.assertNull(metas.get(0).getErrorInfo());
     }
 
+    /**
+     * Verifies that a partition timestamp more than one year in the future is rejected.
+     *
+     * <p>Given a {@code created_at} partition value far in the future, when {@code convert} runs, then
+     * no rows are serialized and the single record is an {@link ErrorType#INVALID_MESSAGE_ERROR} whose
+     * message reports the value is outside the allowed date range.</p>
+     *
+     * @throws IOException if conversion fails
+     */
     @Test
     public void shouldNotConvertMoreThanOneYearFutureTimeStamp() throws IOException {
         Instant moreThanOneYear = Instant.now().plus(Days.of(10000));
@@ -654,6 +801,16 @@ public class BigQueryProtoStorageClientTest {
                 .contains("is outside the allowed bounds. You can only stream to date range within 1825 days in the past and 366 days in the future relative to the current date."));
     }
 
+    /**
+     * Verifies that an unrepresentable timestamp value is rejected.
+     *
+     * <p>Given an {@code updated_at} timestamp built from an absurd epoch second, when {@code convert}
+     * runs, then no rows are serialized and the single record is an
+     * {@link ErrorType#INVALID_MESSAGE_ERROR} reporting the value is outside the allowed bounds in
+     * BigQuery.</p>
+     *
+     * @throws IOException if conversion fails
+     */
     @Test
     public void shouldNotConvertIfInvalidTimeStamp() throws IOException {
         Instant now = Instant.now();
@@ -679,6 +836,15 @@ public class BigQueryProtoStorageClientTest {
                 .contains("is outside the allowed bounds in BQ"));
     }
 
+    /**
+     * Verifies that timestamps just within the allowed bounds are converted.
+     *
+     * <p>Given a {@code created_at} partition value 1824 days in the past and {@code updated_at} values
+     * 365 days in the future and 1824 days in the past, when {@code convert} runs, then the row is
+     * serialized and those timestamps are exposed as microseconds.</p>
+     *
+     * @throws IOException if the serialized row cannot be parsed
+     */
     @Test
     public void shouldConvertTimeStampCloseToLimits() throws IOException {
         Instant past = Instant.now().minus(Days.of(1824));

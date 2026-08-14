@@ -22,17 +22,48 @@ import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link HttpSinkClient}, the component that dispatches a list of
+ * {@link HttpRequestRecord} instances over an Apache {@link HttpClient} and records per-status-code
+ * metrics for the responses.
+ *
+ * <p>The Apache {@link HttpClient} and the {@link Instrumentation} facade are mocked with Mockito,
+ * while a real {@link HttpSinkMetrics} is built from an {@link HttpSinkConfig} in {@link #setUp()} so
+ * that the actual metric names (including the configured application prefix) are exercised. Each
+ * {@link HttpRequestRecord} is itself a mock whose {@code send} method is stubbed to return a
+ * corresponding mocked {@link HttpSinkResponse}, isolating the client's fan-out and metric-capture
+ * behaviour from real HTTP transport.</p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class HttpSinkClientTest {
 
+    /**
+     * Mocked Apache HttpClient handed to the sink client and forwarded to each record's send call.
+     */
     @Mock
     private HttpClient client;
 
+    /**
+     * Real metrics holder built from configuration in {@link #setUp()}; supplies the metric names
+     * the client emits.
+     */
     private HttpSinkMetrics httpSinkMetrics;
 
+    /**
+     * Mocked logging and metric facade used to verify the status-code counts captured by the client.
+     */
     @Mock
     private Instrumentation instrumentation;
 
+    /**
+     * Initialises the metrics fixture before each test.
+     *
+     * <p>Sets the {@code SINK_METRICS_APPLICATION_PREFIX} system property to {@code xyz_}, builds an
+     * {@link HttpSinkConfig} from the current system properties via {@code ConfigFactory}, and
+     * constructs the {@link HttpSinkMetrics} used to assert on the emitted metric names.</p>
+     *
+     * @throws IOException never in practice; declared to mirror the configuration-loading contract
+     */
     @Before
     public void setUp() throws IOException {
         System.setProperty("SINK_METRICS_APPLICATION_PREFIX", "xyz_");
@@ -41,6 +72,15 @@ public class HttpSinkClientTest {
 
     }
 
+    /**
+     * Verifies that the client sends every record and returns the corresponding responses in order.
+     *
+     * <p>Given five mocked records, each stubbed so that {@code send} returns a distinct mocked
+     * {@link HttpSinkResponse} with response code {@code 200}, when {@link HttpSinkClient#send(List)}
+     * is invoked, then the returned list contains exactly those responses at the same positions.</p>
+     *
+     * @throws IOException never in practice; declared because the record's send method is checked
+     */
     @Test
     public void shouldSendRecords() throws IOException {
         HttpSinkClient sinkClient = new HttpSinkClient(client, httpSinkMetrics, instrumentation);
@@ -82,6 +122,16 @@ public class HttpSinkClientTest {
         );
     }
 
+    /**
+     * Verifies that the client records a per-status-code metric for every response it receives.
+     *
+     * <p>Given five mocked records whose responses all report status code {@code 200}, when
+     * {@link HttpSinkClient#send(List)} is invoked, then {@link Instrumentation#captureCount} is
+     * called five times with the prefixed metric {@code xyz_sink_http_response_code_total}, a count of
+     * {@code 1} and the tag {@code status_code=200}.</p>
+     *
+     * @throws IOException never in practice; declared because the record's send method is checked
+     */
     @Test
     public void shouldCaptureStatusCodeCount() throws IOException {
         HttpSinkClient sinkClient = new HttpSinkClient(client, httpSinkMetrics, instrumentation);

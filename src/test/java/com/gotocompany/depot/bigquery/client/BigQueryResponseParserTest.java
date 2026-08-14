@@ -23,22 +23,48 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Unit tests for {@link BigQueryResponseParser}, which maps a BigQuery {@link InsertAllResponse}'s
+ * per-row insert errors back to {@link ErrorInfo} entries keyed by record index.
+ *
+ * <p>The test builds a batch of {@link Record}s, stubs the {@link InsertAllResponse} to report a mix
+ * of unknown, invalid-schema, out-of-bounds and stopped errors, and asserts both the resulting
+ * {@link ErrorType} classification per row and that the matching BigQuery error metrics are
+ * incremented on the {@link Instrumentation}.</p>
+ */
 public class BigQueryResponseParserTest {
 
+    /** Mocked BigQuery insert-all response whose insert errors drive the parser. */
     @Mock
     private InsertAllResponse response;
 
+    /** Mocked instrumentation used to verify that error metrics are emitted. */
     @Mock
     private Instrumentation instrumentation;
 
+    /** Mocked metrics provider supplying the BigQuery error metric names. */
     @Mock
     private BigQueryMetrics metrics;
 
+    /**
+     * Initializes the Mockito-annotated mocks before each test.
+     */
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
     }
 
+    /**
+     * Verifies that BigQuery insert errors are classified and counted per record.
+     *
+     * <p>Given six records and an {@link InsertAllResponse} reporting errors for the first four rows
+     * (an empty reason, a {@code "no such field"} schema error, an out-of-bounds partition error and a
+     * {@code "stopped"} error), when {@code getErrorsFromBQResponse} runs, then rows {@code 0}-{@code 3}
+     * are mapped to {@link ErrorType#SINK_UNKNOWN_ERROR}, {@link ErrorType#SINK_4XX_ERROR},
+     * {@link ErrorType#SINK_4XX_ERROR} and {@link ErrorType#SINK_5XX_ERROR} respectively, and the
+     * unknown, invalid-schema, out-of-bounds and stopped error counters are each incremented
+     * once.</p>
+     */
     @Test
     public void shouldParseResponse() {
         TestMetadata record1Offset = new TestMetadata("topic1", 1, 101, Instant.now().toEpochMilli(), Instant.now().toEpochMilli());

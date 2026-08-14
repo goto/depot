@@ -13,8 +13,31 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for {@link SchemaDifferenceUtils}.
+ *
+ * <p>These tests verify the additive schema-difference computation that renders MaxCompute
+ * {@code ALTER TABLE ... ADD COLUMN} statements from two {@link TableSchema} instances. Schemas are built with
+ * the ODPS {@link TableSchema.Builder}, exercising newly added top-level columns as well as fields added deep
+ * inside structs and arrays of structs. The tests also confirm that unsupported in-place primitive type
+ * changes are rejected with an {@link UnsupportedOperationException}.</p>
+ *
+ * @see SchemaDifferenceUtils
+ */
 public class SchemaDifferenceUtilsTest {
 
+    /**
+     * Verifies that the additive difference between two schemas is rendered as the expected set of DDL
+     * statements.
+     *
+     * <p>Given an old schema and a new schema that adds several columns and nested struct fields (including
+     * fields inside structs and arrays of structs), when
+     * {@link SchemaDifferenceUtils#getSchemaDifferenceSql(TableSchema, TableSchema, String, String)} is called
+     * for {@code test_schema.test_table}, then the returned statements equal, in any order, the expected set of
+     * {@code alter table ... add column if not exists} statements for each added column and field. Columns whose
+     * names differ only in case (for example {@code col2} versus {@code COL2}) are treated as unchanged and
+     * produce no statement.</p>
+     */
     @Test
     public void testGetSchemaDifferenceDdl() {
         TableSchema oldTableSchema = TableSchema.builder()
@@ -59,6 +82,15 @@ public class SchemaDifferenceUtilsTest {
         assertTrue(expectedMetadataColumns.containsAll(actualMetadataColumns));
     }
 
+    /**
+     * Verifies that changing an existing primitive column's type is rejected.
+     *
+     * <p>Given an old schema with an {@code INT} column and a new schema that redefines the same column as
+     * {@code BIGINT}, when
+     * {@link SchemaDifferenceUtils#getSchemaDifferenceSql(TableSchema, TableSchema, String, String)} is called,
+     * then an {@link UnsupportedOperationException} is thrown, as asserted by the {@code expected} attribute of
+     * the {@link Test} annotation.</p>
+     */
     @Test(expected = UnsupportedOperationException.class)
     public void shouldThrowUnsupportedExceptionWhenChangingPrimitiveType() {
         TableSchema oldSchema = TableSchema.builder()
@@ -71,6 +103,15 @@ public class SchemaDifferenceUtilsTest {
         SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, newSchema, "test_schema", "test_table");
     }
 
+    /**
+     * Verifies that changing the element type of a primitive array column is rejected.
+     *
+     * <p>Given an old schema with an {@code ARRAY<INT>} column and a new schema that redefines it as
+     * {@code ARRAY<BIGINT>}, when
+     * {@link SchemaDifferenceUtils#getSchemaDifferenceSql(TableSchema, TableSchema, String, String)} is called,
+     * then an {@link UnsupportedOperationException} is thrown, as asserted by the {@code expected} attribute of
+     * the {@link Test} annotation.</p>
+     */
     @Test(expected = UnsupportedOperationException.class)
     public void shouldThrowUnsupportedExceptionWhenChangingArrayPrimitiveTypeToDifferentArrayType() {
         TableSchema oldSchema = TableSchema.builder()
@@ -83,6 +124,15 @@ public class SchemaDifferenceUtilsTest {
         SchemaDifferenceUtils.getSchemaDifferenceSql(oldSchema, newSchema, "test_schema", "test_table");
     }
 
+    /**
+     * Verifies that changing a primitive array column into a scalar column is rejected.
+     *
+     * <p>Given an old schema with an {@code ARRAY<INT>} column and a new schema that redefines the same column
+     * as a scalar {@code INT}, when
+     * {@link SchemaDifferenceUtils#getSchemaDifferenceSql(TableSchema, TableSchema, String, String)} is called,
+     * then an {@link UnsupportedOperationException} is thrown, as asserted by the {@code expected} attribute of
+     * the {@link Test} annotation.</p>
+     */
     @Test(expected = UnsupportedOperationException.class)
     public void shouldThrowUnsupportedExceptionWhenChangingArrayPrimitiveTypeToNonArrayType() {
         TableSchema oldSchema = TableSchema.builder()

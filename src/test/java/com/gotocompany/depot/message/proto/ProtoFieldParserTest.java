@@ -15,19 +15,49 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Unit tests for {@link ProtoFieldParser}, which walks a Protobuf descriptor and builds the
+ * corresponding {@link ProtoField} tree.
+ *
+ * <p>The fixtures provide descriptor maps and type-name-to-package maps built from the generated test
+ * protos ({@link TestMessageBQ}, {@link TestNestedMessageBQ} and {@link TestRecursiveMessageBQ}) plus
+ * well-known types such as {@code Duration}, {@code Timestamp}, {@code Struct} and {@code Date}. Tests
+ * assert that {@link ProtoFieldParser#parseFields(ProtoField, String, java.util.Map, java.util.Map)}
+ * produces the expected field structure for flat, nested and recursive messages (recursion being
+ * capped at a fixed depth), and that a missing top-level or nested descriptor raises a
+ * {@link RuntimeException}.</p>
+ */
 public class ProtoFieldParserTest {
+    /** Parser under test, recreated before each test. */
     private ProtoFieldParser protoMappingParser;
 
+    /**
+     * Initialises a fresh {@link ProtoFieldParser} before each test.
+     */
     @Before
     public void setup() {
         this.protoMappingParser = new ProtoFieldParser();
     }
 
+    /**
+     * Verifies that parsing fails when the requested top-level descriptor is unknown.
+     *
+     * <p>Given a {@code null} {@link ProtoField}, an unknown type name and empty descriptor maps, when
+     * {@link ProtoFieldParser#parseFields(ProtoField, String, java.util.Map, java.util.Map)} is
+     * called, then a {@link RuntimeException} is thrown.</p>
+     */
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfProtoNotFound() {
         protoMappingParser.parseFields(null, "test", new HashMap<>(), new HashMap<>());
     }
 
+    /**
+     * Verifies that parsing fails when a referenced descriptor is missing from the map.
+     *
+     * <p>Given a descriptor map that contains {@link TestMessageBQ} but not {@code TestNestedMessageBQ},
+     * when {@link ProtoFieldParser#parseFields(ProtoField, String, java.util.Map, java.util.Map)} is
+     * asked to parse {@code TestNestedMessageBQ}, then a {@link RuntimeException} is thrown.</p>
+     */
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfNestedProtoNotFound() {
         Map<String, Descriptors.Descriptor> descriptorMap = new HashMap<String, Descriptors.Descriptor>() {{
@@ -37,6 +67,15 @@ public class ProtoFieldParserTest {
         protoMappingParser.parseFields(protoField, "com.gotocompany.depot.TestNestedMessageBQ", descriptorMap, new HashMap<>());
     }
 
+    /**
+     * Verifies that a message descriptor is parsed into its complete field list.
+     *
+     * <p>Given descriptor and type-name maps built from {@link TestMessageBQ} and the well-known
+     * {@code Duration}, {@code Date}, {@code Struct} and {@code Timestamp} types, when
+     * {@link ProtoFieldParser#parseFields(ProtoField, String, java.util.Map, java.util.Map)} parses
+     * {@code TestMessageBQ}, then the resulting fields match the expected names, types, labels and
+     * indices, including the nested {@code Duration} and {@code Date} sub-fields.</p>
+     */
     @Test
     public void shouldParseProtoSchemaForNonNestedFields() {
         ArrayList<Descriptors.FileDescriptor> fileDescriptors = new ArrayList<>();
@@ -61,6 +100,13 @@ public class ProtoFieldParserTest {
         assertTestMessage(protoField.getFields());
     }
 
+    /**
+     * Verifies that a self-referential message is parsed only up to the maximum recursion depth.
+     *
+     * <p>Given {@link TestRecursiveMessageBQ}, when its descriptor is parsed, then each level exposes
+     * the {@code string_value} and {@code float_value} fields plus the recursive field, and the
+     * nesting stops at a total of fifteen levels.</p>
+     */
     @Test
     public void shouldParseProtoSchemaForRecursiveFieldTillMaxLevel() {
         ArrayList<Descriptors.FileDescriptor> fileDescriptors = new ArrayList<>();
@@ -89,6 +135,13 @@ public class ProtoFieldParserTest {
         assertEquals(15, totalLevel);
     }
 
+    /**
+     * Verifies that a message with a nested message field is parsed recursively.
+     *
+     * <p>Given {@link TestNestedMessageBQ} and the descriptor maps for its types, when its descriptor
+     * is parsed, then the top-level {@code nested_id} and {@code single_message} fields are present and
+     * the {@code single_message} sub-tree matches the full {@link TestMessageBQ} field structure.</p>
+     */
     @Test
     public void shouldParseProtoSchemaForNestedFields() {
         ArrayList<Descriptors.FileDescriptor> fileDescriptors = new ArrayList<>();
@@ -117,6 +170,16 @@ public class ProtoFieldParserTest {
         assertTestMessage(protoField.getFields().get(1).getFields());
     }
 
+    /**
+     * Builds a descriptor lookup map keyed by fully-qualified message name.
+     *
+     * <p>For each file descriptor, registers every top-level message and its nested types under keys
+     * of the form {@code javaPackage.ClassName} and {@code javaPackage.ClassName.NestedName}
+     * respectively.</p>
+     *
+     * @param fileDescriptors the proto file descriptors to index
+     * @return a map from fully-qualified message name to its {@code Descriptor}
+     */
     private Map<String, Descriptors.Descriptor> getDescriptors(ArrayList<Descriptors.FileDescriptor> fileDescriptors) {
         Map<String, Descriptors.Descriptor> descriptorMap = new HashMap<>();
         fileDescriptors.forEach(fd -> {
@@ -133,6 +196,15 @@ public class ProtoFieldParserTest {
         return descriptorMap;
     }
 
+    /**
+     * Asserts that the parsed fields match the full {@link TestMessageBQ} schema.
+     *
+     * <p>Checks that there are nineteen fields with the expected name, type, label and index, and that
+     * the {@code trip_duration} and {@code order_date} message fields expose the {@code Duration} and
+     * {@code Date} sub-fields.</p>
+     *
+     * @param fields the parsed fields to verify
+     */
     private void assertTestMessage(List<ProtoField> fields) {
         assertEquals(19, fields.size());
         assertField(fields.get(0), "order_number", DescriptorProtos.FieldDescriptorProto.Type.TYPE_STRING, DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL, 1);
@@ -167,6 +239,15 @@ public class ProtoFieldParserTest {
         assertField(fields.get(13).getFields().get(2), "day", DescriptorProtos.FieldDescriptorProto.Type.TYPE_INT32, DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL, 3);
     }
 
+    /**
+     * Asserts that a single {@link ProtoField} has the expected name, type, label and index.
+     *
+     * @param field the field to verify
+     * @param name the expected field name
+     * @param ftype the expected Protobuf field type
+     * @param flabel the expected Protobuf field label
+     * @param index the expected field index
+     */
     private void assertField(ProtoField field, String name, DescriptorProtos.FieldDescriptorProto.Type ftype, DescriptorProtos.FieldDescriptorProto.Label flabel, int index) {
         assertEquals(name, field.getName());
         assertEquals(ftype, field.getType());

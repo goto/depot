@@ -20,8 +20,23 @@ import static com.google.protobuf.Descriptors.FieldDescriptor.Type.SINT64;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT32;
 import static com.google.protobuf.Descriptors.FieldDescriptor.Type.UINT64;
 
+/**
+ * {@link ProtoPrimitiveDataTypeMapper} that widens every integer Protobuf type to MaxCompute {@code BIGINT}.
+ *
+ * <p>All integer families map to {@code BIGINT}. The 64-bit values pass through unchanged, while the 32-bit
+ * values are upcast from {@link Integer} to {@code long}. This mapper is selected when integer-to-bigint widening
+ * is enabled, in place of
+ * {@link com.gotocompany.depot.maxcompute.converter.mapper.noncasted.IntegerDataTypeMapper}.</p>
+ *
+ * @see ProtoPrimitiveDataTypeMapper
+ */
 public class IntegerToBigintDataTypeMapper implements ProtoPrimitiveDataTypeMapper {
 
+    /**
+     * Returns the MaxCompute type mapping for the integer types.
+     *
+     * @return a map from every supported integer type to {@code BIGINT}
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, TypeInfo> getProtoTypeMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, TypeInfo>builder()
@@ -38,6 +53,11 @@ public class IntegerToBigintDataTypeMapper implements ProtoPrimitiveDataTypeMapp
                 .build();
     }
 
+    /**
+     * Returns the value-conversion mapping for the integer types.
+     *
+     * @return a map whose 64-bit entries pass values through unchanged and whose 32-bit entries upcast them to {@code long}
+     */
     @Override
     public Map<Descriptors.FieldDescriptor.Type, Function<Object, Object>> getProtoPayloadMapperMap() {
         return ImmutableMap.<Descriptors.FieldDescriptor.Type, Function<Object, Object>>builder()
@@ -54,6 +74,12 @@ public class IntegerToBigintDataTypeMapper implements ProtoPrimitiveDataTypeMapp
                 .build();
     }
 
+    /**
+     * Upcasts a 32-bit integer value to a {@code long}.
+     *
+     * @param object the value to upcast, expected to be an {@link Integer}
+     * @return the value as a boxed {@link Long}
+     */
     private Object upcastInteger(Object object) {
         return ((Integer) object).longValue();
     }

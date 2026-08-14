@@ -43,21 +43,55 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Unit tests for {@link BigTableRecordParser}, which turns a batch of {@link Message}s into
+ * {@link BigTableRecord}s using a {@link ProtoMessageParser}, a {@link BigTableRowKeyParser} and a
+ * {@link BigTableSchema}.
+ *
+ * <p>The {@link #setUp()} fixture seeds the proto message class, message mode, column-family mapping
+ * and row-key template as system properties, then wires a real parser pipeline around a
+ * {@link ClassLoadStencilClient} stubbed with {@code CALLS_REAL_METHODS} and two booking-log
+ * {@link Message}s. The happy-path tests reconfigure the column-family mapping to cover plain,
+ * complex (message), nested and nested-timestamp fields and assert that the produced records are
+ * valid. The error-path tests replace the collaborators with Mockito mocks
+ * ({@link #mockMessageParser}, {@link #mockBigTableRowKeyParser}, {@link #mockParsedMessage}) that
+ * throw, and assert that each exception is mapped to the expected {@link ErrorType} on an invalid
+ * record.</p>
+ */
 public class BigTableRecordParserTest {
 
+    /** Stencil client for proto descriptors; replaced in setUp with a {@code CALLS_REAL_METHODS} mock. */
     @Mock
     private ClassLoadStencilClient stencilClient;
+    /** Mock message parser used by error-path tests to simulate parse failures. */
     @Mock
     private MessageParser mockMessageParser;
 
+    /** Mock row-key parser used to simulate row-key resolution failures. */
     @Mock
     private BigTableRowKeyParser mockBigTableRowKeyParser;
+    /** Mock parsed message returned before a row-key failure is triggered. */
     @Mock
     private ParsedMessage mockParsedMessage;
+    /** Parser under test, rebuilt per scenario from real or mocked collaborators. */
     private BigTableRecordParser bigTableRecordParser;
+    /** Two valid booking-log messages forming the input batch. */
     private List<Message> messages;
+    /** Sink configuration loaded from the seeded system properties. */
     private BigTableSinkConfig sinkConfig;
 
+    /**
+     * Seeds configuration and builds the record parser and message batch before each test.
+     *
+     * <p>Opens the Mockito annotations, sets the proto message class, {@code LOG_MESSAGE} mode, a
+     * single-family column mapping and a constant row-key template as system properties, and builds
+     * two booking-log {@link Message}s. It then constructs a real {@link ProtoMessageParser} (over a
+     * {@code CALLS_REAL_METHODS} {@link ClassLoadStencilClient}), a {@link BigTableSchema}, a
+     * {@link BigTableRowKeyParser} and the {@link BigTableRecordParser} under test.</p>
+     *
+     * @throws IOException if reading configuration or building the parser fails
+     * @throws InvalidTemplateException if the row-key template is not valid
+     */
     @Before
     public void setUp() throws IOException, InvalidTemplateException {
         MockitoAnnotations.openMocks(this);
@@ -98,6 +132,13 @@ public class BigTableRecordParserTest {
         bigTableRecordParser = new BigTableRecordParser(protoMessageParser, bigTableRowKeyParser, modeAndSchema, bigtableSchema);
     }
 
+    /**
+     * Verifies that a batch of valid messages converts into valid, error-free records.
+     *
+     * <p>Given two well-formed booking-log messages and the default column mapping, when
+     * {@link BigTableRecordParser#convert(java.util.List)} is called, then both resulting
+     * {@link BigTableRecord}s are valid and carry no error info.</p>
+     */
     @Test
     public void shouldReturnValidRecordsForListOfValidMessages() {
         List<BigTableRecord> records = bigTableRecordParser.convert(messages);
@@ -107,6 +148,14 @@ public class BigTableRecordParserTest {
         assertNull(records.get(1).getErrorInfo());
     }
 
+    /**
+     * Verifies that a column mapping referencing a complex (message) field still produces valid records.
+     *
+     * <p>Given the column mapping extended with {@code q3 -> driver_pickup_location} (a nested message
+     * field), when the batch is converted, then both records are valid with no error info.</p>
+     *
+     * @throws InvalidTemplateException if the row-key template is not valid
+     */
     @Test
     public void shouldReturnValidRecordsForListOfValidMessagesForComplexFieldsInColumnsMapping() throws InvalidTemplateException {
         System.setProperty("SINK_BIGTABLE_COLUMN_FAMILY_MAPPING", "{ \"cf1\" : { \"q1\" : \"order_number\", \"q2\" : \"service_type\", \"q3\" : \"driver_pickup_location\"} }");
@@ -128,6 +177,14 @@ public class BigTableRecordParserTest {
         assertNull(records.get(1).getErrorInfo());
     }
 
+    /**
+     * Verifies that a column mapping referencing a nested timestamp field produces valid records.
+     *
+     * <p>Given the column mapping extended with {@code q3 -> event_timestamp.nanos}, when the batch is
+     * converted, then both records are valid with no error info.</p>
+     *
+     * @throws InvalidTemplateException if the row-key template is not valid
+     */
     @Test
     public void shouldReturnValidRecordsForListOfValidMessagesForNestedTimestampFieldsInColumnsMapping() throws InvalidTemplateException {
         System.setProperty("SINK_BIGTABLE_COLUMN_FAMILY_MAPPING", "{ \"cf1\" : { \"q1\" : \"order_number\", \"q2\" : \"service_type\", \"q3\" : \"event_timestamp.nanos\"} }");
@@ -148,6 +205,14 @@ public class BigTableRecordParserTest {
         assertNull(records.get(1).getErrorInfo());
     }
 
+    /**
+     * Verifies that a column mapping referencing a nested scalar field produces valid records.
+     *
+     * <p>Given the column mapping extended with {@code q3 -> driver_pickup_location.latitude}, when
+     * the batch is converted, then both records are valid with no error info.</p>
+     *
+     * @throws InvalidTemplateException if the row-key template is not valid
+     */
     @Test
     public void shouldReturnValidRecordsForListOfValidMessagesForNestedFieldsInColumnsMapping() throws InvalidTemplateException {
         System.setProperty("SINK_BIGTABLE_COLUMN_FAMILY_MAPPING", "{ \"cf1\" : { \"q1\" : \"order_number\", \"q2\" : \"service_type\", \"q3\" : \"driver_pickup_location.latitude\"} }");
@@ -168,6 +233,12 @@ public class BigTableRecordParserTest {
         assertNull(records.get(1).getErrorInfo());
     }
 
+    /**
+     * Verifies that a message with null key and value is converted into an invalid record.
+     *
+     * <p>Given a single {@code Message(null, null)}, when the batch is converted, then the resulting
+     * record is invalid and carries non-null error info.</p>
+     */
     @Test
     public void shouldReturnInvalidRecordForAnyNullMessage() {
         List<BigTableRecord> records = bigTableRecordParser.convert(Collections.list(new Message(null, null)));
@@ -175,6 +246,15 @@ public class BigTableRecordParserTest {
         assertNotNull(records.get(0).getErrorInfo());
     }
 
+    /**
+     * Verifies that an {@link EmptyMessageException} maps to an invalid-message error.
+     *
+     * <p>Given a mocked message parser that throws {@link EmptyMessageException}, when the batch is
+     * converted, then every record is invalid with error type
+     * {@link ErrorType#INVALID_MESSAGE_ERROR}.</p>
+     *
+     * @throws IOException declared by the mocked parser's {@code parse} method
+     */
     @Test
     public void shouldCatchEmptyMessageExceptionAndReturnAnInvalidBigtableRecordWithErrorTypeAsInvalidMessageError() throws IOException {
         bigTableRecordParser = new BigTableRecordParser(mockMessageParser,
@@ -192,6 +272,15 @@ public class BigTableRecordParserTest {
         }
     }
 
+    /**
+     * Verifies that a {@link ConfigurationException} maps to an unknown-fields error.
+     *
+     * <p>Given a mocked message parser that throws {@link ConfigurationException}, when the batch is
+     * converted, then every record is invalid with error type
+     * {@link ErrorType#UNKNOWN_FIELDS_ERROR}.</p>
+     *
+     * @throws IOException declared by the mocked parser's {@code parse} method
+     */
     @Test
     public void shouldCatchConfigurationExceptionAndReturnAnInvalidBigtableRecordWithErrorTypeAsUnknownFieldsError() throws IOException {
         bigTableRecordParser = new BigTableRecordParser(mockMessageParser,
@@ -209,6 +298,14 @@ public class BigTableRecordParserTest {
         }
     }
 
+    /**
+     * Verifies that an {@link IOException} maps to a deserialization error.
+     *
+     * <p>Given a mocked message parser that throws {@link IOException}, when the batch is converted,
+     * then every record is invalid with error type {@link ErrorType#DESERIALIZATION_ERROR}.</p>
+     *
+     * @throws IOException declared by the mocked parser's {@code parse} method
+     */
     @Test
     public void shouldCatchIOExceptionAndReturnAnInvalidBigtableRecordWithErrorTypeAsDeserializationError() throws IOException {
         bigTableRecordParser = new BigTableRecordParser(mockMessageParser,
@@ -226,6 +323,16 @@ public class BigTableRecordParserTest {
         }
     }
 
+    /**
+     * Verifies that an {@link IllegalArgumentException} during row-key parsing maps to an
+     * unknown-fields error.
+     *
+     * <p>Given a mocked parser that returns {@link #mockParsedMessage} and a mocked row-key parser
+     * whose {@code parse} throws {@link IllegalArgumentException}, when the batch is converted, then
+     * every record is invalid with error type {@link ErrorType#UNKNOWN_FIELDS_ERROR}.</p>
+     *
+     * @throws IOException declared by the mocked parser's {@code parse} method
+     */
     @Test
     public void shouldCatchIllegalArgumentExceptionAndReturnAnInvalidBigtableRecordWithErrorTypeAsUnknownFieldsError() throws IOException {
         bigTableRecordParser = new BigTableRecordParser(mockMessageParser,

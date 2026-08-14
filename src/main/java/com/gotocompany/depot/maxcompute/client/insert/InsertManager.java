@@ -19,17 +19,61 @@ import java.util.List;
 
 /**
  * InsertManager is responsible for inserting records into MaxCompute.
+ *
+ * <p>It centralizes the mechanics shared by all insert strategies: obtaining record packs from a streaming
+ * upload session (optionally compressed), appending records, flushing packs, and emitting the associated
+ * metrics. Concrete subclasses implement {@link #insert(List)} to decide how records are grouped onto
+ * sessions:</p>
+ * <ul>
+ *     <li>{@link NonPartitionedInsertManager} uses a single session per thread;</li>
+ *     <li>{@link PartitionedInsertManager} uses one session per partition spec.</li>
+ * </ul>
+ *
+ * <p>Schema-mismatch failures are treated as unrecoverable and surfaced as {@link NonRetryableException},
+ * whereas I/O and tunnel failures are allowed to propagate so that the caller can retry. The Lombok
+ * {@code @Getter} annotation generates accessors that expose the shared collaborators to subclasses and
+ * tests.</p>
+ *
+ * @see StreamingSessionManager
+ * @see NonPartitionedInsertManager
+ * @see PartitionedInsertManager
  */
 @Getter
 @Slf4j
 public abstract class InsertManager {
 
+    /**
+     * Sink configuration carrying compression, flush-timeout, and related streaming-insert settings.
+     */
     private final MaxComputeSinkConfig maxComputeSinkConfig;
+    /**
+     * Metric instrumentation used to time and count insert operations.
+     */
     private final Instrumentation instrumentation;
+    /**
+     * Holder of MaxCompute metric identifiers and tag templates.
+     */
     private final MaxComputeMetrics maxComputeMetrics;
+    /**
+     * Supplies and caches the streaming upload sessions keyed by partition spec.
+     */
     private final StreamingSessionManager streamingSessionManager;
+    /**
+     * Flush option built once from the configured record-pack flush timeout and reused for every flush.
+     */
     private final TableTunnel.FlushOption flushOption;
 
+    /**
+     * Initializes the state shared by all insert strategies.
+     *
+     * <p>Builds the {@link TableTunnel.FlushOption} once from the configured record-pack flush timeout so that
+     * it can be reused for every flush.</p>
+     *
+     * @param maxComputeSinkConfig    the sink configuration providing compression and flush-timeout settings
+     * @param instrumentation         metric instrumentation used to time and count insert operations
+     * @param maxComputeMetrics       holder of MaxCompute metric identifiers and tag templates
+     * @param streamingSessionManager manager that supplies and caches the streaming upload sessions
+     */
     protected InsertManager(MaxComputeSinkConfig maxComputeSinkConfig, Instrumentation instrumentation,
                             MaxComputeMetrics maxComputeMetrics,
                             StreamingSessionManager streamingSessionManager) {
@@ -43,6 +87,10 @@ public abstract class InsertManager {
 
     /**
      * Insert records into MaxCompute.
+     *
+     * <p>Implementations group the records onto one or more streaming upload sessions, append them to record
+     * packs, and flush those packs. The concrete grouping strategy is defined by the subclass.</p>
+     *
      * @param recordWrappers list of records to insert
      * @throws TunnelException if there is an error with the tunnel service, typically due to network issues
      * @throws IOException typically thrown when issues such as schema mismatch occur
@@ -52,6 +100,10 @@ public abstract class InsertManager {
     /**
      * Create a new record pack for streaming insert.
      * Record pack encloses the records to be inserted.
+     *
+     * <p>A record pack accumulates the records that are flushed together. When streaming-insert compression is
+     * enabled the pack is created with a {@link CompressOption} built from the configured algorithm, level, and
+     * strategy; otherwise an uncompressed pack is created.</p>
      *
      * @param streamUploadSession session for streaming insert
      * @return TableTunnel.StreamRecordPack
@@ -69,6 +121,9 @@ public abstract class InsertManager {
 
     /**
      * Instrument the insert operation.
+     *
+     * <p>Emits the insert operation counter and latency, plus the flushed record count and flushed byte size;
+     * the latter two are tagged with the compression settings in effect.</p>
      *
      * @param start start time of the operation
      * @param flushResult result of the flush operation
@@ -89,6 +144,11 @@ public abstract class InsertManager {
      * When schema mismatch occurs, wrap the exception in a NonRetryableException. It is not possible to recover from schema mismatch.
      * When network partition occurs, refresh the schema and rethrow the exception.
      *
+     * <p>A {@link SchemaMismatchException} means the record no longer matches the table schema; this is
+     * unrecoverable for the streaming insert, so it is logged and rethrown as a {@link NonRetryableException}.
+     * Any other {@link IOException}, typically caused by a network partition, is allowed to propagate so that
+     * the caller can refresh the schema and retry.</p>
+     *
      * @param recordPack recordPack to append the record to
      * @param recordWrapper record to append
      * @param sessionKey key to identify the session, used for refreshing the schema
@@ -107,6 +167,10 @@ public abstract class InsertManager {
      * Flush the record pack.
      * When schema mismatch occurs, wrap the exception in a NonRetryableException. It is not possible to recover from schema mismatch.
      * When network partition occurs, typically indicated by IOException being thrown, refresh the schema and rethrow the exception.
+     *
+     * <p>On success the flush metrics are recorded. A {@link SchemaMismatchException} is unrecoverable and is
+     * logged and rethrown as a {@link NonRetryableException}; any other {@link IOException}, typically caused by
+     * a network partition, propagates so that the caller can refresh the schema and retry.</p>
      *
      * @param recordPack recordPack to flush
      * @throws IOException typically thrown when issues such as network partition occur

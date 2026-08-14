@@ -24,8 +24,31 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link MaxComputeSchemaCache}.
+ *
+ * <p>These tests verify how the cache lazily builds, caches, and refreshes the MaxCompute schema in response to
+ * Stencil descriptor updates. The {@link MaxComputeSchemaBuilder} is mocked to return a placeholder
+ * {@link MaxComputeSchema}, the {@link MaxComputeClient} is a Mockito spy whose table create/update and
+ * latest-schema reads are stubbed, and {@link SinkConfig} selects between {@code LOG_MESSAGE} and
+ * {@code LOG_KEY} schema modes. Interactions are asserted by verifying how often the client upserts the table
+ * and, in one case, by injecting the cached schema through reflection.</p>
+ *
+ * @see MaxComputeSchemaCache
+ */
 public class MaxComputeSchemaCacheTest {
 
+    /**
+     * Verifies that the schema is lazily built, the table is upserted, and the server-side schema is cached on
+     * first access.
+     *
+     * <p>Given a freshly constructed cache whose collaborators are stubbed, when
+     * {@link MaxComputeSchemaCache#getMaxComputeSchema()} is called for the first time, then the table is
+     * created or updated exactly once and the returned schema's table schema equals the server-side
+     * {@link TableSchema} read back from the {@link MaxComputeClient}.</p>
+     *
+     * @throws OdpsException never in this test; declared because the upsert path may throw it
+     */
     @Test
     public void shouldBuildAndReturnMaxComputeSchema() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
@@ -70,6 +93,17 @@ public class MaxComputeSchemaCacheTest {
         assertEquals(finalMockedTableSchema, maxComputeSchema.getTableSchema());
     }
 
+    /**
+     * Verifies that an already-cached schema is returned without rebuilding the table.
+     *
+     * <p>Given a cache whose private {@code maxComputeSchema} field is pre-populated via reflection, when
+     * {@link MaxComputeSchemaCache#getMaxComputeSchema()} is called, then the cached instance is returned and
+     * the {@link MaxComputeClient} table upsert is never invoked.</p>
+     *
+     * @throws OdpsException           never in this test; declared because the upsert path may throw it
+     * @throws NoSuchFieldException    if the reflective {@code maxComputeSchema} field lookup fails
+     * @throws IllegalAccessException  if the reflective field assignment is not permitted
+     */
     @Test
     public void shouldReturnMaxComputeSchemaIfExists() throws OdpsException, NoSuchFieldException, IllegalAccessException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
@@ -107,6 +141,15 @@ public class MaxComputeSchemaCacheTest {
         assertEquals(mockedMaxComputeSchema, maxComputeSchema);
     }
 
+    /**
+     * Verifies that a Stencil schema update triggers a fresh table upsert.
+     *
+     * <p>Given a cache in {@code LOG_MESSAGE} mode that has already built its schema once, when
+     * {@link MaxComputeSchemaCache#onSchemaUpdate(Map)} is invoked with a new descriptor map, then the table is
+     * created or updated a second time, for a total of two upserts.</p>
+     *
+     * @throws OdpsException never in this test; declared because the upsert path may throw it
+     */
     @Test
     public void shouldUpdateSchemaBasedOnNewDescriptor() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
@@ -147,6 +190,16 @@ public class MaxComputeSchemaCacheTest {
                 .createOrUpdateTable(Mockito.any());
     }
 
+    /**
+     * Verifies that schema updates use the key class descriptor when running in {@code LOG_KEY} mode.
+     *
+     * <p>Given a cache configured in {@link SinkConnectorSchemaMessageMode#LOG_KEY} mode that has already built
+     * its schema once, when {@link MaxComputeSchemaCache#onSchemaUpdate(Map)} is invoked with a new descriptor
+     * map keyed by the configured key class, then the table is created or updated a second time, for a total of
+     * two upserts.</p>
+     *
+     * @throws OdpsException never in this test; declared because the upsert path may throw it
+     */
     @Test
     public void shouldUpdateSchemaUsingLogKeyBasedOnNewDescriptor() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();
@@ -187,6 +240,16 @@ public class MaxComputeSchemaCacheTest {
                 .createOrUpdateTable(Mockito.any());
     }
 
+    /**
+     * Verifies that a failing table upsert is surfaced as a {@link MaxComputeTableOperationException}.
+     *
+     * <p>Given a {@link MaxComputeClient} whose {@code createOrUpdateTable} is stubbed to throw an
+     * {@link OdpsException}, when {@link MaxComputeSchemaCache#getMaxComputeSchema()} triggers the schema build,
+     * then the {@link OdpsException} is wrapped and rethrown as a {@link MaxComputeTableOperationException}, as
+     * asserted by the {@code expected} attribute of the {@link Test} annotation.</p>
+     *
+     * @throws OdpsException never in this test; declared because the upsert path may throw it
+     */
     @Test(expected = MaxComputeTableOperationException.class)
     public void shouldThrowMaxComputeTableOperationExceptionWhenUpsertIsFailing() throws OdpsException {
         Map<String, Descriptors.Descriptor> newDescriptor = new HashMap<>();

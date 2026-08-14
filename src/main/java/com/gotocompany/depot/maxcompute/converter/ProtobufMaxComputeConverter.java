@@ -7,6 +7,27 @@ import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Strategy that converts a single Protobuf field into its MaxCompute type and value representation.
+ *
+ * <p>Implementations are the building blocks used by the MaxCompute sink to translate a Protobuf schema and
+ * its messages into MaxCompute records. Each implementation handles one category of field (for example
+ * primitives, nested messages/structs, and the well-known timestamp and duration types). The interface
+ * separates two concerns:</p>
+ * <ul>
+ *     <li><em>type</em> conversion, which derives the MaxCompute {@link TypeInfo} of a field through
+ *     {@link #convertTypeInfo(ProtoPayload)} and {@link #convertSingularTypeInfo(ProtoPayload)};</li>
+ *     <li><em>value</em> conversion, which maps an actual field value to the object the MaxCompute SDK expects
+ *     through {@link #convertPayload(ProtoPayload)} and {@link #convertSingularPayload(ProtoPayload)}.</li>
+ * </ul>
+ *
+ * <p>The two {@code default} methods transparently handle {@code repeated} fields by wrapping the singular
+ * result in an array type, or by mapping each element; implementations therefore only need to provide the
+ * singular variants.</p>
+ *
+ * @see ProtoPayload
+ * @see ProtobufConverterOrchestrator
+ */
 public interface ProtobufMaxComputeConverter {
 
     /**
