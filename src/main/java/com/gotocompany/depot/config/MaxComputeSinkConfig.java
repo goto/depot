@@ -7,6 +7,7 @@ import com.gotocompany.depot.config.converter.KeyValuePairsToMapConverter;
 import com.gotocompany.depot.config.converter.LocalDateTimeConverter;
 import com.gotocompany.depot.config.converter.MaxComputeOdpsGlobalSettingsConverter;
 import com.gotocompany.depot.config.converter.ZoneIdConverter;
+import com.gotocompany.depot.maxcompute.enumeration.StreamingInsertPartitioningType;
 import com.gotocompany.depot.maxcompute.enumeration.MaxComputeTimestampDataType;
 import org.aeonbits.owner.Config;
 
@@ -59,6 +60,10 @@ public interface MaxComputeSinkConfig extends Config {
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITIONING_ENABLE")
     @DefaultValue("false")
     Boolean isTablePartitioningEnabled();
+
+    @Key("SINK_MAXCOMPUTE_STREAMING_INSERT_PARTITIONING_TYPE")
+    @DefaultValue("DEFAULT")
+    StreamingInsertPartitioningType getStreamingInsertPartitioningType();
 
     @Key("SINK_MAXCOMPUTE_TABLE_PARTITION_KEY")
     String getTablePartitionKey();

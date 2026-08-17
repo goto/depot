@@ -9,7 +9,10 @@ import com.google.common.cache.LoadingCache;
 import com.gotocompany.depot.config.MaxComputeSinkConfig;
 import com.gotocompany.depot.metrics.Instrumentation;
 import com.gotocompany.depot.metrics.MaxComputeMetrics;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 
 /**
@@ -17,7 +20,8 @@ import java.time.Instant;
  * Streaming Insert Sessions are reused when the partition spec is the same.
  * Streaming sessions are created by TableTunnel service. Read more about it here: <a href="https://www.alibabacloud.com/help/en/maxcompute/user-guide/tabletunnel">Alibaba MaxCompute Table Tunnel</a>
  */
-public final class StreamingSessionManager {
+@Slf4j
+    public final class StreamingSessionManager {
 
     private final LoadingCache<String, TableTunnel.StreamUploadSession> sessionCache;
 
@@ -73,6 +77,30 @@ public final class StreamingSessionManager {
                                 .setCreatePartition(true)
                                 .setPartitionSpec(partitionSpecKey),
                         instrumentation, maxComputeMetrics);
+            }
+        };
+        return new StreamingSessionManager(CacheBuilder.newBuilder()
+                .maximumSize(maxComputeSinkConfig.getStreamingInsertMaximumSessionCount())
+                .build(cacheLoader));
+    }
+
+    public static StreamingSessionManager createDynamicPartitioned(TableTunnel tableTunnel,
+                                                                   MaxComputeSinkConfig maxComputeSinkConfig,
+                                                                   Instrumentation instrumentation,
+                                                                   MaxComputeMetrics maxComputeMetrics) {
+
+        CacheLoader<String, TableTunnel.StreamUploadSession> cacheLoader = new CacheLoader<String, TableTunnel.StreamUploadSession>() {
+            @SneakyThrows
+            @Override
+            public TableTunnel.StreamUploadSession load(String partitionSpecKey) throws TunnelException {
+                log.info("Creating dynamic partitioned streaming session for partition spec: {}", partitionSpecKey);
+                TableTunnel.StreamUploadSession.Builder streamUploadSessionBuilder = getBaseStreamSessionBuilder(tableTunnel, maxComputeSinkConfig)
+                        .setCreatePartition(true)
+                        .setDynamicPartition(true);
+                Field field = TableTunnel.StreamUploadSession.Builder.class.getDeclaredField("dynamicPartition");
+                field.setAccessible(true);
+                log.info("Dynamic partition: {}", field.get(streamUploadSessionBuilder));
+                return buildStreamSession(streamUploadSessionBuilder, instrumentation, maxComputeMetrics);
             }
         };
         return new StreamingSessionManager(CacheBuilder.newBuilder()
