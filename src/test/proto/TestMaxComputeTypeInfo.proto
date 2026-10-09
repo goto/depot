@@ -109,3 +109,21 @@ message EmptyHolder {
 }
 
 
+
+message TestDepthLeaf {
+  string name = 1;
+}
+
+message TestDepthOnlyMessages {
+  TestDepthLeaf leaf = 1;
+}
+
+message TestDepthMiddle {
+  string name = 1;
+  TestDepthOnlyMessages only_messages = 2;
+}
+
+message TestDepthRoot {
+  string id = 1;
+  TestDepthMiddle middle = 2;
+}

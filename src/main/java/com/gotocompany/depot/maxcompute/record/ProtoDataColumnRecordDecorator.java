@@ -3,6 +3,7 @@ package com.gotocompany.depot.maxcompute.record;
 import com.aliyun.odps.PartitionSpec;
 import com.google.protobuf.Descriptors;
 import com.gotocompany.depot.config.SinkConfig;
+import com.gotocompany.depot.exception.ProtoFieldConversionException;
 import com.gotocompany.depot.maxcompute.converter.ProtobufConverterOrchestrator;
 import com.gotocompany.depot.maxcompute.model.ProtoPayload;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -22,8 +23,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Decorator to convert protobuf message to maxcompute record.
@@ -94,8 +97,10 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
             }
         }
         com.google.protobuf.Message protoMessage = (com.google.protobuf.Message) parsedMessage.getRaw();
-        protoMessage.getDescriptorForType().getFields()
-                .forEach(fieldDescriptor -> {
+        List<Descriptors.FieldDescriptor> fields = protoMessage.getDescriptorForType().getFields();
+        IntStream.range(0, fields.size())
+                .forEach(index -> {
+                    Descriptors.FieldDescriptor fieldDescriptor = fields.get(index);
                     if (fieldDescriptor.getName().equals(partitionFieldName) && shouldReplaceOriginalColumn) {
                         return;
                     }
@@ -108,8 +113,12 @@ public class ProtoDataColumnRecordDecorator extends RecordDecorator {
                     if (ProtoUtils.isNonRepeatedString(fieldDescriptor) && !protoMessage.hasField(fieldDescriptor)) {
                         return;
                     }
-                    recordWrapper.getRecord()
-                            .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
+                    try {
+                        recordWrapper.getRecord()
+                                .set(fieldDescriptor.getName(), protobufConverterOrchestrator.toMaxComputeValue(new ProtoPayload(fieldDescriptor, protoMessage.getField(fieldDescriptor), 0)));
+                    } catch (RuntimeException e) {
+                        throw ProtoFieldConversionException.wrap(fieldDescriptor.getName(), index, -1, e);
+                    }
                 });
         PartitionSpec partitionSpec = getPartitionSpec(recordWrapper, protoMessage);
         return new RecordWrapper(recordWrapper.getRecord(), recordWrapper.getIndex(), recordWrapper.getErrorInfo(), partitionSpec);

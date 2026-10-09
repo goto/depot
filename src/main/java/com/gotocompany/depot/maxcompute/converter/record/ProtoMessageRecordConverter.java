@@ -8,6 +8,7 @@ import com.gotocompany.depot.error.ErrorInfo;
 import com.gotocompany.depot.error.ErrorType;
 import com.gotocompany.depot.exception.EmptyMessageException;
 import com.gotocompany.depot.exception.InvalidMessageException;
+import com.gotocompany.depot.exception.ProtoFieldConversionException;
 import com.gotocompany.depot.exception.UnknownFieldsException;
 import com.gotocompany.depot.maxcompute.model.MaxComputeSchema;
 import com.gotocompany.depot.maxcompute.model.RecordWrapper;
@@ -49,6 +50,13 @@ public class ProtoMessageRecordConverter implements MessageRecordConverter {
                     RecordWrapper recordWrapper = new RecordWrapper(record, index, null, null);
                     try {
                         recordWrappers.addValidRecord(recordDecorator.decorate(recordWrapper, messages.get(index)));
+                    } catch (ProtoFieldConversionException e) {
+                        ProtoFieldConversionException located = e.withMessageContext(
+                                String.format("message index %d in batch, metadata %s", index, messages.get(index).getMetadataString()));
+                        log.debug("Field conversion error while converting message to record", located);
+                        ErrorType errorType = e.getCause() instanceof SchemaMismatchRuntimeException || e.getCause() instanceof SchemaMismatchException
+                                ? ErrorType.SINK_NON_RETRYABLE_ERROR : ErrorType.SINK_UNKNOWN_ERROR;
+                        recordWrappers.addInvalidRecord(toErrorRecordWrapper(recordWrapper, new ErrorInfo(located, errorType)));
                     } catch (SchemaMismatchException | SchemaMismatchRuntimeException e) {
                         log.debug("Schema mismatch error while converting message to record", e);
                         recordWrappers.addInvalidRecord(

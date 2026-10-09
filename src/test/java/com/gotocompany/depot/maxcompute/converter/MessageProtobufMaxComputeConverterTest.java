@@ -122,4 +122,28 @@ public class MessageProtobufMaxComputeConverterTest {
         new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(maxComputeSinkConfig), maxComputeSinkConfig);
     }
 
+
+    private MessageProtobufMaxComputeConverter converterWithDepth(int depth) {
+        MaxComputeSinkConfig config = Mockito.mock(MaxComputeSinkConfig.class);
+        when(config.getMaxNestedMessageDepth()).thenReturn(depth);
+        return new MessageProtobufMaxComputeConverter(new MaxComputeProtobufConverterCache(config), config);
+    }
+
+    @Test
+    public void shouldOmitMessageFieldWhenItWouldBeAnEmptyStructAfterDepthCutOff() {
+        Descriptors.FieldDescriptor middle = TestMaxComputeTypeInfo.TestDepthRoot.getDescriptor().findFieldByName("middle");
+
+        TypeInfo typeInfo = converterWithDepth(2).convertTypeInfo(new ProtoPayload(middle));
+
+        assertEquals("STRUCT<name:STRING>", typeInfo.toString());
+    }
+
+    @Test
+    public void shouldKeepNestedMessageFieldWhenDepthAllowsItsContent() {
+        Descriptors.FieldDescriptor middle = TestMaxComputeTypeInfo.TestDepthRoot.getDescriptor().findFieldByName("middle");
+
+        TypeInfo typeInfo = converterWithDepth(3).convertTypeInfo(new ProtoPayload(middle));
+
+        assertEquals("STRUCT<name:STRING,only_messages:STRUCT<leaf:STRUCT<name:STRING>>>", typeInfo.toString());
+    }
 }
